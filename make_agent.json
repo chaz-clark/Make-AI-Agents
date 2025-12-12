@@ -1,0 +1,366 @@
+{
+  "_metadata": {
+    "template_version": "3.1",
+    "last_updated": "2025-02-05",
+    "description": "NGAI agent template with tier guidance; keep it concise and delete unused optional sections.",
+    "instructions": "Fill only what you need. Keep Tier 1 for simple agents; add Tier 2/3 if warranted.",
+    "usage": "JSON = structured schema; MD = narrative. Delete sections not used.",
+    "tier_guidance": {
+      "tier_1_core": "Essential for any agent (agent_type, implementation for chosen type, io_contract, primary_data if data-driven, dependencies, validation)",
+      "tier_2_recommended": "For production/shared agents (operational_guidance, error_handling, logging_observability, configuration)",
+      "tier_3_optional": "Only if needed (common_patterns, domain_specific_patterns, decision_rules, constraints, tests, cross_references, changelog)"
+    },
+    "companion_files": {
+      "conceptual_guide": "<your_agent_name>.md",
+      "implementation": "path/to/code.py (optional)",
+      "additional_references": []
+    },
+    "agent_details": {
+      "agent_name": "YourAgentName",
+      "version": "1.0",
+      "last_updated": "YYYY-MM-DD",
+      "description": "One-sentence description of what this agent does.",
+      "owner": "Team or Individual",
+      "complexity": "simple|standard|complex"
+    }
+  },
+  "agent_type": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "type": "class_based|workflow|rule_based|llm_agent|api_agent|multi_agent|data_processor|other",
+    "description": "Select exactly one; delete irrelevant implementation branches.",
+    "notes": "Choosing a type helps decide which optional sections to keep."
+  },
+  "implementation": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "class_based": {
+      "optional": false,
+      "class_definition": {
+        "class_name": "YourAgentClass",
+        "inherits_from": "BaseAgent or None",
+        "location": "path/to/your_agent.py"
+      },
+      "initialization": {
+        "description": "How __init__ works",
+        "parameters": [
+          {
+            "name": "param_name",
+            "type": "Type",
+            "description": "",
+            "required": true,
+            "default": null
+          }
+        ]
+      },
+      "core_methods": [
+        {
+          "name": "method_name",
+          "description": "",
+          "inputs": [],
+          "outputs": "",
+          "example": "agent.method_name(...)"
+        }
+      ],
+      "helper_functions": [
+        {
+          "name": "helper_name",
+          "description": "",
+          "location": "path/to/your_agent.py"
+        }
+      ]
+    },
+    "workflow_based": {
+      "optional": true,
+      "steps": [
+        {
+          "step": 1,
+          "name": "Step Name",
+          "description": "",
+          "input": "",
+          "output": ""
+        }
+      ],
+      "entry_point": "How to start",
+      "exit_point": "What it produces"
+    },
+    "rule_based": {
+      "optional": true,
+      "rules": [
+        {
+          "rule_id": 1,
+          "condition": "",
+          "action": "",
+          "priority": "high|medium|low"
+        }
+      ],
+      "evaluation_order": "priority|sequential|parallel",
+      "default_action": "What happens if no rules match"
+    },
+    "llm_agent": {
+      "optional": true,
+      "model": "gpt-4|claude-3|...",
+      "system_prompt": "...",
+      "tools": [
+        {
+          "name": "tool_name",
+          "description": "",
+          "parameters": {}
+        }
+      ],
+      "parameters": {
+        "temperature": 0.7,
+        "max_tokens": 2000,
+        "top_p": 1.0
+      }
+    },
+    "api_agent": {
+      "optional": true,
+      "base_url": "",
+      "authentication": "API key|OAuth|...",
+      "endpoints": "See primary_data",
+      "rate_limiting": "Strategy"
+    }
+  },
+  "io_contract": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "description": "Define inputs/outputs clearly",
+    "inputs": [
+      {
+        "name": "input_name",
+        "type": "Type",
+        "format": "",
+        "example": "",
+        "required": true
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output_name",
+        "type": "Type",
+        "format": "",
+        "example": "",
+        "conditions": ""
+      }
+    ],
+    "side_effects": "State changes or external effects"
+  },
+  "primary_data": {
+    "_tier": "tier_1_core",
+    "_required_for": [
+      "llm_agent",
+      "api_agent",
+      "rule_based",
+      "data_processor",
+      "workflow"
+    ],
+    "_optional_for": [
+      "class_based if not data-driven"
+    ],
+    "description": "Core structured data (prompts, mappings, rules, endpoints)",
+    "format": "array_of_objects|lookup_table|prompt_templates|endpoint_mappings|rules",
+    "data": [
+      {
+        "key": "identifier",
+        "value": "payload",
+        "description": "",
+        "notes": ""
+      }
+    ],
+    "usage_note": "How to parse/use this data"
+  },
+  "dependencies": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "packages": [],
+    "files": [],
+    "models": [],
+    "apis": [],
+    "data_sources": [],
+    "environment_variables": [],
+    "optional_dependencies": {
+      "description": "",
+      "packages": []
+    }
+  },
+  "validation": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "description": "How to verify the agent works",
+    "pre_run_checklist": [],
+    "post_run_checklist": [],
+    "success_criteria": [],
+    "test_cases": [
+      {
+        "name": "",
+        "input": "",
+        "expected_output": "",
+        "validation_method": "exact|tolerance|regex"
+      }
+    ],
+    "tolerance": {
+      "numeric": "",
+      "string": "exact_match|case_insensitive|regex",
+      "structural": ""
+    },
+    "commands": [
+      "pytest ...",
+      "python -m smoke_test ..."
+    ]
+  },
+  "operational_guidance": {
+    "_tier": "tier_2_recommended",
+    "optional": true,
+    "when_to_use": [],
+    "when_not_to_use": [],
+    "best_practices": [],
+    "alternatives": []
+  },
+  "error_handling": {
+    "_tier": "tier_2_recommended",
+    "optional": true,
+    "known_failures": [],
+    "fallbacks": [],
+    "retry_strategy": {
+      "max_retries": 3,
+      "backoff": "exponential",
+      "timeout_per_attempt": "30s"
+    },
+    "timeout_behavior": "",
+    "error_reporting": ""
+  },
+  "logging_observability": {
+    "_tier": "tier_2_recommended",
+    "optional": true,
+    "logs": {
+      "what_to_log": "",
+      "sensitive_fields": "",
+      "log_level": "INFO"
+    },
+    "location": "stdout|file|service",
+    "format": "json|text",
+    "metrics": [],
+    "alerts": []
+  },
+  "configuration": {
+    "_tier": "tier_2_recommended",
+    "optional": true,
+    "config_class": "ConfigClassName or omitted",
+    "location": "path/to/config",
+    "parameters": [
+      {
+        "name": "",
+        "type": "",
+        "default": "",
+        "description": "",
+        "valid_values": [],
+        "impact": ""
+      }
+    ]
+  },
+  "common_patterns": {
+    "_tier": "tier_3_optional",
+    "optional": true,
+    "patterns": [
+      {
+        "name": "",
+        "description": "",
+        "before": {
+          "code": "",
+          "description": ""
+        },
+        "after": {
+          "code": "",
+          "description": ""
+        },
+        "notes": ""
+      }
+    ]
+  },
+  "domain_specific_patterns": {
+    "_tier": "tier_3_optional",
+    "optional": true,
+    "patterns": [
+      {
+        "context": "",
+        "description": "",
+        "example": {
+          "code": "",
+          "explanation": ""
+        },
+        "notes": ""
+      }
+    ]
+  },
+  "decision_rules": {
+    "_tier": "tier_3_optional",
+    "optional": true,
+    "rules": [
+      {
+        "rule_id": 1,
+        "condition": "",
+        "action": "",
+        "rationale": "",
+        "priority": "high|medium|low"
+      }
+    ],
+    "default_behavior": "",
+    "conflict_resolution": ""
+  },
+  "constraints": {
+    "_tier": "tier_3_optional",
+    "optional": true,
+    "resource_limits": {
+      "cpu": "",
+      "memory": "",
+      "disk": "",
+      "network": "",
+      "cost": ""
+    },
+    "safety_boundaries": {
+      "prohibited_actions": [],
+      "guardrails": [],
+      "human_in_the_loop": ""
+    },
+    "compliance": {
+      "regulations": [],
+      "policies": [],
+      "data_handling": ""
+    }
+  },
+  "tests": {
+    "_tier": "tier_3_optional",
+    "optional": true,
+    "test_framework": "pytest|unittest|custom",
+    "commands": [],
+    "test_coverage": {
+      "target": "",
+      "current": "",
+      "command": ""
+    },
+    "ci_integration": ""
+  },
+  "cross_references": {
+    "_tier": "tier_3_optional",
+    "optional": true,
+    "related_agents": [],
+    "external_dependencies": [],
+    "documentation": []
+  },
+  "changelog": {
+    "_tier": "tier_3_optional",
+    "optional": true,
+    "versions": [
+      {
+        "version": "1.0",
+        "date": "YYYY-MM-DD",
+        "changes": [
+          "Initial version"
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      }
+    ]
+  }
+}
