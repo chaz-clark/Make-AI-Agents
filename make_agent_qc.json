@@ -1,0 +1,671 @@
+{
+  "_metadata": {
+    "template_version": "3.1",
+    "last_updated": "2025-12-15",
+    "description": "Quality Control agent for validating newly created agents against make_agent template standards",
+    "instructions": "This JSON contains validation rules, scoring rubrics, and test cases for agent quality control",
+    "usage": "Load validation rules to check agent MD/JSON files for completeness, specificity, and cleanup",
+    "tier_guidance": {
+      "tier_1_core": "All validation rules for core sections that must exist in every agent",
+      "tier_2_recommended": "Validation for production/shared agents",
+      "tier_3_optional": "Validation for complex agents only"
+    },
+    "companion_files": {
+      "conceptual_guide": "make_agent_qc.md",
+      "reference_template": "make_agent.md",
+      "reference_json": "make_agent.json"
+    },
+    "agent_details": {
+      "agent_name": "AgentQualityControl",
+      "version": "1.1",
+      "last_updated": "2025-12-15",
+      "description": "Validates agent MD and JSON files for quality, specificity, and standard adherence",
+      "owner": "Agent Development Team",
+      "complexity": "standard"
+    }
+  },
+  "agent_type": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "type": "rule_based",
+    "description": "Rule-based validation system with weighted scoring across multiple quality dimensions"
+  },
+  "implementation": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "rule_based": {
+      "optional": false,
+      "rules": [
+        {
+          "rule_id": 1,
+          "name": "Core Section Completeness",
+          "condition": "All tier_1_core sections exist in JSON with non-empty content",
+          "action": "Flag missing or empty core sections as critical issues",
+          "priority": "critical",
+          "weight": 0.20
+        },
+        {
+          "rule_id": 2,
+          "name": "Placeholder Detection",
+          "condition": "Content contains template placeholders like [Your..., YourAgent, <your_...",
+          "action": "Flag as specificity issue, severity based on location",
+          "priority": "high",
+          "weight": 0.15
+        },
+        {
+          "rule_id": 3,
+          "name": "Optional Section Cleanup",
+          "condition": "Optional sections marked unused but still present in files",
+          "action": "Flag as cleanup issue",
+          "priority": "medium",
+          "weight": 0.10
+        },
+        {
+          "rule_id": 4,
+          "name": "JSON-MD Consistency",
+          "condition": "Agent names, versions, descriptions match between MD and JSON",
+          "action": "Flag inconsistencies",
+          "priority": "high",
+          "weight": 0.10
+        },
+        {
+          "rule_id": 5,
+          "name": "Example Concreteness",
+          "condition": "Examples contain actual code/data, not pseudo-code or 'example_value'",
+          "action": "Flag generic examples",
+          "priority": "medium",
+          "weight": 0.10
+        },
+        {
+          "rule_id": 6,
+          "name": "Validation Testability",
+          "condition": "Test cases have specific inputs, outputs, and validation methods",
+          "action": "Flag untestable validation cases",
+          "priority": "high",
+          "weight": 0.15
+        },
+        {
+          "rule_id": 7,
+          "name": "Dependency Completeness",
+          "condition": "Dependencies section exists; packages array present (empty OK for LLM agents); if packages listed, include versions",
+          "action": "Note empty packages as informational; flag unversioned packages if present",
+          "priority": "low",
+          "weight": 0.10
+        },
+        {
+          "rule_id": 8,
+          "name": "Documentation Quality",
+          "condition": "Mission, Quickstart, and How to Use sections are complete and specific",
+          "action": "Flag incomplete or generic documentation",
+          "priority": "medium",
+          "weight": 0.10
+        }
+      ],
+      "evaluation_order": "priority",
+      "default_action": "If no specific rule matches, check for general template adherence"
+    }
+  },
+  "io_contract": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "description": "QC agent takes agent file paths, returns validation report",
+    "inputs": [
+      {
+        "name": "agent_md_path",
+        "type": "string",
+        "format": "file path",
+        "example": "sql_validator.md",
+        "required": true,
+        "description": "Path to agent markdown file"
+      },
+      {
+        "name": "agent_json_path",
+        "type": "string",
+        "format": "file path",
+        "example": "sql_validator.json",
+        "required": true,
+        "description": "Path to agent JSON configuration file"
+      },
+      {
+        "name": "strict_mode",
+        "type": "boolean",
+        "format": "true|false",
+        "example": false,
+        "required": false,
+        "description": "If true, fails on any medium+ severity issues. Default: false"
+      },
+      {
+        "name": "min_score",
+        "type": "integer",
+        "format": "0-100",
+        "example": 80,
+        "required": false,
+        "description": "Minimum acceptable score. Default: 70"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "validation_report",
+        "type": "object",
+        "format": "ValidationReport",
+        "example": "See validation.test_cases for examples",
+        "conditions": "Always returns report, even if files are malformed"
+      }
+    ],
+    "side_effects": "None - read-only validation, no file modifications"
+  },
+  "primary_data": {
+    "_tier": "tier_1_core",
+    "description": "Core validation rules and patterns for detecting issues",
+    "format": "structured_rules",
+    "placeholder_patterns": [
+      "\\[Your [A-Za-z ]+\\]",
+      "\\[.*?\\]",
+      "<your_[a-z_]+>",
+      "YourAgent",
+      "YourAgentName",
+      "your_agent_name",
+      "example_value",
+      "TODO:",
+      "FIXME:",
+      "\\.\\.\\.",
+      "etc\\.",
+      "path/to/your"
+    ],
+    "core_sections_required": {
+      "md_sections": [
+        "## Mission (core)",
+        "## Agent Quickstart (core)",
+        "## File Organization: JSON vs MD (core)",
+        "## Key Principles (core)",
+        "## How to Use This Agent (core)",
+        "## Common Pitfalls and Solutions (core)",
+        "## Examples (core)",
+        "## Validation and Testing (core)",
+        "## Resources and References"
+      ],
+      "json_sections": [
+        "agent_type",
+        "implementation",
+        "io_contract",
+        "dependencies",
+        "validation"
+      ]
+    },
+    "optional_sections": {
+      "md_sections": [
+        "## Core Concepts (optional for complex agents)",
+        "## Performance Considerations (optional)",
+        "## Operational Guidance (optional)",
+        "## Troubleshooting (optional)",
+        "## Monitoring and Observability (optional)"
+      ],
+      "json_sections": [
+        "primary_data",
+        "operational_guidance",
+        "error_handling",
+        "logging_observability",
+        "configuration",
+        "common_patterns",
+        "domain_specific_patterns",
+        "decision_rules",
+        "constraints",
+        "tests",
+        "cross_references",
+        "changelog"
+      ]
+    },
+    "tier_requirements": {
+      "simple": {
+        "complexity": "simple",
+        "required_tiers": ["tier_1_core"],
+        "allowed_optional": [],
+        "description": "Simple agents should only have tier_1_core sections"
+      },
+      "standard": {
+        "complexity": "standard",
+        "required_tiers": ["tier_1_core"],
+        "recommended_tiers": ["tier_2_recommended"],
+        "allowed_optional": ["tier_2_recommended", "tier_3_optional"],
+        "description": "Standard agents should have tier_1 + some tier_2"
+      },
+      "complex": {
+        "complexity": "complex",
+        "required_tiers": ["tier_1_core", "tier_2_recommended"],
+        "recommended_tiers": ["tier_3_optional"],
+        "allowed_optional": ["tier_3_optional"],
+        "description": "Complex agents should have tier_1 + tier_2 + relevant tier_3"
+      }
+    },
+    "json_md_separation_rules": {
+      "json_should_contain": [
+        "arrays",
+        "objects",
+        "code snippets",
+        "configuration parameters",
+        "API endpoints",
+        "prompts",
+        "rules",
+        "test cases",
+        "structured mappings"
+      ],
+      "md_should_contain": [
+        "narrative explanations",
+        "conceptual descriptions",
+        "why explanations",
+        "philosophy",
+        "pitfall explanations",
+        "usage guidance",
+        "references to JSON"
+      ],
+      "md_should_not_contain": [
+        "duplicate code from JSON",
+        "structured data tables that belong in JSON",
+        "configuration parameters",
+        "detailed test cases"
+      ]
+    }
+  },
+  "dependencies": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "packages": [
+      "json (stdlib)",
+      "re (stdlib)",
+      "pathlib (stdlib)"
+    ],
+    "files": [
+      "make_agent.md (reference template)",
+      "make_agent.json (reference template)"
+    ],
+    "models": [],
+    "apis": [],
+    "data_sources": [],
+    "environment_variables": [],
+    "optional_dependencies": {
+      "description": "Optional packages for enhanced validation",
+      "packages": [
+        "jsonschema (for JSON validation)",
+        "markdown (for MD parsing)",
+        "pytest (for testing the QC agent itself)"
+      ]
+    }
+  },
+  "validation": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "description": "How to verify the QC agent itself works correctly",
+    "pre_run_checklist": [
+      "QC agent code is available",
+      "Reference templates (make_agent.md, make_agent.json) are accessible",
+      "Test agent files are prepared (both good and bad examples)"
+    ],
+    "post_run_checklist": [
+      "Validation report is generated",
+      "All 8 quality dimensions are scored",
+      "Issues are categorized by severity",
+      "Recommendations are actionable"
+    ],
+    "success_criteria": [
+      "QC agent detects all planted issues in test agents",
+      "False positive rate < 5%",
+      "Scoring is consistent across multiple runs",
+      "Report format matches specification"
+    ],
+    "test_cases": [
+      {
+        "name": "Perfect Agent Validation",
+        "input": {
+          "agent_md_path": "test_agents/perfect_agent.md",
+          "agent_json_path": "test_agents/perfect_agent.json",
+          "strict_mode": true
+        },
+        "expected_output": {
+          "overall_score": 100,
+          "status": "PASS",
+          "critical_issues": [],
+          "all_issues": []
+        },
+        "validation_method": "exact"
+      },
+      {
+        "name": "Agent with Placeholders",
+        "input": {
+          "agent_md_path": "test_agents/placeholder_agent.md",
+          "agent_json_path": "test_agents/placeholder_agent.json",
+          "strict_mode": false
+        },
+        "expected_output": {
+          "overall_score": "< 70",
+          "status": "NEEDS_IMPROVEMENT",
+          "critical_issues": [],
+          "specificity_score": "< 50",
+          "placeholder_count": "> 5"
+        },
+        "validation_method": "range"
+      },
+      {
+        "name": "Agent Missing Core Sections",
+        "input": {
+          "agent_md_path": "test_agents/incomplete_agent.md",
+          "agent_json_path": "test_agents/incomplete_agent.json",
+          "strict_mode": false
+        },
+        "expected_output": {
+          "overall_score": "< 60",
+          "status": "FAIL",
+          "critical_issues": "> 0",
+          "completeness_score": "< 40",
+          "missing_sections": ["io_contract", "validation"]
+        },
+        "validation_method": "structural"
+      },
+      {
+        "name": "Agent with Unused Optional Sections",
+        "input": {
+          "agent_md_path": "test_agents/bloated_agent.md",
+          "agent_json_path": "test_agents/bloated_agent.json",
+          "strict_mode": false
+        },
+        "expected_output": {
+          "overall_score": "70-85",
+          "status": "NEEDS_IMPROVEMENT",
+          "cleanup_score": "< 70",
+          "unused_sections": [
+            "common_patterns",
+            "domain_specific_patterns",
+            "constraints"
+          ]
+        },
+        "validation_method": "structural"
+      },
+      {
+        "name": "Agent with Generic Examples",
+        "input": {
+          "agent_md_path": "test_agents/generic_examples_agent.md",
+          "agent_json_path": "test_agents/generic_examples_agent.json",
+          "strict_mode": false
+        },
+        "expected_output": {
+          "overall_score": "70-80",
+          "status": "NEEDS_IMPROVEMENT",
+          "examples_score": "< 60",
+          "issues": [
+            {
+              "type": "generic_example",
+              "severity": "medium"
+            }
+          ]
+        },
+        "validation_method": "pattern"
+      }
+    ],
+    "tolerance": {
+      "numeric": "Score ranges allow ±2 points for rounding",
+      "string": "case_insensitive for status matching",
+      "structural": "Array length comparisons allow exact match or range"
+    },
+    "commands": [
+      "pytest test_agent_qc.py -v",
+      "python test_qc_on_references.py --suite comprehensive",
+      "python agent_qc_cli.py --self-test"
+    ]
+  },
+  "operational_guidance": {
+    "_tier": "tier_2_recommended",
+    "when_to_use": [
+      "Pre-deployment validation of new agents",
+      "CI/CD pipeline quality gates",
+      "Pull request validation",
+      "Periodic agent quality audits",
+      "Before sharing agents with other teams"
+    ],
+    "when_not_to_use": [
+      "Real-time development feedback (too slow)",
+      "Validating non-agent documentation",
+      "Code linting (use dedicated linters)",
+      "Performance testing (use benchmarks)",
+      "Security auditing (use security scanners)"
+    ],
+    "best_practices": [
+      "Run in non-strict mode during development",
+      "Enable strict mode only in CI/CD",
+      "Fix critical issues before medium/low",
+      "Maintain reference agents scoring 95+",
+      "Review recommendations even if passing",
+      "Adjust weights based on team priorities"
+    ],
+    "alternatives": [
+      "Manual review using JSON checklist",
+      "Peer review process",
+      "JSON schema validation (structure only)",
+      "Linting tools (syntax only)"
+    ]
+  },
+  "error_handling": {
+    "_tier": "tier_2_recommended",
+    "known_failures": [
+      {
+        "error": "File not found",
+        "cause": "Agent MD or JSON file doesn't exist at specified path",
+        "fallback": "Return validation report with status=ERROR and clear message",
+        "retry": false
+      },
+      {
+        "error": "Malformed JSON",
+        "cause": "Agent JSON file has syntax errors",
+        "fallback": "Report JSON parsing error with line number, fail validation",
+        "retry": false
+      },
+      {
+        "error": "Missing _metadata section",
+        "cause": "JSON doesn't follow template structure",
+        "fallback": "Flag as critical completeness issue, continue validation of other sections",
+        "retry": false
+      },
+      {
+        "error": "Encoding issues",
+        "cause": "File contains non-UTF-8 characters",
+        "fallback": "Try alternate encodings (latin-1, cp1252), warn in report",
+        "retry": true
+      }
+    ],
+    "fallbacks": [
+      "If scoring fails, return score of 0 with explanation",
+      "If section detection fails, assume section is missing",
+      "If pattern matching fails, skip that specific check"
+    ],
+    "retry_strategy": {
+      "max_retries": 0,
+      "backoff": "none",
+      "timeout_per_attempt": "10s",
+      "note": "Validation is deterministic, retries not useful"
+    },
+    "timeout_behavior": "If validation takes > 10s, abort and return TIMEOUT status",
+    "error_reporting": "All errors logged to validation report with severity=CRITICAL"
+  },
+  "logging_observability": {
+    "_tier": "tier_2_recommended",
+    "logs": {
+      "what_to_log": "Each validation check result, scoring calculations, issues found",
+      "sensitive_fields": "None - agent content is not sensitive",
+      "log_level": "INFO"
+    },
+    "location": "stdout (CLI) or return in report object (API)",
+    "format": "json for programmatic access, text for CLI readability",
+    "metrics": [
+      "validation_duration_seconds",
+      "agent_score_distribution",
+      "issue_count_by_severity",
+      "pass_fail_ratio"
+    ],
+    "alerts": []
+  },
+  "common_patterns": {
+    "_tier": "tier_3_optional",
+    "patterns": [
+      {
+        "name": "Batch Agent Validation",
+        "description": "Validate multiple agents in one run, generate summary report",
+        "before": {
+          "code": "for agent in agents:\n    result = qc.validate_agent(f'{agent}.md', f'{agent}.json')\n    print(result)",
+          "description": "Inefficient, no summary statistics"
+        },
+        "after": {
+          "code": "agent_names = ['sql_validator', 'data_processor', 'api_client']\nresults = qc.validate_batch(agent_names)\nsummary = qc.generate_summary(results)\nprint(f'Pass rate: {summary.pass_rate}%')\nprint(f'Avg score: {summary.avg_score}')",
+          "description": "Efficient batch processing with aggregate metrics"
+        },
+        "notes": "Useful for CI/CD pipelines validating multiple agents"
+      },
+      {
+        "name": "Progressive Quality Improvement",
+        "description": "Start with low threshold, gradually increase requirements",
+        "before": {
+          "code": "qc.validate_agent('new_agent.md', 'new_agent.json', strict_mode=True, min_score=90)",
+          "description": "Too strict for new agents"
+        },
+        "after": {
+          "code": "if agent_is_new:\n    min_score = 70\n    strict = False\nelif agent_in_development:\n    min_score = 80\n    strict = False\nelse:\n    min_score = 90\n    strict = True\n\nresult = qc.validate_agent('agent.md', 'agent.json', strict_mode=strict, min_score=min_score)",
+          "description": "Adaptive quality thresholds based on agent maturity"
+        },
+        "notes": "Balances quality with development velocity"
+      }
+    ]
+  },
+  "validation_rules_detailed": {
+    "_tier": "tier_3_optional",
+    "description": "Detailed validation logic for each quality dimension",
+    "dimensions": {
+      "completeness": {
+        "weight": 0.20,
+        "checks": [
+          "All core MD sections present (9 required sections)",
+          "All core JSON sections present (5 required sections)",
+          "Core sections have substantive content (>50 chars)",
+          "Implementation type is selected (one branch has optional=false)"
+        ]
+      },
+      "specificity": {
+        "weight": 0.15,
+        "checks": [
+          "No bracket placeholders [Your..., [Description], etc.]",
+          "No generic agent names (YourAgent, YourAgentName)",
+          "Examples contain concrete domain terms",
+          "Mission has domain-specific terminology",
+          "No TODO/FIXME markers"
+        ]
+      },
+      "cleanup": {
+        "weight": 0.10,
+        "checks": [
+          "No empty optional JSON sections",
+          "No empty optional MD sections",
+          "Tier usage aligns with complexity level",
+          "Unused implementation branches removed"
+        ]
+      },
+      "consistency": {
+        "weight": 0.10,
+        "checks": [
+          "Agent name matches between MD and JSON",
+          "Version matches between MD and JSON",
+          "Description aligns between files",
+          "Complexity level matches sections used"
+        ]
+      },
+      "examples": {
+        "weight": 0.10,
+        "checks": [
+          "At least 2 examples present",
+          "Examples have code blocks or JSON snippets",
+          "Examples show both input and output",
+          "No generic placeholders in examples"
+        ]
+      },
+      "validation": {
+        "weight": 0.15,
+        "checks": [
+          "Test cases array has at least 1 entry",
+          "Each test case has input specified",
+          "Each test case has expected_output specified",
+          "Validation methods are specified"
+        ]
+      },
+      "dependencies": {
+        "weight": 0.10,
+        "checks": [
+          "Dependencies section exists",
+          "Packages array is present (empty is valid for LLM/text-based agents)",
+          "If packages listed, versions or (stdlib) notes are included",
+          "Files array lists required input files if any"
+        ]
+      },
+      "documentation": {
+        "weight": 0.10,
+        "checks": [
+          "Mission has What/Why/Who/Example",
+          "Quickstart has 4-5 actionable steps",
+          "Pitfalls has 3+ specific entries",
+          "Resources section is complete"
+        ]
+      }
+    },
+    "severity_levels": {
+      "critical": "Prevents agent from functioning - fail immediately in strict mode",
+      "high": "Significantly impacts quality - major score reduction",
+      "medium": "Reduces quality but usable - moderate score reduction",
+      "low": "Minor quality issue - minimal score impact"
+    }
+  },
+  "cross_references": {
+    "_tier": "tier_3_optional",
+    "related_agents": [
+      {
+        "name": "make_agent",
+        "relationship": "Creates agents that this QC agent validates",
+        "location": "make_agent.md, make_agent.json"
+      }
+    ],
+    "external_dependencies": [
+      {
+        "name": "make_agent template",
+        "type": "reference",
+        "location": "make_agent.md, make_agent.json",
+        "purpose": "Defines structure being validated against"
+      }
+    ]
+  },
+  "changelog": {
+    "_tier": "tier_3_optional",
+    "versions": [
+      {
+        "version": "1.1",
+        "date": "2025-12-15",
+        "changes": [
+          "Updated Dependencies dimension to be context-aware",
+          "Empty packages array now valid for LLM/text-based agents",
+          "Changed dependency validation from penalty to informational note",
+          "Added pitfall #6 explaining LLM agent dependencies",
+          "Updated rule_id 7 priority from medium to low"
+        ],
+        "breaking_changes": [
+          "Dependency scoring no longer penalizes empty packages arrays"
+        ],
+        "contributors": ["Agent Development Team"]
+      },
+      {
+        "version": "1.0",
+        "date": "2025-12-15",
+        "changes": [
+          "Initial version of Agent QC",
+          "Implements 8-dimension validation framework",
+          "Supports simple/standard/complex agent tiers",
+          "Includes 40+ validation checks",
+          "Generates detailed reports with recommendations"
+        ],
+        "breaking_changes": [],
+        "contributors": ["Agent Development Team"]
+      }
+    ]
+  }
+}
