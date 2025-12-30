@@ -82,7 +82,7 @@ The QC agent evaluates Gems based on these key dimensions:
 
 ## Validation Rules (Technical)
 See `make_gem_qc.json` for the exact logic.
-- **Pillar Completeness**: 25% weight.
+- **Pillar Completeness**: 25% weight. Checks for the *presence* of Role, Task, Context, and Format concepts, even if grouped under headers like "Behaviors and Rules" or "Purpose".
 - **Specificity**: 20% weight.
 - **Persona/Task/Context/Format**: 10-15% weight each.
 

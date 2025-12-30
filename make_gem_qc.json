@@ -60,8 +60,8 @@
       {
         "rule_id": 1,
         "name": "Pillar Completeness",
-        "condition": "gem_instructions object contains all 4 keys: persona, task, context, format",
-        "action": "Flag missing pillars as critical",
+        "condition": "Instructions contain definitions for: Role/Persona, Goals/Task, Constraints/Context, and Output Rules/Format. (Accepts functional equivalents like 'Purpose' for Task, or 'Behaviors' for Context)",
+        "action": "Flag missing conceptual pillars as critical",
         "weight": 0.25
       },
       {
