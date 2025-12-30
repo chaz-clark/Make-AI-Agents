@@ -1,0 +1,94 @@
+{
+  "_metadata": {
+    "template_version": "1.1",
+    "last_updated": "2025-12-30",
+    "description": "Google Gem definition template focused strictly on System Instructions (4 Pillars).",
+    "instructions": "Fill out the gem_instructions object. Compile the 4 pillars into a single text block and save as 'copy_paste_instructions.txt'.",
+    "usage": "Use this JSON to define behavior. The final output must be a plain text file ('copy_paste_instructions.txt') for pasting into the Gem interface.",
+    "companion_files": {
+      "conceptual_guide": "<your_gem_name>.md",
+      "reference": "Gem Instructions.md"
+    },
+    "gem_details": {
+      "gem_name": "YourGemName",
+      "version": "1.0",
+      "last_updated": "YYYY-MM-DD",
+      "description": "Short description of what this Gem does.",
+      "owner": "Individual or Team"
+    }
+  },
+  "gem_instructions": {
+    "_description": "The core behavior definition. These 4 sections must be compiled into the Gem's 'Instructions' text field.",
+    "_required": true,
+    "persona": {
+      "description": "Tell your Gem what role to play and how to respond.",
+      "role": "e.g., Coding Partner, Creative Writer, Tutor",
+      "tone": "e.g., Patient, Enthusiastic, Professional, Sarcastic. Consider including pedagogical stances like 'Encourage first attempts'.",
+      "perspective": "e.g., Expert, Novice, Skeptic"
+    },
+    "task": {
+      "description": "Tell the Gem what you want it to do or create.",
+      "primary_goals": [
+        "Goal 1",
+        "Goal 2"
+      ],
+      "actions": [
+        "Action 1 (e.g., Write code)",
+        "Action 2 (e.g., Explain concepts)",
+        "Action 3 (e.g., Ensure documentation)"
+      ]
+    },
+    "context": {
+      "description": "Provide background and boundaries.",
+      "background_info": "e.g., User level, project context, specific constraints",
+      "boundaries": [
+        "Do not discuss politics",
+        "Only use Python",
+        "Assume beginner knowledge"
+      ],
+      "interaction_style": "e.g., Ask clarifying questions before answering"
+    },
+    "format": {
+      "description": "Be specific about the desired output structure and conversational workflow.",
+      "interaction_chain": [
+        "Step 1: Understand request (e.g., Ask clarifying questions)",
+        "Step 2: Provide Overview",
+        "Step 3: Deliver Content",
+        "Step 4: Check for understanding"
+      ],
+      "formatting_rules": [
+        "Use bullet points for lists",
+        "Code blocks for code",
+        "Bold key terms"
+      ],
+      "output_length": "Concise|Detailed|One Paragraph"
+    }
+  },
+  "validation": {
+    "_description": "Test cases to verify the instructions produce the desired behavior.",
+    "test_cases": [
+      {
+        "input": "User prompt",
+        "expected_behavior": "Description of how the Gem should respond based on Persona/Task/Context/Format"
+      }
+    ]
+  },
+  "changelog": {
+    "versions": [
+      {
+        "version": "1.1",
+        "date": "2025-12-30",
+        "changes": [
+          "Removed knowledge_base and triggers to focus strictly on System Instructions"
+        ]
+      },
+      {
+        "version": "1.0",
+        "date": "YYYY-MM-DD",
+        "changes": [
+          "Initial Gem definition"
+        ]
+      }
+    ]
+  }
+}
