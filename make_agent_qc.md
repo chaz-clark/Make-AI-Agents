@@ -102,6 +102,13 @@ For detailed validation rules and scoring criteria, see `make_agent_qc.json`.
 
 **How**: Ensure validation section includes specific inputs, expected outputs, and verification methods.
 
+### 6. MD/JSON Companion Sync
+**Description**: Every substantive entry in the JSON (known_failures, guardrails, best_practices) must have corresponding narrative coverage in the companion MD (a pitfall, principle, or guidance note). The two files are a pair — one without the other is incomplete.
+
+**Why**: The JSON tells practitioners *what* exists; the MD tells them *why* it matters and how to use it. A guardrail entry in JSON with no MD explanation leaves practitioners with a field they can't interpret. A pitfall in MD referencing a JSON field that doesn't exist breaks trust in both files.
+
+**How**: For each JSON array entry in the sections above, check that the MD has at least one section that covers the same concept — even in different words. Use QC rule 10 (MD/JSON Companion Sync) and the `consistency` dimension checks. Flag unmatched entries as medium issues.
+
 ---
 
 ## How to Use This Agent (core)
@@ -282,7 +289,7 @@ For the complete list of API endpoints with parameters and examples, see `my_age
 
 **Solution**: Match complexity to sections used. Simple agents should only have tier_1_core. Standard agents add tier_2. Complex agents may need tier_3.
 
-### 6. Penalizing Empty Dependencies for LLM Agents
+### 7. Penalizing Empty Dependencies for LLM Agents
 
 **Problem**: Flagging empty `packages: []` array as incomplete when the agent is LLM-based and does text analysis only.
 
@@ -404,16 +411,18 @@ The validation section includes:
 
 ### Quality Dimensions Explained
 
-**8 Core Dimensions** (see JSON for scoring rubrics):
+**10 Quality Dimensions** (see JSON for scoring rubrics):
 
 1. **Completeness**: All tier_1_core sections present and filled
 2. **Specificity**: Content is agent-specific, not generic templates
 3. **Cleanup**: Unused optional sections removed
-4. **Consistency**: MD and JSON files align, no contradictions
+4. **Consistency**: MD and JSON files align, no contradictions — includes companion sync check
 5. **Examples**: Concrete, runnable examples with real data
 6. **Validation**: Actionable test cases with clear pass/fail criteria
 7. **Dependencies**: All dependencies explicitly listed and versioned
 8. **Documentation**: Clear mission, principles, and usage instructions
+9. **LLM Parameter Completeness**: For llm_agent type — tool_choice, response_format, disable_parallel_tool_use, mcp_servers, and strict present
+10. **MD/JSON Companion Sync**: Every JSON known_failure, guardrail, and best_practice entry has corresponding MD narrative
 
 ### Automated Testing
 ```bash

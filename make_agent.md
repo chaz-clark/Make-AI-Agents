@@ -101,6 +101,23 @@ Common principles across successful agents:
 - **Observability**: Easy to debug and monitor
 - **Security**: Protects sensitive data
 
+### Recommended Principles for LLM Agents
+
+**Explicit Tool Control**
+**Description**: Always set `tool_choice` intentionally — don't rely on the model default.
+**Why**: Default (`auto`) is correct for conversational agents, but agentic loops often need `required` to prevent the model skipping tool calls, or a specific tool name to force a deterministic step.
+**How**: Set `tool_choice` in `implementation.llm_agent.parameters`. Use `required` only when you know a tool call is mandatory; reset to `auto` after the first forced call to avoid infinite loops.
+
+**Guardrails as a Separate Layer**
+**Description**: Input validation and output validation belong outside the agent's core logic — not inside system prompts or tool implementations.
+**Why**: Embedding safety checks in prompts makes them invisible to reviewers and easy to override. A dedicated guardrail layer is auditable, replaceable, and testable independently.
+**How**: Implement pre/post hooks (Anthropic pattern) or parallel guardrail checks (OpenAI pattern). Document them in `constraints.safety_boundaries.guardrails` in the JSON.
+
+**Observability via Lifecycle Hooks**
+**Description**: Instrument agent behavior at defined lifecycle points rather than scattering logging inside tools.
+**Why**: Hooks (on_tool_call, on_tool_result, on_agent_end) give a consistent, auditable trace of every agent run without coupling observability logic to business logic.
+**How**: Register hooks for metrics, logging, and guardrail triggers. See `operational_guidance.best_practices` in the JSON for the hook pattern.
+
 ---
 
 ## Core Concepts (optional for complex agents)
@@ -190,9 +207,25 @@ result = agent.process(large_input, timeout=120, batch_size=100)
 
 [Same structure as above]
 
-### 3. [Additional Pitfalls]
+### 3. Infinite Tool Loop
 
-Document 3-5 common pitfalls based on expected usage. Focus on mistakes that:
+**Problem**: The agent repeatedly calls tools without reaching a stopping condition, consuming tokens and budget indefinitely.
+
+**Why it happens**: When `tool_choice` is set to `required`, the model is forced to call a tool on every turn — including turns where it would otherwise return a final answer. Without a `max_turns` limit, this produces an infinite loop.
+
+**Solution**: Set a `max_turns` limit in your agent runner. Use `tool_choice=required` only for the specific turn that needs it, then reset to `auto`. Implement loop detection (e.g., track repeated tool calls with identical arguments). Document this in `error_handling.known_failures` in your JSON.
+
+### 4. Too Many Tools Per Agent
+
+**Problem**: Agent performance degrades noticeably when the tool list grows beyond 20 entries — the model struggles to select the right tool and may hallucinate tool names.
+
+**Why it happens**: Large tool sets increase the model's decision space. The model must reason across all available tools on every call, and beyond a threshold (empirically 10-20 tools per Google's documentation), this overhead hurts selection accuracy.
+
+**Solution**: Keep each agent's tool count to 10-20. If you need more tools, split them across specialized sub-agents and use a multi-agent routing pattern. Document the split in `cross_references.related_agents`.
+
+### 5. [Additional Pitfalls]
+
+Document common pitfalls based on expected usage. Focus on mistakes that:
 - Are easy to make
 - Have non-obvious causes
 - Can be explained better in narrative than in code alone

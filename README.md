@@ -100,6 +100,27 @@ The AI has now generated both files. Your final step is to review them for accur
 
 *The rest of this README provides the detailed context (Tiers, Design Rationale, FAQs) that the AI will use as its own reference to complete your requests.*
 
+## Keeping Templates Current
+
+The `make_agent` and `make_gem_qc` templates are kept up to date with evolving AI platform best practices using a two-agent documentation update system:
+
+| Agent | Files | What it does |
+|-------|-------|-------------|
+| **Doc Refresh Agent** | `doc_refresh_agent.md` / `doc_refresh_agent.json` | Fetches live documentation from Anthropic, Google, OpenAI, and xAI and writes results to `source_docs/` cache files |
+| **Doc Analysis Agent** | `doc_analysis_agent.md` / `doc_analysis_agent.json` | Reads cached docs, diffs against templates using an intent-first reading protocol, and proposes minimal additive improvements — always updating both the `.json` and companion `.md` together |
+
+**Typical cadence**: Run `doc_refresh_agent` monthly (or after a major platform release), then run `doc_analysis_agent` to surface any proposals worth adding to the templates.
+
+```
+doc_refresh_agent  →  updates source_docs/ cache
+doc_analysis_agent →  proposes scored changes; each JSON change paired with companion MD update
+make_agent_qc      →  validates templates (10 dimensions, including MD/JSON companion sync)
+```
+
+Cached source documentation lives in `source_docs/` (one `.md` file per platform source). See `update_agent.md` for a quick navigation guide to both agents.
+
+---
+
 ## What This Is (and Isn't)
 
 **This is a documentation template system** for NGAI agents, designed to be used with an AI assistant.

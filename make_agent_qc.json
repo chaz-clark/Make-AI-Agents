@@ -99,6 +99,22 @@
           "action": "Flag incomplete or generic documentation",
           "priority": "medium",
           "weight": 0.10
+        },
+        {
+          "rule_id": 9,
+          "name": "LLM Agent Parameter Completeness",
+          "condition": "If agent_type is llm_agent: implementation.llm_agent.parameters must include tool_choice, response_format, and disable_parallel_tool_use in addition to temperature/max_tokens",
+          "action": "Flag missing LLM parameters as medium issues; note which are absent",
+          "priority": "medium",
+          "weight": 0.05
+        },
+        {
+          "rule_id": 10,
+          "name": "MD/JSON Companion Sync",
+          "condition": "For every concept documented in JSON (known_failures, guardrails, best_practices entries), the companion MD must have narrative coverage (principle, pitfall, or guidance note). No orphaned JSON entries without MD explanation.",
+          "action": "Flag unmatched JSON entries as consistency issues; list which concepts lack MD narrative",
+          "priority": "medium",
+          "weight": 0.05
         }
       ],
       "evaluation_order": "priority",
@@ -570,7 +586,10 @@
           "Agent name matches between MD and JSON",
           "Version matches between MD and JSON",
           "Description aligns between files",
-          "Complexity level matches sections used"
+          "Complexity level matches sections used",
+          "Each entry in error_handling.known_failures has corresponding MD coverage (pitfall or principle)",
+          "Each entry in constraints.safety_boundaries.guardrails has corresponding MD coverage",
+          "Each entry in operational_guidance.best_practices has corresponding MD coverage"
         ]
       },
       "examples": {
@@ -610,6 +629,27 @@
         ]
       }
     },
+      "llm_parameter_completeness": {
+        "weight": 0.05,
+        "applies_to": "llm_agent type only",
+        "checks": [
+          "implementation.llm_agent.parameters contains tool_choice",
+          "implementation.llm_agent.parameters contains response_format",
+          "implementation.llm_agent.parameters contains disable_parallel_tool_use",
+          "implementation.llm_agent contains mcp_servers field",
+          "Each tool in implementation.llm_agent.tools has a strict field"
+        ]
+      },
+      "md_json_companion_sync": {
+        "weight": 0.05,
+        "checks": [
+          "Every error_handling.known_failures entry has matching MD pitfall or principle",
+          "Every constraints.safety_boundaries.guardrails entry has matching MD guidance",
+          "Every operational_guidance.best_practices entry has matching MD narrative",
+          "MD pitfalls referencing JSON fields correctly name the dot-path location",
+          "No principle or pitfall in MD references a JSON field that does not exist"
+        ]
+      },
     "severity_levels": {
       "critical": "Prevents agent from functioning - fail immediately in strict mode",
       "high": "Significantly impacts quality - major score reduction",
@@ -638,6 +678,20 @@
   "changelog": {
     "_tier": "tier_3_optional",
     "versions": [
+      {
+        "version": "1.2",
+        "date": "2026-03-12",
+        "changes": [
+          "Added rule_id 9: LLM Agent Parameter Completeness — checks for tool_choice, response_format, disable_parallel_tool_use, mcp_servers, strict",
+          "Added rule_id 10: MD/JSON Companion Sync — flags JSON entries in known_failures/guardrails/best_practices with no MD narrative counterpart",
+          "Added companion sync checks to consistency dimension in validation_rules_detailed",
+          "Added llm_parameter_completeness and md_json_companion_sync dimensions to validation_rules_detailed",
+          "Added Principle 6 (MD/JSON Companion Sync) to make_agent_qc.md",
+          "Updated Quality Dimensions count from 8 to 10 in make_agent_qc.md"
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      },
       {
         "version": "1.1",
         "date": "2025-12-15",

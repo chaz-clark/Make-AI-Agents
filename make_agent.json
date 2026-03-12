@@ -105,13 +105,18 @@
         {
           "name": "tool_name",
           "description": "",
-          "parameters": {}
+          "parameters": {},
+          "strict": null
         }
       ],
+      "mcp_servers": [],
       "parameters": {
         "temperature": 0.7,
         "max_tokens": 2000,
-        "top_p": 1.0
+        "top_p": 1.0,
+        "tool_choice": "auto",
+        "response_format": null,
+        "disable_parallel_tool_use": false
       }
     },
     "api_agent": {
@@ -214,13 +219,28 @@
     "optional": true,
     "when_to_use": [],
     "when_not_to_use": [],
-    "best_practices": [],
+    "best_practices": [
+      {
+        "practice": "lifecycle_hooks",
+        "description": "Instrument on_tool_call, on_tool_result, and on_agent_end hooks for observability; use hooks for metrics, logging, and guardrail triggers rather than embedding logic in tools"
+      },
+      {
+        "practice": "tool_count_limit",
+        "description": "Keep tool count to 10-20 per agent; beyond this threshold model performance degrades. Split large tool sets across specialized sub-agents."
+      }
+    ],
     "alternatives": []
   },
   "error_handling": {
     "_tier": "tier_2_recommended",
     "optional": true,
-    "known_failures": [],
+    "known_failures": [
+      {
+        "failure": "infinite_tool_loop",
+        "cause": "Model repeatedly calls tools without reaching a stopping condition",
+        "mitigation": "Set max_turns limit; use tool_choice=auto (not required) after first tool call; implement loop detection in tool runner"
+      }
+    ],
     "fallbacks": [],
     "retry_strategy": {
       "max_retries": 3,
@@ -320,7 +340,13 @@
     },
     "safety_boundaries": {
       "prohibited_actions": [],
-      "guardrails": [],
+      "guardrails": [
+        {
+          "type": "input_output_guardrail",
+          "description": "Run input validation before agent processes user message; run output validation before returning result to caller",
+          "implementation": "parallel guardrail checks (OpenAI pattern) or pre/post hooks (Anthropic pattern)"
+        }
+      ],
       "human_in_the_loop": ""
     },
     "compliance": {
@@ -352,6 +378,20 @@
     "_tier": "tier_3_optional",
     "optional": true,
     "versions": [
+      {
+        "version": "3.2",
+        "date": "2026-03-12",
+        "changes": [
+          "Added tool_choice, response_format, disable_parallel_tool_use to implementation.llm_agent.parameters (4-platform convergence)",
+          "Added strict field to llm_agent.tools tool definition schema",
+          "Added mcp_servers array to implementation.llm_agent",
+          "Added infinite_tool_loop known failure entry to error_handling.known_failures",
+          "Added input_output_guardrail entry to constraints.safety_boundaries.guardrails",
+          "Added lifecycle_hooks and tool_count_limit entries to operational_guidance.best_practices"
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      },
       {
         "version": "1.0",
         "date": "YYYY-MM-DD",

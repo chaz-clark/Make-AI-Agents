@@ -1,0 +1,349 @@
+{
+  "_metadata": {
+    "template_version": "1.0",
+    "last_updated": "2026-03-11",
+    "description": "Doc Refresh Agent — fetches live AI platform documentation and writes results to source_docs/ cache files. Does not analyze or propose changes.",
+    "instructions": "Load sources list and fetch_config. Fetch stale or failed sources. Write results to cache_file paths. Never write to template files.",
+    "usage": "JSON = source list, fetch config, validation. MD = philosophy, pitfalls, usage.",
+    "companion_files": {
+      "conceptual_guide": "doc_refresh_agent.md",
+      "output_folder": "source_docs/",
+      "downstream_agent": "doc_analysis_agent.json"
+    },
+    "agent_details": {
+      "agent_name": "DocRefreshAgent",
+      "version": "1.0",
+      "last_updated": "2026-03-11",
+      "description": "Fetches live documentation from AI platform URLs and writes results to source_docs/ cache files for use by the doc_analysis_agent.",
+      "owner": "Repo Maintainer",
+      "complexity": "simple"
+    }
+  },
+  "agent_type": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "type": "workflow",
+    "description": "Linear workflow: check staleness → fetch stale sources → write cache files → validate → report."
+  },
+  "implementation": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "workflow_based": {
+      "optional": false,
+      "steps": [
+        {
+          "step": 1,
+          "name": "Check Staleness",
+          "description": "Read each cache_file from source_docs/. Parse the metadata header for last_fetched and fetch_status. Flag sources older than staleness_threshold_days or with fetch_status of 'failed'. Sources with fetch_method: manual are listed in the report but not fetched.",
+          "input": "sources list from this JSON",
+          "output": "list of stale/failed sources to fetch; list of current sources to skip"
+        },
+        {
+          "step": 2,
+          "name": "Fetch",
+          "description": "For each stale or failed source (where fetch_method != manual), fetch the source_url using WebFetch with Cache-Control: no-cache. Retry up to max_retries on timeout or transient errors. Do not retry on 403/404.",
+          "input": "source URL from sources[].url",
+          "output": "raw fetched content + HTTP status"
+        },
+        {
+          "step": 3,
+          "name": "Validate Fetch",
+          "description": "Before writing, verify: fetched content length > min_content_length, content is not an error page (check for 403/404 keywords in body), content contains at least one recognizable documentation element (header, list, or code block).",
+          "input": "raw fetched content",
+          "output": "validated content or fetch_status: failed with reason"
+        },
+        {
+          "step": 4,
+          "name": "Write Cache File",
+          "description": "Overwrite the source_docs/ file. Construct a fresh metadata header from the source entry + today's date + fetch result. Preserve any manually added notes from the existing header by appending rather than replacing. Write header + extracted content.",
+          "input": "validated content + source entry + existing notes",
+          "output": "updated source_docs/*.md file"
+        },
+        {
+          "step": 5,
+          "name": "Report",
+          "description": "Output a refresh summary: sources refreshed (with old→new file size), sources skipped (current), sources failed (with reason), sources requiring manual refresh.",
+          "input": "results from all fetch/write operations",
+          "output": "refresh_summary object"
+        }
+      ],
+      "entry_point": "Step 1: Check Staleness",
+      "exit_point": "Step 5: Report — summary of all refresh results"
+    }
+  },
+  "io_contract": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "description": "Reads source list from this JSON, writes to source_docs/ files. Never reads or writes template files.",
+    "inputs": [
+      {
+        "name": "sources",
+        "type": "array",
+        "format": "Array of source objects from this JSON",
+        "example": "See sources array below",
+        "required": true
+      },
+      {
+        "name": "target_sources",
+        "type": "array",
+        "format": "Optional list of specific cache_file paths to refresh. If empty, refresh all stale sources.",
+        "example": "['source_docs/anthropic_tool_use.md']",
+        "required": false
+      }
+    ],
+    "outputs": [
+      {
+        "name": "updated_cache_files",
+        "type": "array",
+        "format": "List of source_docs/*.md files written during this run",
+        "example": "['source_docs/anthropic_tool_use.md', 'source_docs/google_structured_output.md']",
+        "conditions": "Only files successfully fetched and written"
+      },
+      {
+        "name": "refresh_summary",
+        "type": "object",
+        "format": "{ refreshed: [], skipped: [], failed: [], manual_required: [], run_date: '' }",
+        "example": "{ refreshed: ['anthropic_tool_use.md'], skipped: ['anthropic_agent_sdk.md'], failed: [], manual_required: ['anthropic_agents.md'], run_date: '2026-03-11' }",
+        "conditions": "Always produced"
+      }
+    ],
+    "side_effects": "Writes to source_docs/*.md files only. Never modifies make_agent.md, make_agent.json, make_gem_qc.md, make_gem_qc.json, or any other repo file."
+  },
+  "primary_data": {
+    "_tier": "tier_1_core",
+    "_required_for": ["workflow"],
+    "description": "Source list and fetch configuration",
+    "sources": [
+      {
+        "platform": "Anthropic",
+        "label": "Claude Agents Overview",
+        "url": "https://docs.anthropic.com/en/docs/build-with-claude/agents",
+        "cache_file": "source_docs/anthropic_agents.md",
+        "section_focus": "agent patterns, tool use, memory, orchestration",
+        "fetch_method": "auto",
+        "last_refresh_status": "failed",
+        "last_refresh_date": "2026-03-11",
+        "notes": "URL 404s at redirect destination. Re-attempt periodically — Anthropic may restore this path."
+      },
+      {
+        "platform": "Anthropic",
+        "label": "Tool Use Guide",
+        "url": "https://docs.anthropic.com/en/docs/build-with-claude/tool-use",
+        "cache_file": "source_docs/anthropic_tool_use.md",
+        "section_focus": "tool_choice, fallback handling, strict mode, parallel tool use, tool runner, MCP tools",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-03-11",
+        "notes": ""
+      },
+      {
+        "platform": "Anthropic",
+        "label": "Claude Agent SDK",
+        "url": "https://docs.anthropic.com/en/docs/claude-code/sdk",
+        "cache_file": "source_docs/anthropic_agent_sdk.md",
+        "section_focus": "agent SDK, agent loop, subagents, sessions, hooks, compaction, permissions",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-03-11",
+        "notes": "Formerly Claude Code SDK. Redirects to platform.claude.com/docs/en/agent-sdk/overview."
+      },
+      {
+        "platform": "Google",
+        "label": "Gemini API Agentic Capabilities",
+        "url": "https://ai.google.dev/gemini-api/docs/agentic-capabilities",
+        "cache_file": "source_docs/google_gemini_agentic.md",
+        "section_focus": "function calling, parallel/compositional calling, thinking models, MCP, best practices",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-03-11",
+        "notes": "Original URL 404s. Content retrieved from function calling and thinking sub-pages. Try fetching https://ai.google.dev/gemini-api/docs/function-calling directly on next refresh."
+      },
+      {
+        "platform": "Google",
+        "label": "Gemini Structured Output",
+        "url": "https://ai.google.dev/gemini-api/docs/structured-output",
+        "cache_file": "source_docs/google_structured_output.md",
+        "section_focus": "response_mime_type, response_json_schema, JSON schema features, structured output vs function calling",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-03-11",
+        "notes": ""
+      },
+      {
+        "platform": "OpenAI",
+        "label": "OpenAI Agents SDK",
+        "url": "https://openai.github.io/openai-agents-python/",
+        "cache_file": "source_docs/openai_agents_sdk.md",
+        "section_focus": "agents, handoffs, guardrails, lifecycle hooks, tool_choice, structured output, MCP, multi-agent patterns",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-03-11",
+        "notes": "platform.openai.com returns 403 for all docs URLs. Using GitHub Pages instead. Also fetch https://openai.github.io/openai-agents-python/agents/ and merge."
+      },
+      {
+        "platform": "xAI",
+        "label": "Grok API Overview",
+        "url": "https://docs.x.ai/docs/overview",
+        "cache_file": "source_docs/xai_overview.md",
+        "section_focus": "function calling, tool_choice, parallel tools, Pydantic schemas, built-in tools, model tiers",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-03-11",
+        "notes": "Main overview page is sparse. Also fetch https://docs.x.ai/docs/function-calling and https://docs.x.ai/docs/models and merge on next refresh."
+      }
+    ]
+  },
+  "fetch_config": {
+    "staleness_threshold_days": 30,
+    "max_retries": 2,
+    "retry_on": ["timeout", "connection_error"],
+    "no_retry_on": ["403", "404"],
+    "timeout_seconds": 20,
+    "headers": {
+      "Cache-Control": "no-cache"
+    },
+    "min_content_length": 500,
+    "suspect_overwrite_threshold": 0.20,
+    "metadata_header_format": "---\nplatform: {platform}\nlabel: {label}\nsource_url: {url}\nlast_fetched: {date}\nfetch_status: {status}\nnotes: {notes}\n---\n",
+    "strip_patterns": [
+      "nav", "footer", "sidebar", "cookie banner", "sign-in prompt", "breadcrumb"
+    ],
+    "keep_patterns": [
+      "headings", "paragraphs", "code blocks", "tables", "numbered lists", "bulleted lists"
+    ]
+  },
+  "dependencies": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "packages": [],
+    "files": [
+      "source_docs/anthropic_agents.md",
+      "source_docs/anthropic_tool_use.md",
+      "source_docs/anthropic_agent_sdk.md",
+      "source_docs/google_gemini_agentic.md",
+      "source_docs/google_structured_output.md",
+      "source_docs/openai_agents_sdk.md",
+      "source_docs/xai_overview.md"
+    ],
+    "models": [],
+    "apis": ["WebFetch (HTTP GET with Cache-Control: no-cache)"],
+    "data_sources": ["7 public AI platform documentation URLs — see sources array"],
+    "environment_variables": [],
+    "optional_dependencies": {
+      "description": "No LLM required. Pure fetch + write workflow.",
+      "packages": []
+    }
+  },
+  "validation": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "description": "How to verify the refresh agent is working correctly",
+    "pre_run_checklist": [
+      "source_docs/ folder exists and is writable",
+      "All source URLs are reachable (ping test)",
+      "doc_refresh_agent.json is valid JSON with all required source fields"
+    ],
+    "post_run_checklist": [
+      "Each refreshed file is larger than min_content_length (500 bytes)",
+      "Each refreshed file starts with the --- metadata header",
+      "last_fetched in each header matches today's date",
+      "fetch_status is 'success' or 'failed' — never empty",
+      "No template files (make_agent.md etc.) were modified"
+    ],
+    "success_criteria": [
+      "At least 1 source successfully refreshed per run",
+      "No source_docs file overwritten with content shorter than 20% of its previous size",
+      "refresh_summary produced with all sources accounted for"
+    ],
+    "test_cases": [
+      {
+        "name": "Successful refresh",
+        "input": "Source with last_fetched 45 days ago, URL returns 200",
+        "expected_output": "cache_file updated, last_fetched = today, fetch_status: success, file size > 500 bytes",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Graceful 403 handling",
+        "input": "Source URL returns HTTP 403",
+        "expected_output": "cache_file written with fetch_status: failed, original content preserved, no retry attempted, listed in refresh_summary.failed",
+        "validation_method": "exact"
+      },
+      {
+        "name": "Suspect overwrite blocked",
+        "input": "Source URL returns 200 but content is 150 bytes (< 20% of existing 9KB file)",
+        "expected_output": "Write blocked, file staged as .new for review, warning in refresh_summary",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Template files untouched",
+        "input": "Full refresh run on all 7 sources",
+        "expected_output": "make_agent.md, make_agent.json, make_gem_qc.md, make_gem_qc.json are byte-identical to pre-run state",
+        "validation_method": "exact"
+      }
+    ],
+    "tolerance": {
+      "numeric": "File size comparisons allow ±50 bytes",
+      "string": "fetch_status must be exact match",
+      "structural": "Metadata header fields must all be present"
+    },
+    "commands": []
+  },
+  "error_handling": {
+    "_tier": "tier_2_recommended",
+    "optional": false,
+    "known_failures": [
+      {
+        "error": "HTTP 403 Forbidden",
+        "cause": "Platform blocks automated fetching (e.g., platform.openai.com)",
+        "action": "Mark fetch_status: failed, do not retry, note in refresh_summary.manual_required"
+      },
+      {
+        "error": "HTTP 404 Not Found",
+        "cause": "URL moved or page deleted",
+        "action": "Mark fetch_status: failed, update source entry notes with 'URL may have moved', do not retry"
+      },
+      {
+        "error": "Content too short (< min_content_length)",
+        "cause": "JS-rendered page, error page, or redirect to login",
+        "action": "Mark fetch_status: failed, preserve original cache file, add note about JS rendering"
+      },
+      {
+        "error": "Suspect overwrite (new content < 20% of existing)",
+        "cause": "Page returned much less content than before — possible error page or redirect",
+        "action": "Stage new content as cache_file.new for human review, preserve original, warn in summary"
+      }
+    ],
+    "fallbacks": [
+      {
+        "condition": "All sources fail",
+        "action": "Abort with clear error, leave all cache files unchanged, output summary of all failures"
+      }
+    ],
+    "retry_strategy": {
+      "max_retries": 2,
+      "backoff": "linear",
+      "timeout_per_attempt": "20s",
+      "note": "Only retry on transient errors (timeout, connection reset). Never retry 403/404."
+    },
+    "timeout_behavior": "Mark as failed after timeout, continue to next source",
+    "error_reporting": "All failures included in refresh_summary with HTTP status and reason"
+  },
+  "changelog": {
+    "_tier": "tier_3_optional",
+    "optional": false,
+    "versions": [
+      {
+        "version": "1.0",
+        "date": "2026-03-11",
+        "changes": [
+          "Initial version — split from update_agent.json (formerly Mode B: Refresh)",
+          "7 sources across Anthropic (3), Google (2), OpenAI (1, GitHub Pages), xAI (1)",
+          "Fetch config: staleness_threshold_days 30, max_retries 2, suspect_overwrite_threshold 20%",
+          "Strict write-to-source_docs-only constraint"
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      }
+    ]
+  }
+}

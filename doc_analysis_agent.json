@@ -1,0 +1,699 @@
+{
+  "_metadata": {
+    "template_version": "1.1",
+    "last_updated": "2026-03-11",
+    "description": "Doc Analysis Agent — reads cached source docs from source_docs/, diffs against templates using intent-first reading protocol, applies necessity test, scores candidates, and proposes minimal additive improvements for human approval. Does not fetch live documentation.",
+    "instructions": "Read source files from primary_data.sources[].cache_file. Apply reading_protocol before diffing. Gate candidates through necessity_test. Score survivors. Generate minimal proposals. Present. Halt. Apply only after per-proposal approval.",
+    "usage": "JSON = source list, update targets, diff rules, scoring rubric, proposal template, validation. MD = philosophy, pitfalls, usage.",
+    "companion_files": {
+      "conceptual_guide": "doc_analysis_agent.md",
+      "source_docs_folder": "source_docs/",
+      "upstream_agent": "doc_refresh_agent.json",
+      "target_files": [
+        "make_agent.md",
+        "make_agent.json",
+        "make_gem_qc.md",
+        "make_gem_qc.json",
+        "README.md"
+      ]
+    },
+    "agent_details": {
+      "agent_name": "DocAnalysisAgent",
+      "version": "1.0",
+      "last_updated": "2026-03-11",
+      "description": "Reads cached platform documentation from source_docs/ and surfaces additive improvements to repo templates with source citations, for human approval.",
+      "owner": "Repo Maintainer",
+      "complexity": "standard"
+    }
+  },
+  "agent_type": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "type": "workflow",
+    "description": "Linear workflow: check cache freshness → load sources → load targets → diff and score → generate proposals → present for approval → (on approval) apply changes. LLM used for diff interpretation and proposal generation."
+  },
+  "implementation": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "workflow_based": {
+      "optional": false,
+      "steps": [
+        {
+          "step": 1,
+          "name": "Check Cache Freshness",
+          "description": "Read each cache_file from source_docs/. Parse the metadata header for last_fetched and fetch_status. Sources with fetch_status 'success' or 'partial' and last_fetched within staleness_threshold_days are ready. Sources with 'failed' status are noted in the run_summary but do not block analysis — proceed with available sources. If most sources are stale, warn and recommend running doc_refresh_agent first.",
+          "input": "sources list from this JSON",
+          "output": "list of available sources with content; list of unavailable/stale sources for run_summary"
+        },
+        {
+          "step": 2,
+          "name": "Load Source Content",
+          "description": "Read full content from each available cache_file. Parse metadata header (platform, label, source_url, last_fetched, fetch_status, notes) and extract body content for diffing.",
+          "input": "cache_file paths from step 1",
+          "output": "parsed source content per platform with metadata"
+        },
+        {
+          "step": 3,
+          "name": "Load Target Templates",
+          "description": "Read current content of all target files listed in primary_data.update_targets.",
+          "input": "file paths in primary_data.update_targets",
+          "output": "parsed content of make_agent.md, make_agent.json, make_gem_qc.md, make_gem_qc.json, README.md"
+        },
+        {
+          "step": 4,
+          "name": "Read for Intent",
+          "description": "Before diffing, internalize each template section's purpose. For each eligible section in update_targets, write one sentence stating what it is designed to accomplish. Then read source content through that lens. The question is not 'does this phrase appear in the template?' but 'does this concept serve the template section's purpose?' Follow primary_data.reading_protocol for the per-section procedure.",
+          "input": "template content + reading_protocol",
+          "output": "per-section intent summaries; source candidates filtered to only those that add to the intent (not restate it)"
+        },
+        {
+          "step": 5,
+          "name": "Diff and Apply Necessity Test",
+          "description": "Apply diff_rules to identify content in source docs not represented in target templates (by intent, not just keywords). Filter exclude_patterns. Classify each candidate as add, extend, or replace — silently drop replace-type. Then gate every remaining candidate through primary_data.necessity_test: ask 'If this proposal weren't applied, would a practitioner miss something important?' Drop candidates that fail the necessity test before scoring.",
+          "input": "source content + template content + diff_rules + necessity_test",
+          "output": "list of add/extend candidates that passed necessity gate — with target section, source reference, and change_type"
+        },
+        {
+          "step": 6,
+          "name": "Score Candidates",
+          "description": "Score each candidate that passed the necessity test using the scoring rubric (5 criteria, 0-100). After per-source scoring, deduplicate candidates by pattern identity and apply convergence bonus for patterns appearing in 2+ platform sources. Filter out candidates below min_threshold.",
+          "input": "candidate list + scoring rubric",
+          "output": "scored and ranked proposal list, filtered by min_threshold"
+        },
+        {
+          "step": 7,
+          "name": "Generate Minimal Proposals",
+          "description": "Format each scored candidate as a structured change proposal using proposal_template. CRITICAL: proposed_text must contain only the exact minimal text to add — no explanation, no background, no examples. Rationale carries all explanation. Include existing_context (the adjacent content in the target file) and insertion_point (exactly where the addition goes). Merge convergence candidates into single proposals with multi-platform attribution. COMPANION SYNC: For every proposal targeting a .json file, check the companion .md (via update_targets[].companion_sync_rule) — if the .md lacks narrative guidance for the proposed concept, generate a companion .md proposal and link them with a companion_of field. Vice versa for .md proposals. Companion proposals are presented and approved together.",
+          "input": "scored candidates + proposal_template + update_targets companion_sync_rules",
+          "output": "formatted proposal list sorted by score descending; companion pairs grouped together; each with minimal proposed_text and full rationale"
+        },
+        {
+          "step": 8,
+          "name": "Present for Approval",
+          "description": "Output all proposals with numbering and run_summary. Halt. Do not modify any files. Wait for explicit per-proposal approval. This is the mandatory human approval gate. run_summary must include a tldr field: 1-2 plain-English sentences stating which file(s) are affected, the themes of the proposals, and the net effect if all were approved.",
+          "input": "formatted proposal list",
+          "output": "numbered proposal list + run_summary (including tldr) displayed to human"
+        },
+        {
+          "step": 9,
+          "name": "Apply Approved Changes",
+          "description": "For each approved proposal ID, apply ONLY the proposed_text to the target file at the insertion_point. Do not apply rationale or explanation to the file. Append new entries; do not overwrite existing non-placeholder content. After applying, append a changelog entry to this JSON.",
+          "input": "approved proposal IDs + proposal list",
+          "output": "updated target files (proposed_text only); changelog entry appended to doc_analysis_agent.json"
+        }
+      ],
+      "entry_point": "Step 1: Check Cache Freshness",
+      "exit_point": "Step 8 (present and halt) OR Step 9 (apply approved changes only)"
+    },
+    "llm_agent": {
+      "optional": true,
+      "model": "claude-sonnet-4-6",
+      "system_prompt": "You are a documentation analyst and surgical editor specializing in AI agent and skill design patterns. Your goal is precision, not volume — propose only what is genuinely missing and truly necessary. Follow this sequence: (1) For each template section, state in one sentence what it is designed to accomplish. (2) Read source docs through that lens — ask 'does this add to the section's purpose, or express the same purpose differently?' Semantically equivalent content in different words is NOT a gap. (3) Apply the necessity test: 'If this proposal weren't applied, would a practitioner miss something important?' If no, drop the candidate. (4) For candidates that pass, propose the minimum viable change — proposed_text must be only the exact text to add, never an explanation. Rationale explains; proposed_text is the surgical incision. (5) Include existing_context showing what is already adjacent in the target section, so the reviewer can judge fit. You do NOT modify files. Every proposal must include the exact source URL from the cache file metadata header.",
+      "tools": [
+        {
+          "name": "Read",
+          "description": "Read cached source docs and target template files",
+          "parameters": {
+            "file_path": "string"
+          }
+        }
+      ],
+      "parameters": {
+        "temperature": 0.2,
+        "max_tokens": 4000
+      }
+    }
+  },
+  "io_contract": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "description": "Reads source_docs/ cache files and target template files. Outputs proposal list. No files are modified until explicit per-proposal approval.",
+    "inputs": [
+      {
+        "name": "sources",
+        "type": "array",
+        "format": "Array of source objects from this JSON (each has cache_file path)",
+        "example": "See primary_data.sources",
+        "required": true
+      },
+      {
+        "name": "target_sources",
+        "type": "array",
+        "format": "Optional list of specific cache_file paths to restrict analysis to. If empty, analyze all available sources.",
+        "example": "['source_docs/anthropic_tool_use.md']",
+        "required": false
+      }
+    ],
+    "outputs": [
+      {
+        "name": "proposals",
+        "type": "array",
+        "format": "Array of change_proposal objects per proposal_template schema",
+        "example": "See primary_data.proposal_template",
+        "conditions": "Only proposals scoring >= min_threshold are included"
+      },
+      {
+        "name": "run_summary",
+        "type": "object",
+        "format": "{ sources_read, sources_skipped, candidates_found, proposals_surfaced, convergence_bonuses_applied, run_date, tldr }",
+        "example": "{ sources_read: 6, sources_skipped: 1, candidates_found: 14, proposals_surfaced: 4, convergence_bonuses_applied: 2, run_date: '2026-03-11', tldr: '4 proposals targeting make_agent.json: adds tool_choice, response_format, and disable_parallel_tool_use to llm_agent parameters; adds a known failure entry for tool call retry exhaustion.' }",
+        "conditions": "Always produced, even when zero proposals meet threshold. tldr is 1-2 sentences naming the target file(s), the themes of the proposals, and the net effect if all were approved."
+      }
+    ],
+    "side_effects": "None until Step 8. Step 8 modifies target files only for approved proposals and appends to changelog in doc_analysis_agent.json. Never modifies source_docs/ files — that is doc_refresh_agent's domain."
+  },
+  "primary_data": {
+    "_tier": "tier_1_core",
+    "_required_for": ["workflow", "llm_agent"],
+    "description": "Source list, update targets, diff rules, scoring rubric, and proposal template",
+    "staleness_threshold_days": 30,
+    "reading_protocol": {
+      "description": "Procedure for reading source docs and template sections before diffing. Applied per eligible section in update_targets.",
+      "steps": [
+        {
+          "step": 1,
+          "name": "State the section's intent",
+          "instruction": "Before reading any source content, write one sentence: 'This section exists to [accomplish X].' Do not proceed until this is written.",
+          "example": "For make_agent.json → error_handling.fallbacks: 'This section exists to tell the agent what to do when its primary action fails, so it degrades gracefully instead of silently.'"
+        },
+        {
+          "step": 2,
+          "name": "Read the section's existing content",
+          "instruction": "Read all existing entries in the section. Understand them in terms of the intent statement — what is already covered? What gaps remain within that intent?",
+          "example": "error_handling.fallbacks is currently empty. The intent is unmet — no fallback behaviors are defined yet."
+        },
+        {
+          "step": 3,
+          "name": "Read the source doc through the intent lens",
+          "instruction": "For each source doc paragraph or pattern, ask: 'Does this add to the intent I stated, or does it describe the same thing in different words?' Only candidates that genuinely add to the intent proceed. Candidates that restate the intent differently are dropped here — before scoring.",
+          "example": "Source says 'fail gracefully on tool errors.' Template says nothing about fallback on tool error. Concept is absent → proceed. Source also says 'handle errors robustly' — vague restatement, not a new concept → drop."
+        },
+        {
+          "step": 4,
+          "name": "Identify the minimum text needed",
+          "instruction": "For each candidate that passes step 3, ask: 'What is the smallest text that adds this concept to the section?' This becomes proposed_text. The explanation of why it matters goes in rationale — never in proposed_text.",
+          "example": "Candidate: tool_choice parameter. Minimum text: { 'tool_choice': 'auto|required|none|<tool_name> — forces or restricts tool use per call.' } That's the proposed_text. The three-paragraph explanation belongs in rationale."
+        }
+      ]
+    },
+    "necessity_test": {
+      "description": "Gate applied to every candidate before scoring. A candidate that fails the necessity test is dropped silently — it does not reach the scoring step or the proposal list.",
+      "question": "If this proposal were NOT applied, would a practitioner building an agent with this template miss something important or make a meaningful error?",
+      "proceed_if": [
+        "The concept is genuinely absent from all target files — not just phrased differently",
+        "The omission could lead a practitioner to design something incorrectly or incompletely",
+        "The addition would close a real gap, not just add a synonym or alternative phrasing",
+        "The addition is specific enough to be actionable — a concrete parameter, rule, or step"
+      ],
+      "drop_if": [
+        "The concept is already present in any target file, even in different words",
+        "The omission is stylistic, not functional — the template works correctly without it",
+        "The addition would be 'nice to have' but a practitioner would discover it naturally during implementation",
+        "The source content is platform-specific and unlikely to generalize across agents",
+        "The addition describes a known or obvious practice that requires no explicit documentation"
+      ],
+      "borderline_rule": "When in doubt, drop. A shorter, higher-confidence proposal list is more valuable than a longer, noisier one. The convergence bonus exists precisely to elevate patterns that are genuinely important — if a pattern doesn't appear in 2+ sources, be more conservative about necessity."
+    },
+    "sources": [
+      {
+        "platform": "Anthropic",
+        "label": "Claude Agents Overview",
+        "url": "https://docs.anthropic.com/en/docs/build-with-claude/agents",
+        "cache_file": "source_docs/anthropic_agents.md",
+        "section_focus": "agent patterns, tool use, memory, orchestration",
+        "notes": "Currently fetch_status: failed — URL 404s at redirect. Excluded from analysis until refreshed successfully."
+      },
+      {
+        "platform": "Anthropic",
+        "label": "Tool Use Guide",
+        "url": "https://docs.anthropic.com/en/docs/build-with-claude/tool-use",
+        "cache_file": "source_docs/anthropic_tool_use.md",
+        "section_focus": "tool_choice, fallback handling, strict mode, parallel tool use, tool runner",
+        "notes": "Last fetch: 2026-03-11 success. Key source for tool_choice, error_handling.fallbacks, implementation.llm_agent.parameters."
+      },
+      {
+        "platform": "Anthropic",
+        "label": "Claude Agent SDK",
+        "url": "https://docs.anthropic.com/en/docs/claude-code/sdk",
+        "cache_file": "source_docs/anthropic_agent_sdk.md",
+        "section_focus": "agent SDK patterns, subagents, sessions, hooks, compaction, permissions",
+        "notes": "Last fetch: 2026-03-11 success."
+      },
+      {
+        "platform": "Google",
+        "label": "Gemini API Agentic Capabilities",
+        "url": "https://ai.google.dev/gemini-api/docs/agentic-capabilities",
+        "cache_file": "source_docs/google_gemini_agentic.md",
+        "section_focus": "function calling, parallel/compositional calling, thinking models, MCP, best practices",
+        "notes": "Last fetch: 2026-03-11 partial. Content from function calling and thinking sub-pages."
+      },
+      {
+        "platform": "Google",
+        "label": "Gemini Structured Output",
+        "url": "https://ai.google.dev/gemini-api/docs/structured-output",
+        "cache_file": "source_docs/google_structured_output.md",
+        "section_focus": "response_mime_type, response_json_schema, JSON schema features, structured output vs function calling",
+        "notes": "Last fetch: 2026-03-11 success."
+      },
+      {
+        "platform": "OpenAI",
+        "label": "OpenAI Agents SDK",
+        "url": "https://openai.github.io/openai-agents-python/",
+        "cache_file": "source_docs/openai_agents_sdk.md",
+        "section_focus": "agent primitives, handoffs, guardrails, lifecycle hooks, tool_choice, structured output, MCP, multi-agent patterns",
+        "notes": "Last fetch: 2026-03-11 success. platform.openai.com 403s — using GitHub Pages docs."
+      },
+      {
+        "platform": "xAI",
+        "label": "Grok API Overview",
+        "url": "https://docs.x.ai/docs/overview",
+        "cache_file": "source_docs/xai_overview.md",
+        "section_focus": "function calling, tool_choice, parallel tools, Pydantic schemas, built-in tools, model tiers",
+        "notes": "Last fetch: 2026-03-11 partial. Main overview sparse — supplemented with function calling and models pages."
+      }
+    ],
+    "update_targets": [
+      {
+        "file": "make_agent.md",
+        "companion_file": "make_agent.json",
+        "companion_sync_rule": "If a proposal adds a new JSON field or array entry to make_agent.json, check whether make_agent.md needs a corresponding narrative update (new principle, pitfall, or guidance note). Propose the MD update as a separate companion proposal in the same run.",
+        "eligible_sections": ["Key Principles", "Core Concepts", "Common Pitfalls and Solutions", "Examples"],
+        "ineligible_sections": ["Mission", "File Organization"],
+        "change_types_allowed": ["add_principle", "add_pitfall", "add_example", "extend_existing"]
+      },
+      {
+        "file": "make_agent.json",
+        "companion_file": "make_agent.md",
+        "companion_sync_rule": "If a proposal adds a new field, parameter, or array entry to make_agent.json, check whether make_agent.md already has narrative guidance for that concept. If not, generate a companion proposal targeting the appropriate MD section (Key Principles or Common Pitfalls). Both proposals should be presented together and approved together.",
+        "eligible_sections": [
+          "implementation.llm_agent.parameters",
+          "implementation.llm_agent.tools",
+          "error_handling.fallbacks",
+          "error_handling.known_failures",
+          "operational_guidance.best_practices",
+          "constraints.safety_boundaries.guardrails",
+          "common_patterns.patterns"
+        ],
+        "ineligible_sections": ["_metadata", "agent_type", "io_contract"],
+        "change_types_allowed": ["add_array_entry", "add_key_to_empty_object", "extend_description"]
+      },
+      {
+        "file": "make_gem_qc.md",
+        "companion_file": "make_gem_qc.json",
+        "companion_sync_rule": "If a proposal adds a new pillar or pitfall to make_gem_qc.md, check whether make_gem_qc.json needs a corresponding validation rule. Propose together.",
+        "eligible_sections": ["The 4 Pillars of Quality", "Common Pitfalls", "Validation Rules"],
+        "ineligible_sections": ["Mission", "File Organization: JSON vs MD"],
+        "change_types_allowed": ["add_pillar", "add_pitfall", "add_rule"]
+      },
+      {
+        "file": "make_gem_qc.json",
+        "companion_file": "make_gem_qc.md",
+        "companion_sync_rule": "If a proposal adds a new validation rule to make_gem_qc.json, check whether make_gem_qc.md has narrative explanation for that rule's intent. If not, propose a companion MD addition.",
+        "eligible_sections": [
+          "validation_rules.rules",
+          "gem_instructions.context.boundaries",
+          "gem_instructions.task.actions"
+        ],
+        "ineligible_sections": ["_metadata", "knowledge_base"],
+        "change_types_allowed": ["add_array_entry", "add_rule"]
+      },
+      {
+        "file": "README.md",
+        "companion_file": null,
+        "companion_sync_rule": "README.md summarizes the doc update system and reflects the current state of make_agent.* and make_gem_qc.* templates. When approved proposals change those templates (e.g., new dimensions, new workflow steps, new template tier counts), check whether the 'Keeping Templates Current' section, the workflow block, or the table descriptions in README.md need updating to stay accurate. Propose README.md changes as standalone extend_existing proposals — no companion needed since README has no JSON pair.",
+        "eligible_sections": ["Keeping Templates Current", "What This Is (and Isn't)", "How This Works (workflow block)"],
+        "ineligible_sections": ["Quickstart", "First-Time User? Start Here", "FAQ", "Suggested folder layout"],
+        "change_types_allowed": ["extend_existing"]
+      }
+    ],
+    "diff_rules": {
+      "include_patterns": [
+        "best practice",
+        "recommended",
+        "should include",
+        "agent pattern",
+        "interaction pattern",
+        "system prompt",
+        "tool_choice",
+        "fallback",
+        "guardrail",
+        "memory",
+        "handoff",
+        "structured output",
+        "response_format",
+        "persona",
+        "format",
+        "context boundary",
+        "workflow step"
+      ],
+      "exclude_patterns": [
+        "pricing",
+        "billing",
+        "deprecated",
+        "beta",
+        "preview",
+        "marketing",
+        "sign up",
+        "trial"
+      ],
+      "change_type_rules": {
+        "add": "Target section exists but is empty, a stub, or a template placeholder",
+        "extend": "Target section exists with real content; proposed addition is orthogonal and non-overlapping",
+        "replace": "BLOCKED — never propose replacements of existing non-placeholder content",
+        "note": "Proposals classified as 'replace' are silently dropped before scoring"
+      },
+      "anti_patterns": [
+        {
+          "name": "Semantic duplicate",
+          "description": "Candidate expresses a concept already in the template but in different words",
+          "action": "Drop before scoring — this is a restatement, not a gap"
+        },
+        {
+          "name": "Explanation in proposed_text",
+          "description": "proposed_text contains rationale, background, or examples rather than the minimal text to insert",
+          "action": "Separate: move explanation to rationale, reduce proposed_text to only the insertion content"
+        },
+        {
+          "name": "Platform-specific quirk",
+          "description": "Candidate describes a behavior unique to one platform (e.g., Gemini-only API parameter) with no general applicability",
+          "action": "Drop unless single-platform finding still scores >= 75 AND passes necessity test"
+        },
+        {
+          "name": "Vague best practice",
+          "description": "Candidate is too generic to be actionable — e.g., 'handle errors robustly', 'write clear prompts'",
+          "action": "Drop — only actionable, concrete additions pass the necessity test"
+        },
+        {
+          "name": "Section boundary violation",
+          "description": "Candidate targets an ineligible section (e.g., _metadata, Mission) or creates a new top-level section not in update_targets",
+          "action": "Drop — only eligible sections per update_targets may be modified"
+        }
+      ]
+    },
+    "scoring": {
+      "description": "Score each candidate addition 0-100 before presenting as a proposal",
+      "min_threshold": 60,
+      "criteria": [
+        {
+          "name": "Absent from all target files",
+          "points": 30,
+          "description": "The pattern or practice is not represented in any section of any target file"
+        },
+        {
+          "name": "Actionable",
+          "points": 25,
+          "description": "The proposed addition can be written as a concrete entry (a rule, a parameter, a principle) not a vague suggestion"
+        },
+        {
+          "name": "Directly maps to eligible section",
+          "points": 20,
+          "description": "There is a clear target section in update_targets where this belongs"
+        },
+        {
+          "name": "Source is official developer documentation",
+          "points": 15,
+          "description": "The source URL is on a developer docs domain, not a blog or marketing page"
+        },
+        {
+          "name": "Recently added or updated in source docs",
+          "points": 10,
+          "description": "The content appears to be new or recently revised based on page metadata or content signals"
+        }
+      ],
+      "convergence_bonus": {
+        "description": "Add bonus points when the same pattern appears independently in 2+ platform documentation sources",
+        "two_platforms": 15,
+        "three_or_more_platforms": 25,
+        "note": "Apply after per-source scoring, before threshold filtering. Merge convergence candidates into a single proposal with multi-platform attribution."
+      }
+    },
+    "proposal_template": {
+      "description": "Schema for each change proposal presented to the human",
+      "fields": {
+        "proposal_id": "integer — sequential, 1-indexed per run",
+        "score": "integer 0-100 — final score after convergence bonus",
+        "tldr": "string — one sentence (≤20 words) summarizing the change for the summary table; describes what the addition does, not why",
+        "platform": "string|array — source platform(s) if convergence detected",
+        "source_url": "string|array — direct URL(s) to the documentation section",
+        "fetched_date": "ISO date — when the source was fetched (from cache file header)",
+        "target_file": "string — which file this change applies to",
+        "target_section": "string — dot-path to the section (e.g. 'error_handling.fallbacks')",
+        "insertion_point": "string — where exactly within the section this goes (e.g. 'append to array', 'after entry X', 'new key in object')",
+        "change_type": "add|extend — never replace",
+        "existing_context": "string — the 1-3 existing entries adjacent to the insertion point, so the reviewer can judge fit and confirm non-overlap",
+        "proposed_text": "string|object — ONLY the exact text or JSON to insert. No explanation. No background. No examples. The minimum viable change.",
+        "rationale": "string — explains what gap this fills, why it matters, and why the necessity test was passed. All explanation lives here, never in proposed_text.",
+        "convergence_note": "string|null — names the other platforms that corroborate this finding",
+        "companion_of": "integer|null — proposal_id of the paired companion proposal for the other file in the .md/.json pair; null if no companion needed"
+      },
+      "example": {
+        "proposal_id": 1,
+        "score": 100,
+        "tldr": "Add tool_choice parameter to control whether model must, may, or cannot use tools per call",
+        "platform": ["Anthropic", "OpenAI", "xAI"],
+        "source_url": [
+          "https://docs.anthropic.com/en/docs/build-with-claude/tool-use",
+          "https://openai.github.io/openai-agents-python/agents/",
+          "https://docs.x.ai/docs/function-calling"
+        ],
+        "fetched_date": "2026-03-11",
+        "target_file": "make_agent.json",
+        "target_section": "implementation.llm_agent.parameters",
+        "insertion_point": "append new key to the parameters object, after 'top_p'",
+        "change_type": "extend",
+        "existing_context": "{ 'temperature': 0.2, 'max_tokens': 4000, 'top_p': 1.0 }",
+        "proposed_text": {
+          "tool_choice": "auto|required|none|<tool_name>"
+        },
+        "rationale": "Section intent: this section defines the LLM call parameters that govern how the model behaves during agent execution. Current entries cover output quality (temperature, top_p) and size (max_tokens), but say nothing about tool invocation control. All three source platforms document tool_choice as a first-class parameter controlling whether the model must use a tool (required), may use one (auto), is prevented from using tools (none), or is forced to use a specific tool (<tool_name>). This is absent from the template and a practitioner building a tool-using agent has no guidance on this parameter. Necessity test passed: omitting this leaves a genuine gap for any agent that needs deterministic tool control. Proposed text is the minimal key-value addition only — the explanation lives here.",
+        "convergence_note": "Identical four-value enum (auto/required/none/<tool_name>) documented independently in Anthropic tool use guide, OpenAI Agents SDK agents/ page, and xAI function calling guide."
+      }
+    }
+  },
+  "dependencies": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "packages": [],
+    "files": [
+      "make_agent.md",
+      "make_agent.json",
+      "make_gem_qc.md",
+      "make_gem_qc.json",
+      "README.md",
+      "source_docs/anthropic_agents.md",
+      "source_docs/anthropic_tool_use.md",
+      "source_docs/anthropic_agent_sdk.md",
+      "source_docs/google_gemini_agentic.md",
+      "source_docs/google_structured_output.md",
+      "source_docs/openai_agents_sdk.md",
+      "source_docs/xai_overview.md"
+    ],
+    "models": ["claude-sonnet-4-6"],
+    "apis": [],
+    "data_sources": ["source_docs/ folder — 7 cached platform documentation files (populated by doc_refresh_agent)"],
+    "environment_variables": [],
+    "optional_dependencies": {
+      "description": "No WebFetch required. Fully offline — reads only local source_docs/ cache files.",
+      "packages": []
+    }
+  },
+  "validation": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "description": "How to verify the analysis agent is working correctly",
+    "pre_run_checklist": [
+      "source_docs/ folder exists and at least 1 file has fetch_status: success or partial",
+      "All 4 target files exist in the repo root",
+      "doc_analysis_agent.json is valid JSON with all required fields",
+      "scoring.min_threshold is set (default 60)"
+    ],
+    "post_run_checklist": [
+      "Every proposal includes a non-null source_url",
+      "Every proposal has change_type == 'add' or 'extend' (never 'replace')",
+      "Proposals are sorted by score descending",
+      "run_summary includes sources_read and sources_skipped counts",
+      "No target files were modified before explicit approval"
+    ],
+    "success_criteria": [
+      "At least 1 proposal is generated when source docs contain patterns absent from templates",
+      "Zero proposals are generated when source docs contain only patterns already in templates",
+      "Convergence bonus correctly increases score for 2+ platform matches",
+      "No file modifications occur before Step 8",
+      "All proposals include source_url, platform, fetched_date, and rationale"
+    ],
+    "test_cases": [
+      {
+        "name": "New pattern absent from all templates",
+        "input": "Cache file containing 'agent handoff protocol' — not present in any template",
+        "expected_output": "At least 1 proposal with target_section in update_targets, score >= 60",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Existing pattern already in templates",
+        "input": "Cache file containing content identical to existing make_agent.md Key Principles",
+        "expected_output": "Zero proposals for that content",
+        "validation_method": "exact"
+      },
+      {
+        "name": "Convergence bonus applied",
+        "input": "Same pattern in both openai_agents_sdk.md and google_gemini_agentic.md",
+        "expected_output": "Single merged proposal with score >= base_score + 15, platform field is array of both",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Replace-type change blocked",
+        "input": "Cache file suggesting rewording of existing make_agent.md Mission section",
+        "expected_output": "Zero proposals — replace-type change filtered before scoring",
+        "validation_method": "exact"
+      },
+      {
+        "name": "Failed source skipped gracefully",
+        "input": "anthropic_agents.md has fetch_status: failed",
+        "expected_output": "Source listed in run_summary.sources_skipped; analysis proceeds on remaining 6 sources",
+        "validation_method": "structural"
+      },
+      {
+        "name": "No files modified before approval",
+        "input": "Full run with 5 proposals generated",
+        "expected_output": "All target files are byte-identical to pre-run state at end of Step 7",
+        "validation_method": "exact"
+      }
+    ],
+    "tolerance": {
+      "numeric": "Score within ±5 of expected is acceptable",
+      "string": "Proposal text comparison: semantic match acceptable, not exact match required",
+      "structural": "All required fields present in proposal object"
+    },
+    "commands": []
+  },
+  "operational_guidance": {
+    "_tier": "tier_2_recommended",
+    "optional": false,
+    "when_to_use": [
+      "Periodic maintenance runs (e.g., monthly) to catch new platform doc updates",
+      "After a major model release from any of the four platforms",
+      "Before a significant revision of make_agent.* or make_gem_qc.* templates",
+      "After running doc_refresh_agent and wanting to check for new patterns"
+    ],
+    "when_not_to_use": [
+      "When source_docs/ files are all older than staleness_threshold_days — run doc_refresh_agent first",
+      "For validating individual agents — use make_agent_qc instead",
+      "For rewriting templates from scratch — this agent is additive only",
+      "For non-documentation sources (blog posts, conference talks)"
+    ],
+    "best_practices": [
+      "Run no more than once per month to avoid noise from minor doc edits",
+      "Review proposals in score order; address highest-value additions first",
+      "Before approving any proposal, open the source_url directly to verify context",
+      "After each approved run, update changelog in this JSON with run_date and approved_count",
+      "If a proposal score is borderline (60-70), open the source URL and re-read before deciding",
+      "After applying approved proposals, run make_agent_qc to validate the updated templates"
+    ],
+    "alternatives": [
+      "Manual monthly review: read all source_docs/ files directly and compare to templates",
+      "RSS/changelog monitoring: some platforms publish doc changelogs"
+    ]
+  },
+  "error_handling": {
+    "_tier": "tier_2_recommended",
+    "optional": false,
+    "known_failures": [
+      {
+        "error": "All source files have fetch_status: failed",
+        "cause": "doc_refresh_agent has not been run, or all refreshes failed",
+        "action": "Abort analysis, output clear error, recommend running doc_refresh_agent"
+      },
+      {
+        "error": "Cache file missing or unreadable",
+        "cause": "source_docs/ file deleted or corrupted",
+        "action": "Skip that source, log warning in run_summary, continue with remaining sources"
+      },
+      {
+        "error": "Zero proposals after full run",
+        "cause": "All detected patterns already in templates, or all sources unavailable",
+        "action": "Output run_summary with explanation; do not report false positives"
+      },
+      {
+        "error": "Target file missing",
+        "cause": "make_agent.md or another target was deleted or renamed",
+        "action": "Abort with clear error listing which target file is missing"
+      }
+    ],
+    "fallbacks": [
+      {
+        "condition": "All sources unavailable or failed",
+        "action": "Abort with clear error, leave all target files unchanged, output summary of all failures"
+      }
+    ],
+    "retry_strategy": {
+      "max_retries": 0,
+      "note": "No retries — this agent reads local files only. No transient errors expected."
+    },
+    "timeout_behavior": "N/A — no network calls",
+    "error_reporting": "All skipped sources and failure reasons included in run_summary"
+  },
+  "changelog": {
+    "_tier": "tier_3_optional",
+    "optional": false,
+    "versions": [
+      {
+        "version": "1.3",
+        "date": "2026-03-12",
+        "changes": [
+          "Added README.md as update_target — eligible sections: Keeping Templates Current, What This Is, workflow block",
+          "README.md has no JSON companion (companion_file: null); changes proposed as standalone extend_existing proposals",
+          "Updated Step 3 description and companion_files.target_files to include README.md",
+          "Updated dependencies.files to include README.md"
+        ],
+        "approved_proposals": 0,
+        "breaking_changes": [],
+        "contributors": []
+      },
+      {
+        "version": "1.2",
+        "date": "2026-03-12",
+        "changes": [
+          "Added tldr field to proposal_template schema — one sentence (<=20 words) per proposal for summary table column",
+          "Updated Step 8 description to require tldr column in summary table output",
+          "Updated Example 1 output to show proposal table with TLDR column",
+          "Applied 9 approved proposals to make_agent.json (see make_agent.json v3.2 changelog)"
+        ],
+        "approved_proposals": 9,
+        "breaking_changes": [],
+        "contributors": []
+      },
+      {
+        "version": "1.1",
+        "date": "2026-03-11",
+        "changes": [
+          "Added reading_protocol — per-section intent-first reading procedure before diffing",
+          "Added necessity_test — explicit go/no-go gate applied before scoring; candidates that fail are dropped silently",
+          "Added anti_patterns to diff_rules — 5 named patterns to drop (semantic duplicates, vague practices, platform-specific quirks, explanation in proposed_text, section boundary violations)",
+          "Added insertion_point and existing_context fields to proposal_template — reviewer now sees exactly where the change goes and what's already adjacent",
+          "Clarified proposed_text vs rationale contract: proposed_text = minimal insertion only; rationale = all explanation",
+          "Updated system_prompt with surgical reading instructions and the necessity test question",
+          "Workflow steps renumbered: Read for Intent (step 4) inserted before Diff; steps shifted to 9 total"
+        ],
+        "approved_proposals": 0,
+        "breaking_changes": [],
+        "contributors": []
+      },
+      {
+        "version": "1.0",
+        "date": "2026-03-11",
+        "changes": [
+          "Initial version — split from update_agent.json (formerly Mode A: Analysis)",
+          "7 sources across Anthropic (3), Google (2), OpenAI (1, GitHub Pages), xAI (1)",
+          "Scoring: 5 criteria + convergence bonus (two_platforms: +15, three_or_more: +25)",
+          "min_threshold: 60",
+          "Additive-only enforcement — replace-type proposals silently dropped before scoring",
+          "Mandatory human approval gate before any file modifications",
+          "Fully offline — reads source_docs/ cache only, no WebFetch"
+        ],
+        "approved_proposals": 0,
+        "breaking_changes": [],
+        "contributors": []
+      }
+    ]
+  }
+}

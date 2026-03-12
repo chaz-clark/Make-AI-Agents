@@ -1,0 +1,613 @@
+{
+  "_metadata": {
+    "template_version": "1.1",
+    "last_updated": "2026-03-11",
+    "description": "Doc Update Agent — reads cached source docs from source_docs/, diffs against templates, proposes additive improvements for human approval. Separate refresh step updates the cache.",
+    "instructions": "Load source files from primary_data.sources (each has a cache_file path). Diff cached content against templates. Never apply changes without per-proposal human approval. To refresh stale sources, fetch their URLs and overwrite their cache_file.",
+    "usage": "JSON = source config, diff rules, scoring, proposal schema. MD = philosophy, workflow, pitfalls. source_docs/ = one .md per platform source.",
+    "companion_files": {
+      "conceptual_guide": "update_agent.md",
+      "source_docs_folder": "source_docs/",
+      "target_files": [
+        "make_agent.md",
+        "make_agent.json",
+        "make_gem_qc.md",
+        "make_gem_qc.json"
+      ]
+    },
+    "agent_details": {
+      "agent_name": "DocUpdateAgent",
+      "version": "1.1",
+      "last_updated": "2026-03-11",
+      "description": "Reads cached platform documentation from source_docs/ and surfaces additive improvements to repo templates with source citations, for human approval.",
+      "owner": "Repo Maintainer",
+      "complexity": "standard"
+    }
+  },
+  "agent_type": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "type": "workflow",
+    "description": "Two-mode workflow: (A) Analysis — read cache → diff → score → propose → gate; (B) Refresh — fetch live docs → update cache files. LLM used for diff interpretation and proposal generation."
+  },
+  "implementation": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "workflow_based": {
+      "optional": false,
+      "steps": [
+        {
+          "step": 0,
+          "name": "Check Cache (Analysis Mode)",
+          "description": "Read each source's cache_file from source_docs/. Check the last_fetched date in the file header and fetch_status. Sources with fetch_status: 'success' and last_fetched within staleness_threshold_days are ready to use. Sources with 'failed' or 'not_attempted' status are noted in the run_summary but not blocking — analysis proceeds on available sources.",
+          "input": "primary_data.sources[].cache_file paths",
+          "output": "list of available sources with content, list of unavailable sources for run_summary"
+        },
+        {
+          "step": "0b",
+          "name": "Refresh Cache (Refresh Mode — run separately)",
+          "description": "Fetch live content from source URLs for stale or failed sources. Overwrite the corresponding cache_file in source_docs/, updating last_fetched and fetch_status in the file header. Run this step independently before an analysis run when sources are known to be outdated.",
+          "input": "source URLs from primary_data.sources where cache is stale or failed",
+          "output": "updated cache_file(s) in source_docs/ with fresh content and new last_fetched date"
+        },
+        {
+          "step": 1,
+          "name": "Load Source Content",
+          "description": "Read content from each available cache_file in source_docs/. Parse the metadata header (platform, label, source_url, last_fetched, fetch_status) and extract the body content for diffing.",
+          "input": "cache_file paths from step 0",
+          "output": "parsed source content per platform with metadata"
+        },
+        {
+          "step": 2,
+          "name": "Load Target Templates",
+          "description": "Read current content of all target files listed in primary_data.update_targets.",
+          "input": "file paths in primary_data.update_targets",
+          "output": "parsed content of make_agent.md, make_agent.json, make_gem_qc.md, make_gem_qc.json"
+        },
+        {
+          "step": 3,
+          "name": "Diff and Detect Candidates",
+          "description": "Apply diff_rules to identify content in fetched docs not represented in templates. Filter out replace-type changes against non-placeholder content.",
+          "input": "fetched content + template content + diff_rules",
+          "output": "list of candidate additions with target section and source reference"
+        },
+        {
+          "step": 4,
+          "name": "Score Candidates",
+          "description": "Score each candidate using the scoring rubric. Apply convergence bonus for patterns appearing in 2+ platforms.",
+          "input": "candidate list + scoring rubric",
+          "output": "scored and ranked proposal list, filtered by min_threshold"
+        },
+        {
+          "step": 5,
+          "name": "Generate Proposals",
+          "description": "Format each scored candidate as a structured change proposal using proposal_template. Include source URL, platform, rationale, target, proposed text.",
+          "input": "scored candidates + proposal_template",
+          "output": "formatted proposal list sorted by score descending"
+        },
+        {
+          "step": 6,
+          "name": "Present for Approval",
+          "description": "Output all proposals with numbering. Halt. Do not modify any files. Wait for explicit per-proposal approval.",
+          "input": "formatted proposal list",
+          "output": "numbered proposal list displayed to human"
+        },
+        {
+          "step": 7,
+          "name": "Apply Approved Changes",
+          "description": "For each approved proposal, apply the change to the target file and section. Append new entries; do not overwrite existing non-placeholder content.",
+          "input": "approved proposal IDs + proposal list",
+          "output": "updated target files; changelog entry in update_agent.json"
+        }
+      ],
+      "entry_point": "Step 1: Fetch Documentation",
+      "exit_point": "Step 7: Apply Approved Changes (only after explicit human approval per proposal)"
+    },
+    "llm_agent": {
+      "optional": true,
+      "model": "claude-sonnet-4-6",
+      "system_prompt": "You are a documentation analyst specializing in AI agent and skill design patterns. Given fetched documentation content and the current state of template files, your job is to: (1) identify patterns, conventions, or best practices in the fetched docs that are absent from the templates, (2) assess whether each finding is genuinely additive rather than a rewrite of existing content, (3) generate a clear rationale for each proposal. You do NOT modify files. You only generate proposals. Every proposal must include the exact source URL.",
+      "tools": [
+        {
+          "name": "WebFetch",
+          "description": "Fetch live documentation pages from source URLs",
+          "parameters": {
+            "url": "string",
+            "headers": { "Cache-Control": "no-cache" }
+          }
+        },
+        {
+          "name": "Read",
+          "description": "Read current template files for diffing",
+          "parameters": {
+            "file_path": "string"
+          }
+        }
+      ],
+      "parameters": {
+        "temperature": 0.2,
+        "max_tokens": 4000
+      }
+    }
+  },
+  "io_contract": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "description": "Inputs are the live doc pages and current template files. Output is a proposal list; no files are modified until approval.",
+    "inputs": [
+      {
+        "name": "sources",
+        "type": "array",
+        "format": "List of {platform, url, section_focus} from primary_data.sources",
+        "example": "See primary_data.sources",
+        "required": true
+      },
+      {
+        "name": "target_files",
+        "type": "array",
+        "format": "File paths of templates to diff against",
+        "example": "['make_agent.md', 'make_agent.json', 'make_gem_qc.md', 'make_gem_qc.json']",
+        "required": true
+      }
+    ],
+    "outputs": [
+      {
+        "name": "proposals",
+        "type": "array",
+        "format": "Array of change_proposal objects per proposal_template schema",
+        "example": "See primary_data.proposal_template",
+        "conditions": "Only proposals scoring >= min_threshold are included"
+      },
+      {
+        "name": "run_summary",
+        "type": "object",
+        "format": "{ sources_fetched, candidates_found, proposals_surfaced, convergence_bonuses_applied, run_date }",
+        "example": "{ sources_fetched: 8, candidates_found: 14, proposals_surfaced: 6, convergence_bonuses_applied: 2, run_date: '2026-03-11' }",
+        "conditions": "Always produced, even when zero proposals meet threshold"
+      }
+    ],
+    "side_effects": "None until Step 7. Step 7 modifies target files only for approved proposals. Appends to changelog in update_agent.json."
+  },
+  "primary_data": {
+    "_tier": "tier_1_core",
+    "_required_for": ["workflow", "llm_agent"],
+    "description": "Source URLs, diff rules, scoring rubric, proposal template, and update targets",
+    "staleness_threshold_days": 30,
+    "sources": [
+      {
+        "platform": "Anthropic",
+        "label": "Claude Agents Overview",
+        "url": "https://docs.anthropic.com/en/docs/build-with-claude/agents",
+        "cache_file": "source_docs/anthropic_agents.md",
+        "section_focus": "agent patterns, tool use, memory, orchestration",
+        "notes": "Primary source for Claude-specific agent best practices. Currently 404 at redirect — see cache file for status."
+      },
+      {
+        "platform": "Anthropic",
+        "label": "Tool Use Guide",
+        "url": "https://docs.anthropic.com/en/docs/build-with-claude/tool-use",
+        "cache_file": "source_docs/anthropic_tool_use.md",
+        "section_focus": "tool_choice, fallback handling, error recovery, strict mode, parallel tool use, tool runner",
+        "notes": "Key source for tool use patterns in error_handling and implementation.llm_agent. Last fetch: 2026-03-11 success."
+      },
+      {
+        "platform": "Anthropic",
+        "label": "Claude Agent SDK",
+        "url": "https://docs.anthropic.com/en/docs/claude-code/sdk",
+        "cache_file": "source_docs/anthropic_agent_sdk.md",
+        "section_focus": "agent SDK conventions, agent loop patterns, subagents, sessions, hooks, compaction",
+        "notes": "Renamed from Claude Code SDK. Last fetch: 2026-03-11 success."
+      },
+      {
+        "platform": "Google",
+        "label": "Gemini API Agents",
+        "url": "https://ai.google.dev/gemini-api/docs/agentic-capabilities",
+        "cache_file": "source_docs/google_gemini_agentic.md",
+        "section_focus": "Gemini agent capabilities, function calling, grounding, thinking models",
+        "notes": "Original URL 404d — content from function calling and thinking pages. Last fetch: 2026-03-11 partial."
+      },
+      {
+        "platform": "Google",
+        "label": "Gemini Structured Output",
+        "url": "https://ai.google.dev/gemini-api/docs/structured-output",
+        "cache_file": "source_docs/google_structured_output.md",
+        "section_focus": "response_mime_type, response_json_schema, JSON schema enforcement, structured output vs function calling",
+        "notes": "Last fetch: 2026-03-11 success."
+      },
+      {
+        "platform": "OpenAI",
+        "label": "OpenAI Agents SDK",
+        "url": "https://openai.github.io/openai-agents-python/",
+        "cache_file": "source_docs/openai_agents_sdk.md",
+        "section_focus": "agent primitives (Agents, Handoffs, Guardrails), lifecycle hooks, multi-agent patterns, tool_choice, structured output, MCP",
+        "notes": "platform.openai.com returns 403. Using GitHub Pages docs instead — fully accessible. Last fetch: 2026-03-11 success."
+      },
+      {
+        "platform": "xAI",
+        "label": "Grok API Overview",
+        "url": "https://docs.x.ai/docs/overview",
+        "cache_file": "source_docs/xai_overview.md",
+        "section_focus": "agent API patterns, function calling, system prompt conventions, tool_choice, parallel tools",
+        "notes": "Last fetch: 2026-03-11 partial (main overview minimal; supplemented with quickstart, function calling, models)."
+      }
+    ],
+    "update_targets": [
+      {
+        "file": "make_agent.md",
+        "eligible_sections": ["Key Principles", "Core Concepts", "Common Pitfalls and Solutions", "Examples"],
+        "ineligible_sections": ["Mission", "File Organization"],
+        "change_types_allowed": ["add_principle", "add_pitfall", "add_example", "extend_existing"]
+      },
+      {
+        "file": "make_agent.json",
+        "eligible_sections": [
+          "implementation.llm_agent.parameters",
+          "implementation.llm_agent.tools",
+          "error_handling.fallbacks",
+          "error_handling.known_failures",
+          "operational_guidance.best_practices",
+          "constraints.safety_boundaries.guardrails",
+          "common_patterns.patterns"
+        ],
+        "ineligible_sections": ["_metadata", "agent_type", "io_contract"],
+        "change_types_allowed": ["add_array_entry", "add_key_to_empty_object", "extend_description"]
+      },
+      {
+        "file": "make_gem_qc.md",
+        "eligible_sections": ["The 4 Pillars of Quality", "Common Pitfalls", "Validation Rules"],
+        "ineligible_sections": ["Mission", "File Organization: JSON vs MD"],
+        "change_types_allowed": ["add_pillar", "add_pitfall", "add_rule"]
+      },
+      {
+        "file": "make_gem_qc.json",
+        "eligible_sections": [
+          "validation_rules.rules",
+          "gem_instructions.context.boundaries",
+          "gem_instructions.task.actions"
+        ],
+        "ineligible_sections": ["_metadata", "knowledge_base"],
+        "change_types_allowed": ["add_array_entry", "add_rule"]
+      }
+    ],
+    "diff_rules": {
+      "include_patterns": [
+        "best practice",
+        "recommended",
+        "should include",
+        "agent pattern",
+        "interaction pattern",
+        "system prompt",
+        "tool_choice",
+        "fallback",
+        "guardrail",
+        "memory",
+        "handoff",
+        "structured output",
+        "response_format",
+        "persona",
+        "format",
+        "context boundary",
+        "workflow step"
+      ],
+      "exclude_patterns": [
+        "pricing",
+        "billing",
+        "deprecated",
+        "beta",
+        "preview",
+        "marketing",
+        "sign up",
+        "trial"
+      ],
+      "change_type_rules": {
+        "add": "Target section exists but is empty, a stub, or a template placeholder",
+        "extend": "Target section exists with real content; proposed addition is orthogonal and non-overlapping",
+        "replace": "BLOCKED — never propose replacements of existing non-placeholder content",
+        "note": "Proposals classified as 'replace' are silently dropped before scoring"
+      }
+    },
+    "scoring": {
+      "description": "Score each candidate addition 0-100 before presenting as a proposal",
+      "min_threshold": 60,
+      "criteria": [
+        {
+          "name": "Absent from all target files",
+          "points": 30,
+          "description": "The pattern or practice is not represented in any section of any target file"
+        },
+        {
+          "name": "Actionable",
+          "points": 25,
+          "description": "The proposed addition can be written as a concrete entry (a rule, a parameter, a principle) not a vague suggestion"
+        },
+        {
+          "name": "Directly maps to eligible section",
+          "points": 20,
+          "description": "There is a clear target section in update_targets where this belongs"
+        },
+        {
+          "name": "Source is official developer documentation",
+          "points": 15,
+          "description": "The source URL is on a developer docs domain, not a blog or marketing page"
+        },
+        {
+          "name": "Recently added or updated in source docs",
+          "points": 10,
+          "description": "The content appears to be new or recently revised based on page metadata or content signals"
+        }
+      ],
+      "convergence_bonus": {
+        "description": "Add bonus points when the same pattern appears independently in 2+ platform docs",
+        "two_platforms": 15,
+        "three_or_more_platforms": 25,
+        "note": "Apply after per-source scoring, before threshold filtering"
+      }
+    },
+    "proposal_template": {
+      "description": "Schema for each change proposal presented to the human",
+      "fields": {
+        "proposal_id": "integer — sequential, 1-indexed per run",
+        "score": "integer 0-100 — final score after convergence bonus",
+        "platform": "string|array — source platform(s) if convergence detected",
+        "source_url": "string|array — direct URL(s) to the documentation section",
+        "fetched_date": "ISO date — when the source was fetched",
+        "target_file": "string — which file this change applies to",
+        "target_section": "string — dot-path to the section (e.g. 'error_handling.fallbacks')",
+        "change_type": "add|extend — never replace",
+        "proposed_text": "string|object — exact text or JSON to add",
+        "rationale": "string — one paragraph explaining why this is valuable and what gap it fills",
+        "convergence_note": "string|null — names the other platforms that corroborate this finding"
+      },
+      "example": {
+        "proposal_id": 1,
+        "score": 87,
+        "platform": "Anthropic",
+        "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/tool-use",
+        "fetched_date": "2026-03-11",
+        "target_file": "make_agent.json",
+        "target_section": "error_handling.fallbacks",
+        "change_type": "add",
+        "proposed_text": {
+          "condition": "tool_call_failure_after_retry",
+          "action": "Set tool_choice to 'none', switch to text-only response, log failure with tool name and error code"
+        },
+        "rationale": "The template's error_handling.fallbacks array is empty. Anthropic's tool use docs explicitly recommend a fallback to text-only mode when tool calls fail after retries. This directly fills a gap in the template for llm_agent type agents.",
+        "convergence_note": null
+      }
+    }
+  },
+  "dependencies": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "packages": [],
+    "files": [
+      "make_agent.md",
+      "make_agent.json",
+      "make_gem_qc.md",
+      "make_gem_qc.json",
+      "source_docs/anthropic_agents.md",
+      "source_docs/anthropic_tool_use.md",
+      "source_docs/anthropic_agent_sdk.md",
+      "source_docs/google_gemini_agentic.md",
+      "source_docs/google_structured_output.md",
+      "source_docs/openai_agents_sdk.md",
+      "source_docs/xai_overview.md"
+    ],
+    "models": ["claude-sonnet-4-6"],
+    "apis": ["WebFetch (HTTP GET with no-cache) — Mode B only"],
+    "data_sources": ["source_docs/ folder — 10 cached platform documentation files"],
+    "environment_variables": [],
+    "optional_dependencies": {
+      "description": "WebFetch only needed for Mode B (Refresh). Mode A (Analysis) is fully offline.",
+      "packages": []
+    }
+  },
+  "validation": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "description": "How to verify the update agent is working correctly",
+    "pre_run_checklist": [
+      "All source URLs in primary_data.sources are reachable",
+      "All target files in primary_data.update_targets exist in the repo",
+      "scoring.min_threshold is set (default 60)",
+      "No prior run has modified target files without approval"
+    ],
+    "post_run_checklist": [
+      "Every proposal includes a non-null source_url",
+      "Every proposal has change_type == 'add' or 'extend' (never 'replace')",
+      "Proposals are sorted by score descending",
+      "run_summary.sources_fetched equals the count of sources in primary_data.sources",
+      "No target files were modified before approval step"
+    ],
+    "success_criteria": [
+      "At least 1 proposal is generated when fetched docs contain patterns absent from templates",
+      "Zero proposals are generated when fetched docs contain only patterns already in templates",
+      "Convergence bonus correctly increases score for 2+ platform matches",
+      "No file modifications occur before Step 7",
+      "All proposals include source_url, platform, fetched_date, and rationale"
+    ],
+    "test_cases": [
+      {
+        "name": "New pattern absent from all templates",
+        "input": "Mock fetched doc containing 'agent handoff protocol' — not present in any template",
+        "expected_output": "At least 1 proposal with target_section in update_targets, score >= 60",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Existing pattern already in templates",
+        "input": "Mock fetched doc containing content identical to existing make_agent.md Key Principles",
+        "expected_output": "Zero proposals for that content",
+        "validation_method": "exact"
+      },
+      {
+        "name": "Convergence bonus applied",
+        "input": "Same pattern fetched from both OpenAI and Google docs",
+        "expected_output": "Single merged proposal with score >= base_score + 15, platform field is array of both",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Replace-type change blocked",
+        "input": "Mock fetched doc suggesting rewording of existing make_agent.md Mission section",
+        "expected_output": "Zero proposals — replace-type change filtered before scoring",
+        "validation_method": "exact"
+      },
+      {
+        "name": "No files modified before approval",
+        "input": "Full run with 5 proposals generated",
+        "expected_output": "All target files are byte-identical to pre-run state at end of Step 6",
+        "validation_method": "exact"
+      }
+    ],
+    "tolerance": {
+      "numeric": "Score within ±5 of expected is acceptable",
+      "string": "Proposal text comparison: semantic match acceptable, not exact match required",
+      "structural": "All required fields present in proposal object"
+    },
+    "commands": []
+  },
+  "operational_guidance": {
+    "_tier": "tier_2_recommended",
+    "optional": false,
+    "when_to_use": [
+      "Periodic maintenance runs (e.g., monthly) to catch new platform doc updates",
+      "After a major model release from any of the four platforms",
+      "Before a significant revision of make_agent.* or make_gem_qc.* templates",
+      "When a new agent pattern has been heard about but not yet confirmed in docs"
+    ],
+    "when_not_to_use": [
+      "For validating individual agents — use make_agent_qc instead",
+      "For rewriting templates from scratch — this agent is additive only",
+      "For non-documentation sources (blog posts, X/Twitter threads, conference talks)"
+    ],
+    "best_practices": [
+      "Run no more than once per month to avoid noise from minor doc edits",
+      "Review proposals in score order; address highest-value additions first",
+      "When approving, always read the source_url directly to verify context before accepting",
+      "After each approved run, update changelog in this JSON with run_date and approved_count",
+      "If a proposal score is borderline (60-70), open the source URL and re-read before deciding"
+    ],
+    "alternatives": [
+      "Manual monthly review: bookmark the 10 source URLs and scan manually",
+      "RSS/changelog monitoring: some platforms publish doc changelogs"
+    ]
+  },
+  "error_handling": {
+    "_tier": "tier_2_recommended",
+    "optional": false,
+    "known_failures": [
+      {
+        "error": "Source URL unreachable",
+        "cause": "Doc page moved, rate limited, or platform outage",
+        "action": "Skip that source, log warning in run_summary, continue with remaining sources"
+      },
+      {
+        "error": "Fetched content is empty or malformed",
+        "cause": "JavaScript-rendered page returned minimal HTML",
+        "action": "Log warning, skip source, note in run_summary that manual review of that URL is recommended"
+      },
+      {
+        "error": "Zero proposals after full run",
+        "cause": "All detected patterns already in templates, or all sources unreachable",
+        "action": "Output run_summary with explanation; do not report false positives"
+      }
+    ],
+    "fallbacks": [
+      {
+        "condition": "All sources fail to fetch",
+        "action": "Abort run, output error summary, recommend manual review of source URLs"
+      }
+    ],
+    "retry_strategy": {
+      "max_retries": 2,
+      "backoff": "linear",
+      "timeout_per_attempt": "15s"
+    },
+    "timeout_behavior": "Skip source after timeout; continue with remaining",
+    "error_reporting": "Include all skipped sources and failure reasons in run_summary output"
+  },
+  "cross_references": {
+    "_tier": "tier_3_optional",
+    "optional": false,
+    "related_agents": [
+      {
+        "name": "make_agent_qc",
+        "files": ["make_agent_qc.md", "make_agent_qc.json"],
+        "relationship": "Validates the templates that this agent updates; run after applying approved proposals"
+      },
+      {
+        "name": "make_gem_qc",
+        "files": ["make_gem_qc.md", "make_gem_qc.json"],
+        "relationship": "Validates Gem definitions downstream of this agent's updates to make_gem_qc.*"
+      },
+      {
+        "name": "make_agent",
+        "files": ["make_agent.md", "make_agent.json"],
+        "relationship": "Primary update target; template used by all new agents in this repo"
+      }
+    ],
+    "external_dependencies": [
+      {
+        "name": "Anthropic Documentation",
+        "url": "https://docs.anthropic.com/en/docs/build-with-claude/agents",
+        "type": "source"
+      },
+      {
+        "name": "Google Gemini API Documentation",
+        "url": "https://ai.google.dev/gemini-api/docs/agentic-capabilities",
+        "type": "source"
+      },
+      {
+        "name": "OpenAI Agents Documentation",
+        "url": "https://platform.openai.com/docs/guides/agents",
+        "type": "source"
+      },
+      {
+        "name": "xAI Documentation",
+        "url": "https://docs.x.ai/docs/overview",
+        "type": "source"
+      }
+    ],
+    "documentation": [
+      "update_agent.md — full narrative guide",
+      "make_agent.md — primary update target reference",
+      "make_gem_qc.md — secondary update target reference"
+    ]
+  },
+  "changelog": {
+    "_tier": "tier_3_optional",
+    "optional": false,
+    "versions": [
+      {
+        "version": "1.1",
+        "date": "2026-03-11",
+        "changes": [
+          "Added source_docs/ folder — 10 cached platform documentation files (one per source)",
+          "Each cache file has a YAML-like metadata header: platform, label, source_url, last_fetched, fetch_status, notes",
+          "Workflow split into Mode A (Analysis — reads cache) and Mode B (Refresh — fetches live, updates cache)",
+          "Added cache_file field to each source entry in primary_data.sources",
+          "Added staleness_threshold_days to primary_data for configuring how fresh cache must be",
+          "Mode A is now fully offline-capable; WebFetch only needed for Mode B",
+          "Updated update_agent.md quickstart, workflow steps, pitfalls, resources, and file organization sections",
+          "First analysis run completed: 9 proposals generated from Anthropic + Google + xAI sources"
+        ],
+        "approved_proposals": 0,
+        "breaking_changes": [],
+        "contributors": []
+      },
+      {
+        "version": "1.0",
+        "date": "2026-03-11",
+        "changes": [
+          "Initial version — 10 source URLs across Anthropic, Google, OpenAI, xAI",
+          "Workflow: fetch → diff → score → propose → gate → apply",
+          "Convergence bonus for cross-platform pattern detection",
+          "Additive-only enforcement (replace-type changes blocked)",
+          "Per-proposal human approval gate"
+        ],
+        "approved_proposals": 0,
+        "breaking_changes": [],
+        "contributors": []
+      }
+    ]
+  }
+}

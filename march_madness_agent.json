@@ -1,0 +1,759 @@
+{
+  "_metadata": {
+    "template_version": "3.1",
+    "last_updated": "2026-03-11",
+    "description": "March Madness bracket prediction ML agent — R-first, structured data, feature definitions, tidymodels configs, code snippets, and validation.",
+    "language": "R",
+    "primary_stack": ["tidyverse", "tidymodels", "xgboost", "probably", "furrr", "hoopR"],
+    "companion_files": {
+      "conceptual_guide": "march_madness_agent.md",
+      "implementation": "R/march_madness_predictor.R",
+      "r_scripts": ["R/feature_engineering.R", "R/model.R", "R/simulation.R"]
+    },
+    "agent_details": {
+      "agent_name": "MarchMadnessBracketPredictor",
+      "version": "1.1",
+      "last_updated": "2026-03-11",
+      "description": "Predicts NCAA March Madness tournament outcomes game-by-game using a tidymodels ensemble in R, producing a full 63-game bracket with win probabilities.",
+      "owner": "sports-ml",
+      "complexity": "complex"
+    }
+  },
+
+  "agent_type": {
+    "_tier": "tier_1_core",
+    "type": "data_processor",
+    "description": "Ingests historical tournament + team stat data, engineers matchup features, trains an ensemble classifier, and simulates the full bracket via Monte Carlo."
+  },
+
+  "primary_data": {
+    "_tier": "tier_1_core",
+    "sources": [
+      {
+        "name": "KenPom",
+        "url": "https://kenpom.com/",
+        "access": "subscription or kenpompy scraper",
+        "key_fields": ["AdjO", "AdjD", "AdjEM", "AdjT", "Luck", "SOS_AdjEM", "OppO", "OppD"],
+        "notes": "Gold standard. AdjEM is the single strongest predictor."
+      },
+      {
+        "name": "hoopR",
+        "url": "https://hoopr.sportsdataverse.org/",
+        "access": "free R package — remotes::install_github('sportsdataverse/hoopR')",
+        "key_fields": ["team_id", "team_display_name", "season", "pts", "fg_pct", "fg3_pct", "reb", "ast", "stl", "blk", "to"],
+        "r_example": "hoopR::load_mbb_team_box(seasons = 2025)",
+        "notes": "Best source for live current-season NCAA data via ESPN API. Use for 2025 tournament."
+      },
+      {
+        "name": "Sports Reference CBB",
+        "url": "https://www.sports-reference.com/cbb/",
+        "access": "free / read with readr or rvest scraping",
+        "key_fields": ["team", "seed", "conf", "w_l", "srs", "sos", "fg_pct", "3p_pct", "ft_pct", "trb", "ast", "tov", "blk"],
+        "notes": "Historical tournament results table is the ground truth label source."
+      },
+      {
+        "name": "Kaggle NCAA March Madness",
+        "url": "https://www.kaggle.com/competitions/march-machine-learning-mania-2024",
+        "access": "free, requires Kaggle account — download CSV, load with readr::read_csv()",
+        "key_fields": ["Season", "DayNum", "WTeamID", "LTeamID", "WScore", "LScore", "NumOT"],
+        "r_example": "readr::read_csv('data/MNCAATourneyDetailedResults.csv')",
+        "notes": "Best pre-cleaned historical dataset. Includes compact + detailed results. Many R notebooks in competition."
+      },
+      {
+        "name": "ESPN BPI",
+        "url": "https://www.espn.com/mens-college-basketball/bpi",
+        "access": "free (scrape or ESPN hidden API)",
+        "key_fields": ["BPI", "BPI_offense", "BPI_defense", "strength_of_record"],
+        "notes": "Free alternative to KenPom. Less granular but good for cross-validation."
+      }
+    ],
+    "historical_range": {
+      "recommended_train": "2000-2021",
+      "recommended_validation": "2022-2024",
+      "exclude": [2020],
+      "flag_anomalous": [2021],
+      "reason": "2020: no tournament (COVID); 2021: bubble format distorts pace/variance patterns"
+    },
+    "data_schema": {
+      "matchup_row": {
+        "description": "One row per historical tournament game",
+        "fields": {
+          "season": "int — e.g. 2024",
+          "round": "int — 1=Round64, 2=Round32, 3=Sweet16, 4=Elite8, 5=Final4, 6=Championship",
+          "team_a_id": "str — higher seed team",
+          "team_b_id": "str — lower seed team",
+          "team_a_seed": "int 1-16",
+          "team_b_seed": "int 1-16",
+          "team_a_adj_em": "float — KenPom AdjEM",
+          "team_b_adj_em": "float",
+          "team_a_adj_o": "float — KenPom AdjO",
+          "team_b_adj_o": "float",
+          "team_a_adj_d": "float — KenPom AdjD (lower = better defense)",
+          "team_b_adj_d": "float",
+          "team_a_adj_t": "float — tempo (possessions per 40 min)",
+          "team_b_adj_t": "float",
+          "team_a_sos": "float — strength of schedule",
+          "team_b_sos": "float",
+          "team_a_3p_rate": "float — 3PA / FGA",
+          "team_b_3p_rate": "float",
+          "team_a_ft_rate": "float — FTA / FGA",
+          "team_b_ft_rate": "float",
+          "team_a_tov_rate": "float — turnovers per 100 possessions",
+          "team_b_tov_rate": "float",
+          "team_a_recent_form": "float — win rate last 10 games",
+          "team_b_recent_form": "float",
+          "team_a_coach_tourney_exp": "int — coach's prior tournament appearances",
+          "team_b_coach_tourney_exp": "int",
+          "is_bubble_year": "int — 1 if 2021 bubble tournament",
+          "team_a_wins": "int — binary label: 1 if team_a wins, 0 if team_b wins"
+        }
+      }
+    }
+  },
+
+  "feature_engineering": {
+    "_tier": "tier_1_core",
+    "description": "All features are expressed as team_a minus team_b (matchup deltas) unless noted. This ensures symmetry and interpretability.",
+    "matchup_delta_features": [
+      {
+        "name": "adj_em_delta",
+        "formula": "team_a_adj_em - team_b_adj_em",
+        "importance": "highest",
+        "notes": "Single strongest predictor. Positive = team_a favored by efficiency margin."
+      },
+      {
+        "name": "adj_o_delta",
+        "formula": "team_a_adj_o - team_b_adj_o",
+        "importance": "high",
+        "notes": "Offensive efficiency advantage."
+      },
+      {
+        "name": "adj_d_delta",
+        "formula": "team_b_adj_d - team_a_adj_d",
+        "importance": "high",
+        "notes": "Flipped: lower adj_d = better defense. Positive = team_a has defensive edge."
+      },
+      {
+        "name": "pace_delta",
+        "formula": "team_a_adj_t - team_b_adj_t",
+        "importance": "medium",
+        "notes": "Pace mismatch. Slow teams vs fast teams is a classic upset vector."
+      },
+      {
+        "name": "sos_delta",
+        "formula": "team_a_sos - team_b_sos",
+        "importance": "medium",
+        "notes": "Strength of schedule differential. Mid-majors with weak SOS are overrated in raw stats."
+      },
+      {
+        "name": "three_point_rate_delta",
+        "formula": "team_a_3p_rate - team_b_3p_rate",
+        "importance": "medium",
+        "notes": "High 3P rate = high variance team. Variance favors underdogs in single-elimination."
+      },
+      {
+        "name": "tov_rate_delta",
+        "formula": "team_b_tov_rate - team_a_tov_rate",
+        "importance": "medium",
+        "notes": "Flipped: lower tov = better. Positive = team_a protects the ball better."
+      },
+      {
+        "name": "ft_rate_delta",
+        "formula": "team_a_ft_rate - team_b_ft_rate",
+        "importance": "low-medium",
+        "notes": "Free throw generation advantage. Late-game pressure metric."
+      },
+      {
+        "name": "recent_form_delta",
+        "formula": "team_a_recent_form - team_b_recent_form",
+        "importance": "medium",
+        "notes": "Win rate last 10 games. Hot teams matter in tournament."
+      },
+      {
+        "name": "coach_exp_delta",
+        "formula": "team_a_coach_tourney_exp - team_b_coach_tourney_exp",
+        "importance": "medium",
+        "notes": "Coach's prior tournament appearances. Experience matters in close games."
+      }
+    ],
+    "seed_features": [
+      {
+        "name": "seed_delta",
+        "formula": "team_b_seed - team_a_seed",
+        "importance": "high",
+        "notes": "Positive = team_a is higher seed (better). Strong baseline predictor but noisy."
+      },
+      {
+        "name": "is_classic_upset_matchup",
+        "formula": "1 if (team_a_seed in [5,6,7] and team_b_seed in [10,11,12]) else 0",
+        "importance": "medium",
+        "notes": "12-over-5, 11-over-6, 10-over-7 are historically the most common first-round upsets."
+      }
+    ],
+    "context_features": [
+      {
+        "name": "round",
+        "type": "int 1-6",
+        "importance": "medium",
+        "notes": "Round number. Later rounds favor experience and elite programs."
+      },
+      {
+        "name": "is_bubble_year",
+        "type": "binary",
+        "importance": "low",
+        "notes": "Flag for 2021 bubble tournament anomaly."
+      }
+    ],
+    "code_snippet": {
+      "language": "R",
+      "description": "Build matchup feature tibble from joined team stats using dplyr. Call after joining team stats onto tourney results.",
+      "code": [
+        "library(dplyr)",
+        "",
+        "build_matchup_features <- function(df) {",
+        "  # df has columns: *_a and *_b for team A and team B stats, plus round",
+        "  df |>",
+        "    mutate(",
+        "      adj_em_delta        = adj_em_a - adj_em_b,",
+        "      adj_o_delta         = adj_o_a  - adj_o_b,",
+        "      adj_d_delta         = adj_d_b  - adj_d_a,   # flipped: lower adj_d = better defense",
+        "      pace_delta          = adj_t_a  - adj_t_b,",
+        "      sos_delta           = sos_a    - sos_b,",
+        "      three_pt_rate_delta = fg3_rate_a - fg3_rate_b,",
+        "      tov_rate_delta      = tov_rate_b - tov_rate_a,  # flipped: lower = better",
+        "      ft_rate_delta       = ft_rate_a - ft_rate_b,",
+        "      recent_form_delta   = form_a    - form_b,",
+        "      coach_exp_delta     = coach_exp_a - coach_exp_b,",
+        "      seed_delta          = seed_b   - seed_a,",
+        "      is_classic_upset    = as.integer(seed_a %in% c(5L,6L,7L) & seed_b %in% c(10L,11L,12L)),",
+        "      is_bubble_year      = as.integer(season == 2021L)",
+        "    ) |>",
+        "    select(adj_em_delta, adj_o_delta, adj_d_delta, pace_delta, sos_delta,",
+        "           three_pt_rate_delta, tov_rate_delta, ft_rate_delta,",
+        "           recent_form_delta, coach_exp_delta, seed_delta,",
+        "           is_classic_upset, is_bubble_year, round, team_a_wins)",
+        "}"
+      ]
+    }
+  },
+
+  "implementation": {
+    "_tier": "tier_1_core",
+    "type": "ml_ensemble",
+    "language": "R",
+    "models": {
+      "primary": {
+        "name": "XGBoost via tidymodels parsnip",
+        "r_package": "xgboost (engine), parsnip (interface)",
+        "hyperparameters": {
+          "trees": 300,
+          "tree_depth": 4,
+          "learn_rate": 0.05,
+          "mtry": 0.8,
+          "min_n": 3,
+          "loss_reduction": 0,
+          "sample_size": 0.8,
+          "mode": "classification"
+        },
+        "tune_params": ["trees", "tree_depth", "learn_rate", "min_n"],
+        "notes": "Primary model. Use boost_tree() from parsnip with set_engine('xgboost')."
+      },
+      "secondary": {
+        "name": "Logistic Regression via tidymodels parsnip",
+        "r_package": "glm (engine), parsnip (interface)",
+        "hyperparameters": {
+          "penalty": 0.01,
+          "mixture": 1.0,
+          "mode": "classification"
+        },
+        "notes": "Use logistic_reg() with set_engine('glmnet'). Requires step_normalize() in recipe."
+      },
+      "ensemble": {
+        "method": "stacking via stacks package",
+        "r_package": "stacks",
+        "r_alternative": "weighted average of predict_proba outputs with purrr",
+        "weights": [0.65, 0.35],
+        "order": ["xgboost", "logistic_regression"],
+        "calibration": "probably::cal_estimate_isotonic()",
+        "notes": "Use stacks package for full meta-learner ensemble, OR manually blend: prob = 0.65*xgb_prob + 0.35*lr_prob. Calibrate with probably."
+      }
+    },
+    "training": {
+      "train_split": "temporal — train on seasons <= 2021, validate on 2022-2024",
+      "r_split_function": "rsample::initial_time_split(prop = 0.85) — NEVER use initial_split() which leaks future data",
+      "cross_validation": "rsample::vfold_cv(v = 5, strata = team_a_wins) on training data",
+      "scaling": "step_normalize(all_numeric_predictors()) in recipe — required before logistic regression",
+      "class_balance": "None needed — roughly 50/50 by construction",
+      "tuning_function": "tune::tune_grid() with dials grid",
+      "code_snippet": {
+        "language": "R",
+        "description": "Build and train tidymodels XGBoost workflow with tuning",
+        "code": [
+          "library(tidymodels)",
+          "library(xgboost)",
+          "library(probably)",
+          "",
+          "# --- Recipe ---",
+          "rec <- recipe(team_a_wins ~ ., data = train_df) |>",
+          "  step_normalize(all_numeric_predictors()) |>",
+          "  step_integer(all_nominal_predictors()) |>",
+          "  step_zv(all_predictors())",
+          "",
+          "# --- XGBoost spec with tunable params ---",
+          "xgb_spec <- boost_tree(",
+          "  trees      = tune(),",
+          "  tree_depth = tune(),",
+          "  learn_rate = tune(),",
+          "  min_n      = tune()",
+          ") |>",
+          "  set_engine('xgboost') |>",
+          "  set_mode('classification')",
+          "",
+          "# --- Workflow ---",
+          "xgb_wf <- workflow() |>",
+          "  add_recipe(rec) |>",
+          "  add_model(xgb_spec)",
+          "",
+          "# --- Tuning grid ---",
+          "set.seed(42)",
+          "xgb_grid <- grid_space_filling(",
+          "  trees(), tree_depth(), learn_rate(), min_n(), size = 30",
+          ")",
+          "",
+          "# --- CV folds (temporal-aware) ---",
+          "folds <- vfold_cv(train_df, v = 5, strata = team_a_wins)",
+          "",
+          "# --- Tune ---",
+          "xgb_tuned <- tune_grid(",
+          "  xgb_wf,",
+          "  resamples = folds,",
+          "  grid      = xgb_grid,",
+          "  metrics   = metric_set(brier_class, mn_log_loss, roc_auc),",
+          "  control   = control_grid(save_pred = TRUE)",
+          ")",
+          "",
+          "# --- Fit best ---",
+          "best_params  <- select_best(xgb_tuned, metric = 'brier_class')",
+          "final_wf     <- finalize_workflow(xgb_wf, best_params)",
+          "final_fit    <- fit(final_wf, data = train_df)",
+          "",
+          "# --- Calibrate probabilities ---",
+          "cal_fit <- final_fit |>",
+          "  augment(val_df) |>",
+          "  cal_estimate_isotonic(truth = team_a_wins, estimate = .pred_1)"
+        ]
+      }
+    },
+    "bracket_simulation": {
+      "method": "Monte Carlo",
+      "n_simulations": 10000,
+      "r_parallelism": "furrr::future_map() with plan(multisession, workers = 4)",
+      "description": "Simulate the full 63-game bracket N times. Track champion, Final Four, Elite 8 frequencies. Use purrr::reduce() over rounds for path dependency.",
+      "code_snippet": {
+        "language": "R",
+        "description": "Monte Carlo bracket simulation using purrr + furrr for parallelism",
+        "code": [
+          "library(purrr)",
+          "library(furrr)",
+          "library(dplyr)",
+          "library(tidymodels)",
+          "",
+          "# Simulate one game — returns winning team name",
+          "simulate_game <- function(team_a, team_b, round_num, model, stats) {",
+          "  feats <- stats |>",
+          "    filter(team %in% c(team_a, team_b)) |>",
+          "    pivot_wider(names_from = team, values_from = -team) |>  # stub; use build_matchup_features()",
+          "    mutate(round = round_num)",
+          "  prob_a <- predict(model, feats, type = 'prob')$.pred_1",
+          "  if (runif(1) < prob_a) team_a else team_b",
+          "}",
+          "",
+          "# Simulate one round — returns vector of winners",
+          "simulate_round <- function(survivors, round_num, model, stats) {",
+          "  pairs <- matrix(survivors, ncol = 2, byrow = TRUE)",
+          "  apply(pairs, 1, function(p) simulate_game(p[1], p[2], round_num, model, stats))",
+          "}",
+          "",
+          "# Simulate full bracket — returns list with champion + round-by-round survivors",
+          "simulate_single_bracket <- function(bracket_teams, model, stats) {",
+          "  reduce(",
+          "    1:6,",
+          "    function(survivors, round_num) simulate_round(survivors, round_num, model, stats),",
+          "    .init = bracket_teams",
+          "  )",
+          "}",
+          "",
+          "# Run N simulations in parallel",
+          "run_simulations <- function(bracket_teams, model, stats, n_sim = 10000) {",
+          "  plan(multisession, workers = 4)",
+          "  champions <- future_map_chr(",
+          "    seq_len(n_sim),",
+          "    ~simulate_single_bracket(bracket_teams, model, stats),",
+          "    .options = furrr_options(seed = TRUE)",
+          "  )",
+          "  tibble(champion = champions) |>",
+          "    count(champion) |>",
+          "    mutate(prob = n / n_sim) |>",
+          "    arrange(desc(prob))",
+          "}"
+        ]
+      }
+    }
+  },
+
+  "domain_specific_patterns": {
+    "_tier": "tier_3_optional",
+    "round_dynamics": {
+      "description": "Historical upset rates by seed matchup (1985-2024)",
+      "round_of_64": [
+        {"matchup": "1 vs 16", "upset_rate": 0.014, "note": "Only 2 ever: UMBC 2018, FDU 2023"},
+        {"matchup": "2 vs 15", "upset_rate": 0.063},
+        {"matchup": "3 vs 14", "upset_rate": 0.152},
+        {"matchup": "4 vs 13", "upset_rate": 0.207},
+        {"matchup": "5 vs 12", "upset_rate": 0.355, "note": "Classic upset game — always consider 12-seed"},
+        {"matchup": "6 vs 11", "upset_rate": 0.373, "note": "Most volatile matchup"},
+        {"matchup": "7 vs 10", "upset_rate": 0.391},
+        {"matchup": "8 vs 9", "upset_rate": 0.490, "note": "Essentially a coin flip — model matters most here"}
+      ],
+      "round_of_32": [
+        {"note": "Upsets become less predictable — cumulative fatigue and adjusted matchups"},
+        {"seed_range": "1-4 seeds", "advance_rate": 0.72},
+        {"seed_range": "5-8 seeds", "advance_rate": 0.48}
+      ],
+      "sweet_16_plus": {
+        "note": "Coaching experience, defensive depth, and tournament experience dominate. adj_em_delta and coach_exp_delta are most predictive."
+      }
+    },
+    "cinderella_profile": {
+      "description": "Common attributes of teams that make deep runs as underdogs",
+      "indicators": [
+        "adj_em > 15 despite seed >= 10 (undervalued by committee)",
+        "adj_d < 95 (elite defense — controls pace, wins low-scoring games)",
+        "3p_rate < 0.35 (consistent, non-variance-dependent offense)",
+        "coach_tourney_exp >= 5 (experienced coach in high-pressure moments)",
+        "recent_form (last 10) >= 0.8 (hot entering tournament)",
+        "sos >= 8.0 (played real competition, not inflated record)"
+      ]
+    }
+  },
+
+  "common_patterns": {
+    "_tier": "tier_3_optional",
+    "single_game_prediction": {
+      "description": "Predict win probability for a single matchup using tidymodels predict()",
+      "language": "R",
+      "code": [
+        "predict_game <- function(team_a_stats, team_b_stats, round_num, model) {",
+        "  new_data <- build_matchup_features_row(team_a_stats, team_b_stats, round_num)",
+        "  predict(model, new_data, type = 'prob')$.pred_1  # probability team_a wins",
+        "}",
+        "",
+        "# Helper: build a single-row tibble for one matchup",
+        "build_matchup_features_row <- function(a, b, round_num) {",
+        "  tibble(",
+        "    adj_em_delta        = a$adj_em - b$adj_em,",
+        "    adj_o_delta         = a$adj_o  - b$adj_o,",
+        "    adj_d_delta         = b$adj_d  - a$adj_d,",
+        "    pace_delta          = a$adj_t  - b$adj_t,",
+        "    sos_delta           = a$sos    - b$sos,",
+        "    three_pt_rate_delta = a$fg3_rate - b$fg3_rate,",
+        "    tov_rate_delta      = b$tov_rate - a$tov_rate,",
+        "    ft_rate_delta       = a$ft_rate  - b$ft_rate,",
+        "    recent_form_delta   = a$form     - b$form,",
+        "    coach_exp_delta     = a$coach_exp - b$coach_exp,",
+        "    seed_delta          = b$seed - a$seed,",
+        "    is_classic_upset    = as.integer(a$seed %in% c(5L,6L,7L) & b$seed %in% c(10L,11L,12L)),",
+        "    is_bubble_year      = 0L,",
+        "    round               = round_num",
+        "  )",
+        "}"
+      ]
+    },
+    "cinderella_detection": {
+      "description": "Find first-round games where underdog has >35% win probability",
+      "language": "R",
+      "code": [
+        "find_cinderellas <- function(round1_games, model, team_stats, threshold = 0.35) {",
+        "  round1_games |>",
+        "    mutate(",
+        "      prob_team_a = map2_dbl(",
+        "        higher_seed_team, lower_seed_team,",
+        "        ~predict_game(team_stats[.x,], team_stats[.y,], round_num = 1L, model = model)",
+        "      ),",
+        "      prob_upset = 1 - prob_team_a,",
+        "      matchup    = paste(lower_seed_team, 'over', higher_seed_team)",
+        "    ) |>",
+        "    filter(prob_upset > threshold) |>",
+        "    arrange(desc(prob_upset)) |>",
+        "    select(matchup, prob_upset)",
+        "}"
+      ]
+    },
+    "bracket_optimization": {
+      "description": "Pick bracket to maximize expected ESPN score (points per correct pick, doubled each round)",
+      "espn_scoring": {
+        "round_1": 10,
+        "round_2": 20,
+        "sweet_16": 40,
+        "elite_8": 80,
+        "final_four": 160,
+        "championship": 320
+      },
+      "strategy": "From Monte Carlo simulation results, pick the team with highest championship probability that can reach each game slot. Do not greedily pick the per-game probability winner — optimize for late-round expected value.",
+      "language": "R",
+      "code": [
+        "espn_points <- c('1'=10, '2'=20, '3'=40, '4'=80, '5'=160, '6'=320)",
+        "",
+        "optimize_bracket <- function(sim_results, champion_probs) {",
+        "  # sim_results: list of simulation outputs, each with round->survivors",
+        "  # champion_probs: tibble(team, prob) from run_simulations()",
+        "  round_survivors <- sim_results |>",
+        "    bind_rows(.id = 'sim') |>",
+        "    group_by(round, team) |>",
+        "    summarise(reach_prob = n() / max(as.integer(sim)), .groups = 'drop')",
+        "",
+        "  # For each round, pick team with highest expected_pts = reach_prob * round_pts * champion_prob",
+        "  round_survivors |>",
+        "    left_join(champion_probs, by = 'team') |>",
+        "    mutate(expected_pts = reach_prob * espn_points[as.character(round)] * prob) |>",
+        "    group_by(round) |>",
+        "    slice_max(expected_pts, n = 2^(6 - round), with_ties = FALSE)",
+        "}"
+      ]
+    },
+    "data_loading": {
+      "description": "Load and merge KenPom + Kaggle tournament data for a given season range in R",
+      "language": "R",
+      "code": [
+        "library(readr)",
+        "library(dplyr)",
+        "",
+        "load_season_data <- function(kenpom_path, kaggle_results_path, seasons) {",
+        "  kenpom  <- read_csv(kenpom_path)  # cols: season, team, adj_em, adj_o, adj_d, adj_t, sos, luck",
+        "  results <- read_csv(kaggle_results_path)  # cols: Season, WTeamID, LTeamID, ...",
+        "",
+        "  merged <- results |>",
+        "    filter(Season %in% seasons) |>",
+        "    left_join(kenpom, by = c('WTeamID' = 'team_id', 'Season' = 'season')) |>",
+        "    left_join(kenpom, by = c('LTeamID' = 'team_id', 'Season' = 'season'),",
+        "              suffix = c('_a', '_b'))",
+        "",
+        "  missing <- sum(is.na(merged$adj_em_a))",
+        "  if (missing > 5) {",
+        "    warning(glue::glue('{missing} missing KenPom values — check team name alignment'))",
+        "  }",
+        "  merged",
+        "}"
+      ]
+    }
+  },
+
+  "io_contract": {
+    "_tier": "tier_1_core",
+    "input": {
+      "description": "Current tournament bracket + team stats",
+      "format": {
+        "teams_file": "CSV with columns: team_name, seed, region, adj_em, adj_o, adj_d, adj_t, sos, 3p_rate, ft_rate, tov_rate, recent_form, coach_tourney_exp",
+        "model_file": "pickle — trained CalibratedClassifierCV ensemble",
+        "n_simulations": "int, default 10000"
+      }
+    },
+    "output": {
+      "description": "Full bracket predictions with probabilities",
+      "format": {
+        "champion_probabilities": "dict[team_name -> float] — sorted descending",
+        "final_four_probabilities": "dict[team_name -> float]",
+        "upset_alerts": "list[{matchup, underdog_win_prob, round}] for underdog_prob > 0.35",
+        "optimal_bracket_picks": "dict[round -> list[team_name]] — ESPN-score-optimized picks",
+        "brier_score_estimate": "float — model self-assessment against validation years"
+      }
+    }
+  },
+
+  "validation": {
+    "_tier": "tier_1_core",
+    "pre_run_checklist": [
+      "KenPom/efficiency data loaded for current season (not last year's)",
+      "All 68 tournament teams present in team_stats dict",
+      "No null values in adj_em, adj_o, adj_d, adj_t for any team",
+      "Bracket seeding file matches official NCAA bracket (double-check play-in results)",
+      "Model trained on data that excludes current season (no leakage)",
+      "Temporal split confirmed: validation years not in training set"
+    ],
+    "post_run_checklist": [
+      "All 63 game slots have predicted winner and win probability in (0.01, 0.99)",
+      "Champion probability sums to ~1.0 across all teams",
+      "At least one #10+ seed has >35% upset probability in Round 1",
+      "No team appears twice in the same round",
+      "Brier score on 2022-2024 hold-out < 0.22"
+    ],
+    "success_criteria": {
+      "brier_score": {"target": "< 0.22", "baseline": "seed-only model ~0.24", "fail": ">= 0.24 means model adds no value over seeds"},
+      "log_loss": {"target": "< 0.65", "baseline": "~0.69 for random 50/50"},
+      "upset_recall": {"target": "> 0.40", "description": "Of actual upsets, model correctly flagged >40% as having underdog_prob > 0.35"},
+      "calibration": {"target": "Mean absolute calibration error < 0.05", "description": "Predicted 60% should win ~60% of the time"}
+    },
+    "benchmark_by_year": [
+      {"year": 2022, "target_brier": 0.21, "notes": "Kansas won — models predicted well"},
+      {"year": 2023, "target_brier": 0.22, "notes": "FAU Final Four run — stress test for upset detection"},
+      {"year": 2024, "target_brier": 0.20, "notes": "UConn repeat — chalk year, models should excel"}
+    ],
+    "test_cases": [
+      {
+        "name": "1-seed vs 16-seed",
+        "input": {"adj_em_delta": 25.0, "seed_delta": 15, "round": 1},
+        "expected_team_a_win_prob": "> 0.92",
+        "notes": "Model should near-certainty on this matchup"
+      },
+      {
+        "name": "8-seed vs 9-seed coin flip",
+        "input": {"adj_em_delta": 1.5, "seed_delta": 1, "round": 1},
+        "expected_team_a_win_prob": "0.50-0.57",
+        "notes": "Should be close to 50/50 — small efficiency edge only"
+      },
+      {
+        "name": "Classic 12-over-5 upset setup",
+        "input": {"adj_em_delta": -2.0, "seed_delta": -7, "is_classic_upset": 1, "pace_delta": -4.5, "three_pt_rate_delta": -0.08, "round": 1},
+        "expected_team_a_win_prob": "0.35-0.50",
+        "notes": "12-seed with slightly better efficiency and pace mismatch — should show upset potential"
+      }
+    ]
+  },
+
+  "error_handling": {
+    "_tier": "tier_2_recommended",
+    "common_errors": [
+      {
+        "error": "NA values in adj_em after left_join to KenPom data",
+        "cause": "Team name mismatch — KenPom uses 'Connecticut', ESPN/hoopR uses 'UConn'",
+        "solution": "Build a team name crosswalk tibble and join before merging. Use anti_join() to find unmatched teams.",
+        "r_fix": [
+          "name_xwalk <- tribble(",
+          "  ~kenpom_name,    ~espn_name,",
+          "  'Connecticut',   'UConn',",
+          "  'Louisiana State','LSU',",
+          "  'Nevada Las Vegas','UNLV'",
+          ")",
+          "# Check unmatched:",
+          "anti_join(bracket_teams, kenpom, by = c('team' = 'kenpom_name'))"
+        ]
+      },
+      {
+        "error": "Brier score > 0.24 (worse than seed-only baseline)",
+        "cause": "Data leakage via initial_split() instead of initial_time_split(), or missing KenPom adj_em for key teams",
+        "solution": "Switch to initial_time_split(). Run: sum(is.na(train_df$adj_em_delta)) to check missingness. Confirm training seasons do not include validation years.",
+        "r_check": "stopifnot(max(training(splits)$season) < min(testing(splits)$season))"
+      },
+      {
+        "error": "All predicted probabilities cluster near 0.5",
+        "cause": "step_normalize() not applied in recipe (required for logistic regression), or recipe prep/bake done incorrectly",
+        "solution": "Check recipe includes step_normalize(all_numeric_predictors()). Verify workflow uses prep()+bake() correctly — tidymodels handles this automatically via workflow().",
+        "r_check": "rec |> prep() |> bake(new_data = NULL) |> summary()  # verify normalized ranges"
+      },
+      {
+        "error": "Bracket produces duplicate teams in the same round slot",
+        "cause": "Path dependency bug — purrr::reduce() not correctly chaining round winners",
+        "solution": "Use the reduce(1:6, ...) pattern from implementation.bracket_simulation. Each round's output must be the only input to the next.",
+        "r_check": "# After one simulation, verify lengths: 64, 32, 16, 8, 4, 2, 1",
+        "r_fix": "stopifnot(length(simulate_single_bracket(bracket_teams, model, stats)) == 1)"
+      },
+      {
+        "error": "tune_grid() runs but all metrics are identical across params",
+        "cause": "Outcome variable team_a_wins stored as numeric instead of factor",
+        "solution": "tidymodels classification requires factor outcome. Convert before fitting.",
+        "r_fix": "matchup_df <- matchup_df |> mutate(team_a_wins = factor(team_a_wins, levels = c('0','1')))"
+      }
+    ]
+  },
+
+  "configuration": {
+    "_tier": "tier_2_recommended",
+    "r_packages_required": [
+      "tidyverse", "tidymodels", "xgboost", "probably", "furrr", "future",
+      "hoopR", "vip", "ggplot2", "glue", "stacks"
+    ],
+    "r_packages_install": [
+      "install.packages(c('tidyverse','tidymodels','xgboost','probably','furrr','future','vip','ggplot2','glue','stacks'))",
+      "remotes::install_github('sportsdataverse/hoopR')"
+    ],
+    "model_config": {
+      "xgb_trees": 300,
+      "xgb_tree_depth": 4,
+      "xgb_learn_rate": 0.05,
+      "xgb_sample_size": 0.8,
+      "xgb_mtry": 0.8,
+      "ensemble_xgb_weight": 0.65,
+      "ensemble_lr_weight": 0.35,
+      "calibration_method": "probably::cal_estimate_isotonic()",
+      "n_simulations": 10000,
+      "parallel_workers": 4,
+      "upset_alert_threshold": 0.35,
+      "random_seed": 42,
+      "r_set_seed": "set.seed(42)"
+    },
+    "feature_config": {
+      "features_list": [
+        "adj_em_delta", "adj_o_delta", "adj_d_delta", "pace_delta",
+        "sos_delta", "three_pt_rate_delta", "tov_rate_delta", "ft_rate_delta",
+        "recent_form_delta", "coach_exp_delta", "seed_delta",
+        "is_classic_upset", "is_bubble_year", "round"
+      ],
+      "target_column": "team_a_wins",
+      "target_type": "factor (levels: '0', '1') — required for tidymodels classification",
+      "recipe_steps": [
+        "step_normalize(all_numeric_predictors())",
+        "step_zv(all_predictors())"
+      ]
+    }
+  },
+
+  "cross_references": {
+    "_tier": "tier_3_optional",
+    "related_agents": [
+      {
+        "name": "Sports Data Loader Agent",
+        "purpose": "Handles API calls to Sports Reference and KenPom scraping",
+        "provides": "Clean, normalized team stats DataFrames",
+        "relationship": "upstream — feed its output into march_madness_agent"
+      },
+      {
+        "name": "Bracket Score Optimizer Agent",
+        "purpose": "Takes win probabilities and optimizes picks for specific bracket scoring systems (ESPN, Yahoo, office pool variants)",
+        "relationship": "downstream — consumes march_madness_agent output"
+      }
+    ],
+    "external_tools": [
+      {"name": "hoopR", "url": "https://hoopr.sportsdataverse.org/", "purpose": "R package — live NCAA data via ESPN API, current season team stats"},
+      {"name": "tidymodels", "url": "https://www.tidymodels.org/", "purpose": "R ML framework — recipes, parsnip, tune, yardstick, workflows"},
+      {"name": "probably", "url": "https://probably.tidymodels.org/", "purpose": "R probability calibration package — cal_estimate_isotonic(), cal_plot_breaks()"},
+      {"name": "stacks", "url": "https://stacks.tidymodels.org/", "purpose": "R model stacking/ensemble package — meta-learner over tidymodels candidates"},
+      {"name": "vip", "url": "https://koalaverse.github.io/vip/", "purpose": "Variable importance plots for tidymodels/xgboost"},
+      {"name": "kaggle march madness R notebooks", "url": "https://www.kaggle.com/competitions/march-machine-learning-mania-2024/code", "purpose": "Community ML bracket prediction notebooks — filter by R language for feature ideas"}
+    ]
+  },
+
+  "changelog": {
+    "_tier": "tier_3_optional",
+    "entries": [
+      {
+        "version": "1.0",
+        "date": "2026-03-10",
+        "changes": ["Initial release — full feature set, XGBoost+LogReg ensemble, Monte Carlo simulation, KenPom integration"]
+      },
+      {
+        "version": "1.1",
+        "date": "2026-03-11",
+        "changes": [
+          "Converted all code snippets from Python to R",
+          "Replaced scikit-learn/pandas with tidymodels/tidyverse",
+          "Added hoopR as primary live data source",
+          "Added furrr parallel Monte Carlo simulation pattern",
+          "Added probably package for probability calibration",
+          "Updated error handling with R-specific issues (factor outcome, initial_time_split)",
+          "Added stacks package reference for ensemble",
+          "Updated configuration with R package install instructions"
+        ]
+      }
+    ]
+  }
+}
