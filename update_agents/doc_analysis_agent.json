@@ -12,8 +12,10 @@
       "target_files": [
         "make_agent.md",
         "make_agent.json",
-        "make_gem_qc.md",
-        "make_gem_qc.json",
+        "make_gems/make_gem.md",
+        "make_gems/make_gem.json",
+        "make_gems/make_gem_qc.md",
+        "make_gems/make_gem_qc.json",
         "README.md"
       ]
     },
@@ -57,7 +59,7 @@
           "name": "Load Target Templates",
           "description": "Read current content of all target files listed in primary_data.update_targets.",
           "input": "file paths in primary_data.update_targets",
-          "output": "parsed content of make_agent.md, make_agent.json, make_gem_qc.md, make_gem_qc.json, README.md"
+          "output": "parsed content of make_agent.md, make_agent.json, make_gems/make_gem.md, make_gems/make_gem.json, make_gems/make_gem_qc.md, make_gems/make_gem_qc.json, README.md"
         },
         {
           "step": 4,
@@ -270,6 +272,22 @@
         "cache_file": "source_docs/xai_overview.md",
         "section_focus": "function calling, tool_choice, parallel tools, Pydantic schemas, built-in tools, model tiers",
         "notes": "Last fetch: 2026-03-11 partial. Main overview sparse — supplemented with function calling and models pages."
+      },
+      {
+        "platform": "Google",
+        "label": "Google Gems Overview",
+        "url": "https://support.google.com/gemini/answer/15235921",
+        "cache_file": "source_docs/google_gems_overview.md",
+        "section_focus": "Gem creation workflow, 4-pillar structure (persona, task, context, format), knowledge file upload, system instruction best practices",
+        "notes": "Primary source for make_gems/make_gem.md Key Principles and make_gems/make_gem.json gem_instructions patterns. Pending first fetch."
+      },
+      {
+        "platform": "Google",
+        "label": "Gemini API System Instructions",
+        "url": "https://ai.google.dev/gemini-api/docs/system-instructions",
+        "cache_file": "source_docs/google_system_instructions.md",
+        "section_focus": "system prompt design, persona/task/context/format patterns, instruction scope, boundary setting, format directives",
+        "notes": "Informs make_gems/make_gem.md Key Principles and eligible sections in make_gem.json. Pending first fetch."
       }
     ],
     "update_targets": [
@@ -298,17 +316,40 @@
         "change_types_allowed": ["add_array_entry", "add_key_to_empty_object", "extend_description"]
       },
       {
-        "file": "make_gem_qc.md",
-        "companion_file": "make_gem_qc.json",
-        "companion_sync_rule": "If a proposal adds a new pillar or pitfall to make_gem_qc.md, check whether make_gem_qc.json needs a corresponding validation rule. Propose together.",
+        "file": "make_gems/make_gem.md",
+        "companion_file": "make_gems/make_gem.json",
+        "companion_sync_rule": "If a proposal adds a new principle or pitfall to make_gems/make_gem.md, check whether make_gems/make_gem.json needs a corresponding gem_instructions field or validation entry. Propose together.",
+        "eligible_sections": ["Key Principles", "Common Pitfalls and Solutions", "Examples"],
+        "ineligible_sections": ["Mission", "File Organization: JSON vs MD", "Agent Quickstart"],
+        "change_types_allowed": ["add_principle", "add_pitfall", "add_example", "extend_existing"],
+        "gem_focus": "Proposals must be specific to Gem/system instruction design — persona crafting, task scoping, context boundary patterns, format directives. Reject proposals that duplicate make_agent.md content."
+      },
+      {
+        "file": "make_gems/make_gem.json",
+        "companion_file": "make_gems/make_gem.md",
+        "companion_sync_rule": "If a proposal adds a new field or pattern to make_gems/make_gem.json gem_instructions, check whether make_gems/make_gem.md has narrative guidance for that concept. If not, generate a companion MD proposal targeting Key Principles or Common Pitfalls.",
+        "eligible_sections": [
+          "gem_instructions.persona",
+          "gem_instructions.task.actions",
+          "gem_instructions.context.boundaries",
+          "gem_instructions.format"
+        ],
+        "ineligible_sections": ["_metadata", "validation"],
+        "change_types_allowed": ["add_array_entry", "add_key_to_empty_object", "extend_description"],
+        "gem_focus": "Proposals must refine or extend the 4-pillar template fields with patterns sourced from google_gems_overview.md or google_system_instructions.md."
+      },
+      {
+        "file": "make_gems/make_gem_qc.md",
+        "companion_file": "make_gems/make_gem_qc.json",
+        "companion_sync_rule": "If a proposal adds a new pillar or pitfall to make_gems/make_gem_qc.md, check whether make_gem_qc.json needs a corresponding validation rule. Propose together.",
         "eligible_sections": ["The 4 Pillars of Quality", "Common Pitfalls", "Validation Rules"],
         "ineligible_sections": ["Mission", "File Organization: JSON vs MD"],
         "change_types_allowed": ["add_pillar", "add_pitfall", "add_rule"]
       },
       {
-        "file": "make_gem_qc.json",
-        "companion_file": "make_gem_qc.md",
-        "companion_sync_rule": "If a proposal adds a new validation rule to make_gem_qc.json, check whether make_gem_qc.md has narrative explanation for that rule's intent. If not, propose a companion MD addition.",
+        "file": "make_gems/make_gem_qc.json",
+        "companion_file": "make_gems/make_gem_qc.md",
+        "companion_sync_rule": "If a proposal adds a new validation rule to make_gems/make_gem_qc.json, check whether make_gem_qc.md has narrative explanation for that rule's intent. If not, propose a companion MD addition.",
         "eligible_sections": [
           "validation_rules.rules",
           "gem_instructions.context.boundaries",
@@ -477,8 +518,8 @@
     "files": [
       "make_agent.md",
       "make_agent.json",
-      "make_gem_qc.md",
-      "make_gem_qc.json",
+      "make_gems/make_gem_qc.md",
+      "make_gems/make_gem_qc.json",
       "README.md",
       "source_docs/anthropic_agents.md",
       "source_docs/anthropic_tool_use.md",

@@ -11,8 +11,8 @@
       "target_files": [
         "make_agent.md",
         "make_agent.json",
-        "make_gem_qc.md",
-        "make_gem_qc.json"
+        "make_gems/make_gem_qc.md",
+        "make_gems/make_gem_qc.json"
       ]
     },
     "agent_details": {
@@ -62,7 +62,7 @@
           "name": "Load Target Templates",
           "description": "Read current content of all target files listed in primary_data.update_targets.",
           "input": "file paths in primary_data.update_targets",
-          "output": "parsed content of make_agent.md, make_agent.json, make_gem_qc.md, make_gem_qc.json"
+          "output": "parsed content of make_agent.md, make_agent.json, make_gems/make_gem_qc.md, make_gems/make_gem_qc.json"
         },
         {
           "step": 3,
@@ -146,7 +146,7 @@
         "name": "target_files",
         "type": "array",
         "format": "File paths of templates to diff against",
-        "example": "['make_agent.md', 'make_agent.json', 'make_gem_qc.md', 'make_gem_qc.json']",
+        "example": "['make_agent.md', 'make_agent.json', 'make_gems/make_gem_qc.md', 'make_gems/make_gem_qc.json']",
         "required": true
       }
     ],
@@ -253,13 +253,13 @@
         "change_types_allowed": ["add_array_entry", "add_key_to_empty_object", "extend_description"]
       },
       {
-        "file": "make_gem_qc.md",
+        "file": "make_gems/make_gem_qc.md",
         "eligible_sections": ["The 4 Pillars of Quality", "Common Pitfalls", "Validation Rules"],
         "ineligible_sections": ["Mission", "File Organization: JSON vs MD"],
         "change_types_allowed": ["add_pillar", "add_pitfall", "add_rule"]
       },
       {
-        "file": "make_gem_qc.json",
+        "file": "make_gems/make_gem_qc.json",
         "eligible_sections": [
           "validation_rules.rules",
           "gem_instructions.context.boundaries",
@@ -383,8 +383,8 @@
     "files": [
       "make_agent.md",
       "make_agent.json",
-      "make_gem_qc.md",
-      "make_gem_qc.json",
+      "make_gems/make_gem_qc.md",
+      "make_gems/make_gem_qc.json",
       "source_docs/anthropic_agents.md",
       "source_docs/anthropic_tool_use.md",
       "source_docs/anthropic_agent_sdk.md",
@@ -536,8 +536,8 @@
       },
       {
         "name": "make_gem_qc",
-        "files": ["make_gem_qc.md", "make_gem_qc.json"],
-        "relationship": "Validates Gem definitions downstream of this agent's updates to make_gem_qc.*"
+        "files": ["make_gems/make_gem_qc.md", "make_gems/make_gem_qc.json"],
+        "relationship": "Validates Gem definitions downstream of this agent's updates to make_gems/make_gem_qc.*"
       },
       {
         "name": "make_agent",
@@ -570,7 +570,7 @@
     "documentation": [
       "update_agent.md — full narrative guide",
       "make_agent.md — primary update target reference",
-      "make_gem_qc.md — secondary update target reference"
+      "make_gems/make_gem_qc.md — secondary update target reference"
     ]
   },
   "changelog": {

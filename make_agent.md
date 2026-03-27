@@ -118,6 +118,21 @@ Common principles across successful agents:
 **Why**: Hooks (on_tool_call, on_tool_result, on_agent_end) give a consistent, auditable trace of every agent run without coupling observability logic to business logic.
 **How**: Register hooks for metrics, logging, and guardrail triggers. See `operational_guidance.best_practices` in the JSON for the hook pattern.
 
+**Stop Sequence Control**
+**Description**: Set `stop_sequences` explicitly for agents that produce structured or delimited output.
+**Why**: Without stop sequences, the model may generate beyond intended boundaries in multi-step structured outputs — appending extra JSON, continuing past delimiter tokens, or producing redundant responses. Stop sequences provide a hard boundary that is more reliable than prompting the model to "stop here."
+**How**: Define one or more stop sequences in `implementation.llm_agent.parameters.stop_sequences` that match your expected output boundaries (e.g., `["</output>", "###"]`). Leave empty `[]` if not needed — the parameter should be present so practitioners remember it exists.
+
+**Temperature by Agent Mode**
+**Description**: Set temperature differently for tool-calling agents vs. conversational agents — they have opposite needs.
+**Why**: Tool selection and parameter generation require consistency across runs. At temperature 0.7 (the template default), a model may choose different tools or generate different parameter values for identical inputs. This causes non-deterministic agentic behavior that is difficult to debug. Conversational agents benefit from higher temperature for natural variation.
+**How**: For tool-calling agents, set `temperature: 0.0–0.2` in `implementation.llm_agent.parameters`. For conversational agents, the default 0.7 is appropriate. Document the choice in the parameters section. Three platforms (Anthropic, Google, xAI) independently recommend low temperature for deterministic tool use.
+
+**Structured Output vs. Function Calling — Different Jobs**
+**Description**: Use structured output (`response_format`) when you want the model's final answer in a specific schema. Use function calling (tools) when you need the model to request an action during the conversation.
+**Why**: Conflating these leads to over-engineering — defining tools when structured output would suffice, or expecting a formatted final response from a tool-calling loop that produces raw text. The distinction is: structured output shapes the terminal response; function calling shapes intermediate steps.
+**How**: If your agent needs to return a structured JSON object as its final answer, set `response_format` in parameters. If your agent needs to take actions (fetch data, write files, call APIs) before producing a final answer, use tools. Some agents need both: tools for the agentic loop, `response_format` for the final structured output.
+
 ---
 
 ## Core Concepts (optional for complex agents)
@@ -223,7 +238,39 @@ result = agent.process(large_input, timeout=120, batch_size=100)
 
 **Solution**: Keep each agent's tool count to 10-20. If you need more tools, split them across specialized sub-agents and use a multi-agent routing pattern. Document the split in `cross_references.related_agents`.
 
-### 5. [Additional Pitfalls]
+### 5. Missing Input Examples for Complex Tools
+
+**Problem**: Tools with nested parameters or format-sensitive inputs are called with incorrect or guessed values, causing silent failures or API errors.
+
+**Why it happens**: Without `input_examples`, the model infers how to call a tool from its description and parameter schema alone. For complex nested objects or parameters with precise format requirements (e.g., date strings, coordinate pairs), inference is insufficient — the model guesses and often guesses wrong.
+
+**Solution**: Add `input_examples` to tool definitions for any tool with non-trivial parameter structures. The examples teach the model the expected call format directly. Anthropic documentation identifies this as a key reliability improvement for tool-heavy agents.
+
+### 6. Wrong Order in Tool Result Messages
+
+**Problem**: The API returns an error or unexpected behavior when tool results are sent back in the wrong order within the user message content array.
+
+**Why it happens**: When returning tool results, the `tool_result` content blocks must come **first** in the user message's `content` array. Any accompanying text (e.g., "What should I do next?") must come **after** all tool results. This ordering is a hard API requirement, not a style preference — violating it causes API errors that can be difficult to trace.
+
+**Solution**: Always structure tool result messages as: `[tool_result_block_1, tool_result_block_2, ..., text_block]`. Never interleave text before tool results. Validate content array ordering in your tool runner before sending.
+
+### 7. Thin Tool Descriptions
+
+**Problem**: Tools are called with wrong parameters or skipped entirely because the model doesn't understand when or how to use them.
+
+**Why it happens**: Tool descriptions are the model's only guide to tool selection and parameter filling. Anthropic documentation identifies thin descriptions as "the single most important factor in tool performance." A description like "Gets data" tells the model almost nothing. The model must infer use cases, parameter meanings, and edge cases — and will guess wrong.
+
+**Solution**: Write tool descriptions that answer: (1) what this tool does, (2) when to use it vs. similar tools, (3) what each parameter means and its expected format. For parameters with precise formats (dates, enums, coordinates), include examples directly in the parameter description. Test each tool description by asking: "Could the model call this tool correctly from the description alone?"
+
+### 8. Parallel Prompt for Sequential Tool Chains
+
+**Problem**: Prompting the model to "invoke all tools simultaneously" for a sequential workflow causes the model to guess parameter values for downstream tools before upstream results are available.
+
+**Why it happens**: Parallel tool use prompts (e.g., "for maximum efficiency, invoke all relevant tools simultaneously") work well for independent operations. For dependent chains — where Tool B's input is Tool A's output — the model either refuses to call B in parallel or invents its B parameters. Both outcomes break the workflow.
+
+**Solution**: Use parallel tool calls only for genuinely independent operations. For sequential chains, prompt the model to complete one step at a time and wait for results before proceeding. Set `disable_parallel_tool_use: true` in `implementation.llm_agent.parameters` when your workflow is strictly sequential.
+
+### 9. [Additional Pitfalls]
 
 Document common pitfalls based on expected usage. Focus on mistakes that:
 - Are easy to make

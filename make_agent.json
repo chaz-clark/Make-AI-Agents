@@ -116,7 +116,8 @@
         "top_p": 1.0,
         "tool_choice": "auto",
         "response_format": null,
-        "disable_parallel_tool_use": false
+        "disable_parallel_tool_use": false,
+        "stop_sequences": []
       }
     },
     "api_agent": {
@@ -227,6 +228,10 @@
       {
         "practice": "tool_count_limit",
         "description": "Keep tool count to 10-20 per agent; beyond this threshold model performance degrades. Split large tool sets across specialized sub-agents."
+      },
+      {
+        "practice": "low_temperature_for_tool_agents",
+        "description": "Use low temperature (0.0–0.2) for agents that rely on deterministic tool selection and parameter generation. Higher temperatures increase tool call variability — the model may choose different tools or generate different parameter values for identical inputs. Conversational agents can use higher temperatures (0.7+) for natural variation. Document the temperature choice in implementation.llm_agent.parameters with a note on why."
       }
     ],
     "alternatives": []
@@ -239,9 +244,25 @@
         "failure": "infinite_tool_loop",
         "cause": "Model repeatedly calls tools without reaching a stopping condition",
         "mitigation": "Set max_turns limit; use tool_choice=auto (not required) after first tool call; implement loop detection in tool runner"
+      },
+      {
+        "failure": "server_tool_loop_limit",
+        "cause": "Server-side sampling loop has a default limit of 10 iterations; when reached, API returns stop_reason: 'pause_turn' instead of a final answer",
+        "mitigation": "On receiving stop_reason: 'pause_turn', resend the API response as a new user message to allow the agent to continue and complete its task"
+      },
+      {
+        "failure": "schema_too_complex_for_structured_output",
+        "cause": "Very large or deeply nested JSON schemas provided to structured output or tool parameter definitions are silently rejected or cause API errors",
+        "mitigation": "Flatten nested schemas where possible; split complex types into multiple simpler tools or output types; validate schema against platform limits before deploying"
       }
     ],
-    "fallbacks": [],
+    "fallbacks": [
+      {
+        "trigger": "context_window_exhaustion_in_long_running_task",
+        "action": "enable_automatic_compaction",
+        "description": "When token usage approaches the context window limit during a long-running agentic task, enable automatic compaction (context summarization) to allow the task to continue without losing progress. Alternative: pause and resume via session ID if the platform supports it."
+      }
+    ],
     "retry_strategy": {
       "max_retries": 3,
       "backoff": "exponential",
@@ -284,17 +305,17 @@
     "optional": true,
     "patterns": [
       {
-        "name": "",
-        "description": "",
+        "name": "tool_use_behavior",
+        "description": "Control whether the agent continues after a tool call or uses the tool result as the final response.",
         "before": {
-          "code": "",
-          "description": ""
+          "code": "tool_use_behavior: 'run_llm_again'",
+          "description": "Default: LLM processes tool results and generates a follow-up response (agentic loop continues)"
         },
         "after": {
-          "code": "",
-          "description": ""
+          "code": "tool_use_behavior: 'stop_on_first_tool'",
+          "description": "First tool output becomes the final response — useful when the tool result IS the answer (e.g., database lookup)"
         },
-        "notes": ""
+        "notes": "Four approaches: 'run_llm_again' (default agentic loop), 'stop_on_first_tool' (tool result = final response), StopAtToolName (stop when specific tool called), custom function (inspect tool results and decide dynamically)."
       }
     ]
   },
@@ -378,6 +399,19 @@
     "_tier": "tier_3_optional",
     "optional": true,
     "versions": [
+      {
+        "version": "3.3",
+        "date": "2026-03-27",
+        "changes": [
+          "Added stop_sequences to implementation.llm_agent.parameters (Anthropic + Google convergence)",
+          "Added low_temperature_for_tool_agents to operational_guidance.best_practices (3-platform convergence: Anthropic, Google, xAI)",
+          "Added server_tool_loop_limit and schema_too_complex_for_structured_output to error_handling.known_failures",
+          "Added context_window_exhaustion fallback to error_handling.fallbacks (first entry)",
+          "Added tool_use_behavior pattern to common_patterns.patterns (first entry)"
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      },
       {
         "version": "3.2",
         "date": "2026-03-12",

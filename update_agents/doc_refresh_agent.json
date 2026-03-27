@@ -107,7 +107,7 @@
         "conditions": "Always produced"
       }
     ],
-    "side_effects": "Writes to source_docs/*.md files only. Never modifies make_agent.md, make_agent.json, make_gem_qc.md, make_gem_qc.json, or any other repo file."
+    "side_effects": "Writes to source_docs/*.md files only. Never modifies make_agent.md, make_agent.json, make_gems/make_gem.md, make_gems/make_gem.json, make_gems/make_gem_qc.md, make_gems/make_gem_qc.json, or any other repo file."
   },
   "primary_data": {
     "_tier": "tier_1_core",
@@ -116,14 +116,19 @@
     "sources": [
       {
         "platform": "Anthropic",
-        "label": "Claude Agents Overview",
-        "url": "https://docs.anthropic.com/en/docs/build-with-claude/agents",
+        "label": "Claude Agent Skills",
+        "url": "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview.md",
+        "url_2": "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/quickstart.md",
+        "url_3": "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices.md",
+        "url_4": "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/enterprise.md",
+        "url_5": "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/claude-api-skill.md",
+        "url_6": "https://platform.claude.com/docs/en/build-with-claude/skills-guide.md",
         "cache_file": "source_docs/anthropic_agents.md",
-        "section_focus": "agent patterns, tool use, memory, orchestration",
+        "section_focus": "agent skills, progressive disclosure, skill authoring, enterprise governance, API integration",
         "fetch_method": "auto",
-        "last_refresh_status": "failed",
-        "last_refresh_date": "2026-03-11",
-        "notes": "URL 404s at redirect destination. Re-attempt periodically — Anthropic may restore this path."
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-03-27",
+        "notes": "Anthropic restructured agents docs to /agents-and-tools/agent-skills/. Content consolidated from 6 pages. Old URL docs.anthropic.com/en/docs/build-with-claude/agents now 404s."
       },
       {
         "platform": "Anthropic",
@@ -154,9 +159,9 @@
         "cache_file": "source_docs/google_gemini_agentic.md",
         "section_focus": "function calling, parallel/compositional calling, thinking models, MCP, best practices",
         "fetch_method": "auto",
-        "last_refresh_status": "partial",
-        "last_refresh_date": "2026-03-11",
-        "notes": "Original URL 404s. Content retrieved from function calling and thinking sub-pages. Try fetching https://ai.google.dev/gemini-api/docs/function-calling directly on next refresh."
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-03-27",
+        "notes": "Original agentic-capabilities URL 404s. Content fetched from https://ai.google.dev/gemini-api/docs/function-calling — full function calling reference including Gemini 3 IDs, modes (AUTO/ANY/NONE/VALIDATED), MCP, best practices."
       },
       {
         "platform": "Google",
@@ -190,6 +195,29 @@
         "last_refresh_status": "partial",
         "last_refresh_date": "2026-03-11",
         "notes": "Main overview page is sparse. Also fetch https://docs.x.ai/docs/function-calling and https://docs.x.ai/docs/models and merge on next refresh."
+      },
+      {
+        "platform": "Google",
+        "label": "Google Gems — Use Gems in Gemini Apps",
+        "url": "https://support.google.com/gemini/answer/15146780",
+        "url_2": "https://support.google.com/gemini/answer/15235603",
+        "cache_file": "source_docs/google_gems_overview.md",
+        "section_focus": "Gem creation, 4 pillars (persona, task, context, format), knowledge files, system instructions best practices",
+        "fetch_method": "manual",
+        "last_refresh_status": "manual",
+        "last_refresh_date": "2026-03-27",
+        "notes": "JS-rendered pages — not automatable via WebFetch. Manually copied from both URLs: (1) answer/15146780 (Use Gems in Gemini Apps) and (2) answer/15235603 (Tips for creating custom Gems). Covers Gem creation, 4-pillar instructions, knowledge file upload, sharing."
+      },
+      {
+        "platform": "Google",
+        "label": "Gemini API System Instructions",
+        "url": "https://ai.google.dev/gemini-api/docs/system-instructions",
+        "cache_file": "source_docs/google_system_instructions.md",
+        "section_focus": "system instruction patterns, persona definition, task scoping, context boundaries, format guidance, best practices",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-03-27",
+        "notes": "system-instructions page fetched but sparse (code examples only). Supplemented with https://ai.google.dev/gemini-api/docs/prompting-strategies which has full guidance on system instruction design, persona/task/context/format patterns, Gemini 3 system instruction template."
       }
     ]
   },
@@ -223,11 +251,13 @@
       "source_docs/google_gemini_agentic.md",
       "source_docs/google_structured_output.md",
       "source_docs/openai_agents_sdk.md",
-      "source_docs/xai_overview.md"
+      "source_docs/xai_overview.md",
+      "source_docs/google_gems_overview.md",
+      "source_docs/google_system_instructions.md"
     ],
     "models": [],
     "apis": ["WebFetch (HTTP GET with Cache-Control: no-cache)"],
-    "data_sources": ["7 public AI platform documentation URLs — see sources array"],
+    "data_sources": ["9 public AI platform documentation URLs — see sources array (7 agent/API sources + 2 Google Gems sources)"],
     "environment_variables": [],
     "optional_dependencies": {
       "description": "No LLM required. Pure fetch + write workflow.",
@@ -277,7 +307,7 @@
       {
         "name": "Template files untouched",
         "input": "Full refresh run on all 7 sources",
-        "expected_output": "make_agent.md, make_agent.json, make_gem_qc.md, make_gem_qc.json are byte-identical to pre-run state",
+        "expected_output": "make_agent.md, make_agent.json, make_gems/make_gem_qc.md, make_gem_qc.json are byte-identical to pre-run state",
         "validation_method": "exact"
       }
     ],

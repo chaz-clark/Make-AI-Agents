@@ -1,130 +1,97 @@
 ---
 platform: Google
-label: Gemini API Agentic Capabilities (Function Calling + Thinking)
+label: Gemini API Agentic Capabilities (Function Calling)
 source_url: https://ai.google.dev/gemini-api/docs/agentic-capabilities
-last_fetched: 2026-03-11
-fetch_status: partial
-fetch_error: Original URL 404'd. Content retrieved from closely related function calling and thinking documentation pages.
-notes: Covers function calling modes, parallel/compositional calling, best practices, thinking models, MCP integration.
+last_fetched: 2026-03-27
+fetch_status: success
+fetch_error: Original agentic-capabilities URL 404s. Content fetched from https://ai.google.dev/gemini-api/docs/function-calling
+notes: Covers function calling modes, parallel/compositional calling, best practices, MCP integration, Gemini 3 model IDs. Upgraded from partial to success on 2026-03-27.
 ---
 
-## Function Calling with the Gemini API
+# Function Calling with the Gemini API
 
-### Core Concept
+## Overview
 
-Function calling enables models to connect with external tools and APIs by determining when to invoke specific functions and supplying necessary parameters, rather than generating text responses.
+Function calling enables models to determine when to invoke specific functions and provide necessary parameters for real-world actions. The Gemini API supports three primary use cases:
 
-### Three Primary Use Cases
+- **Augment Knowledge:** Access external databases, APIs, and knowledge bases
+- **Extend Capabilities:** Perform computations and overcome model limitations
+- **Take Actions:** Interact with external systems like scheduling or email
 
-1. **Augment Knowledge** — Access external databases, APIs, and knowledge bases
-2. **Extend Capabilities** — Use external tools for computations beyond model limitations
-3. **Take Actions** — Interact with external systems via APIs (scheduling, invoicing, etc.)
+## How Function Calling Works
 
----
+The process involves four key steps:
 
-## How Function Calling Works (4 Steps)
+1. **Define function declarations** describing the function's name, parameters, and purpose
+2. **Send the API request** with function declarations alongside user prompts
+3. **Execute function code** in your application (the model doesn't execute directly)
+4. **Return results** to the model, including the matching function call ID
 
-1. Define function declarations (name, parameters, purpose)
-2. Send user prompt with function declarations to the model
-3. **Model suggests but does not execute functions** — you execute on your side
-4. Send function results back to the model for a user-friendly response
+**Important:** Gemini 3 models now generate unique IDs for every function call. When returning function results, include the matching `id` in your `functionResponse`.
 
----
+## Function Declarations
 
-## Function Declaration Parameters
+Define functions using a JSON subset of OpenAPI schema format, including:
 
-Each declaration includes:
-- **name** — Unique, descriptive identifier without spaces or special characters
-- **description** — Clear explanation of purpose and capabilities
-- **parameters** — Input specifications with type, description, optional enum values
-- **required** — Array of mandatory parameter names
+- `name`: Unique, descriptive identifier (e.g., `get_weather_forecast`)
+- `description`: Clear explanation of purpose and capabilities
+- `parameters`: Input specification with `type`, `properties`, and `required` fields
 
----
+## Advanced Capabilities
 
-## Function Calling Modes
+### Parallel Function Calling
 
-| Mode | Behavior |
-|------|----------|
-| `AUTO` | Default — model decides whether to generate text or suggest function calls |
-| `ANY` | Model must predict a function call; optionally restricted to specified functions |
-| `NONE` | Function calling disabled |
-| `VALIDATED` | Model predicts either function calls or text with schema adherence |
+Execute multiple independent functions simultaneously. The API maps results to their corresponding calls using IDs, enabling asynchronous execution.
 
----
+### Compositional Function Calling
 
-## Key Capabilities
+Chain multiple function calls sequentially. For example, retrieve location data, then use that location to fetch weather information.
 
-**Parallel Function Calling** — Execute multiple independent functions simultaneously in a single turn
+### Function Calling Modes
 
-**Compositional Function Calling** — Chain multiple function calls sequentially where outputs feed into subsequent calls
+Control how models use tools:
 
-**Automatic Function Calling (Python SDK only)** — SDK converts Python functions to declarations, handles execution, and manages response cycles automatically
+- `AUTO`: Model decides whether to call functions or respond naturally
+- `ANY`: Model always predicts a function call
+- `NONE`: Prohibits function calls
+- `VALIDATED`: Ensures schema adherence while allowing natural language responses
 
----
+### Automatic Function Calling (Python SDK)
+
+The Python SDK converts Python functions directly into declarations and automatically handles execution and response cycles.
+
+### Multimodal Function Responses
+
+Gemini 3 models support including images, PDFs, and text within function responses using nested parts with `inlineData`.
+
+### Model Context Protocol (MCP)
+
+Built-in MCP support (Python and JavaScript SDKs) reduces boilerplate by connecting external tools without manual schema construction.
 
 ## Best Practices
 
-"Be extremely clear and specific in your descriptions. The model relies on these to choose the correct function and provide appropriate arguments."
-
-- Use descriptive, specific function names (underscores or camelCase preferred)
-- Provide clear parameter descriptions with examples and constraints
-- Use enums for fixed value sets rather than descriptions alone
-- **Limit active tool sets to 10–20 functions for optimal performance**
-- Employ low temperature settings (e.g., 0) for deterministic function calls
-  - **Exception**: For Gemini 3 models, keep temperature at its default value of 1.0
-- Validate function calls with significant consequences before execution
-- Check `finishReason` in responses to handle failed function calls
+- Provide extremely clear, specific function and parameter descriptions
+- Use strong typing and enums for limited-value parameters
+- Limit active tool sets to 10-20 for optimal performance
+- Use low temperatures (e.g., 0) for deterministic function calls
+- Validate critical function calls before execution
+- Check `finishReason` to detect failed function calls
 - Implement robust error handling with informative messages
+- Prioritize security with proper authentication and authorization
+- Be mindful of token limits when using lengthy descriptions
 
----
+## Supported Models
 
-## Multimodal Function Responses
-
-Gemini 3 series models support multimodal content in function response parts:
-- Supported MIME types: images (PNG, JPEG, WebP) and documents (PDF, plain text)
-
----
-
-## MCP Integration
-
-Built-in Model Context Protocol support via Python and JavaScript SDKs — reduces boilerplate for external tool integration.
-
----
-
-## Supported Models for Function Calling
+Function calling is supported across Gemini 3 and 2.5 series models:
 
 - Gemini 3.1 Pro Preview
 - Gemini 3 Flash Preview
-- Gemini 2.5 series (Pro, Flash, Flash-Lite)
+- Gemini 2.5 Pro, Flash, Flash-Lite
 - Gemini 2.0 Flash
 
-All support parallel and compositional function calling.
+## Notes and Limitations
 
----
-
-## Gemini Thinking
-
-### Thought Summaries
-
-"Thought summaries are summarized versions of the model's raw thoughts" — provide insights into reasoning. Enable with `includeThoughts: true`. Works with both streaming and non-streaming requests.
-
-### Controlling Thinking
-
-**Thinking Levels (Gemini 3 models):**
-- `minimal` — Minimizes latency for chat or high throughput applications
-- `low`, `medium`, `high`
-
-**Thinking Budgets (Gemini 2.5 series):**
-- Set specific token counts (range varies by model)
-- Setting to 0 disables thinking
-- Setting to -1 enables dynamic thinking
-
-### Thought Signatures
-
-Encrypted representations of the model's internal thought process for maintaining context across multi-turn conversations. The GenAI SDK handles this automatically.
-
-### Best Practices for Thinking
-
-- Review reasoning by analyzing thought summaries when responses don't match expectations
-- Constrain thinking amounts in prompts for lengthy outputs
-- Task complexity alignment: use thinking levels appropriately (off for simple tasks, maximum for complex coding/math)
+- Function call parts may appear anywhere in the response parts array when combined with built-in tools — iterate through all parts rather than assuming position
+- Only a subset of OpenAPI schema is supported
+- Large or deeply nested schemas in `ANY` mode may be rejected
+- Automatic function calling is Python SDK-only

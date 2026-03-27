@@ -8,7 +8,8 @@
       "WebFetch(domain:docs.claude.com)",
       "WebFetch(domain:openai.com)",
       "WebFetch(domain:openai.github.io)",
-      "WebFetch(domain:support.google.com)"
+      "WebFetch(domain:support.google.com)",
+      "WebFetch(domain:gemini.google.com)"
     ]
   }
 }

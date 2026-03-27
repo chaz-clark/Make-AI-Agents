@@ -18,9 +18,9 @@ The documentation update system uses two separate agents with distinct responsib
 ## Workflow
 
 ```
-1. Run doc_refresh_agent   →   updates source_docs/ cache files
+1. Run doc_refresh_agent   →   updates source_docs/ cache files (9 sources: agent/API + Gems)
 2. Run doc_analysis_agent  →   presents scored proposals for approval
-3. Approve proposals       →   agent applies changes to make_agent.* and make_gem_qc.*
+3. Approve proposals       →   agent applies changes to make_agent.*, make_gems/make_gem.*, and make_gems/make_gem_qc.*
 4. Run make_agent_qc       →   validates updated templates
 ```
 
@@ -40,5 +40,5 @@ Each agent runs independently. Refresh only when sources are stale (default thre
 
 - **Start a refresh run**: See `doc_refresh_agent.md` → Agent Quickstart
 - **Start an analysis run**: See `doc_analysis_agent.md` → Agent Quickstart
-- **Source cache files**: `source_docs/` folder (7 files, one per platform source)
-- **Update targets**: `make_agent.md`, `make_agent.json`, `make_gem_qc.md`, `make_gem_qc.json`
+- **Source cache files**: `source_docs/` folder (9 files: 7 agent/API sources + 2 Google Gems sources)
+- **Update targets**: `make_agent.md`, `make_agent.json`, `make_gems/make_gem.md`, `make_gems/make_gem.json`, `make_gems/make_gem_qc.md`, `make_gems/make_gem_qc.json`

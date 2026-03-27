@@ -95,6 +95,9 @@ Reference these examples when filling out your Gem's JSON.
 2.  **Missing Context**: If you don't tell the Gem *who* the user is (expert vs. novice), it may guess wrong.
 3.  **Over-Formatting**: Demanding too rigid a structure can sometimes stifle the model's reasoning. Balance structure with flexibility.
 4.  **Ignoring "Boundaries"**: Explicitly stating what *not* to do is often as important as what *to* do.
+5.  **Unstructured Instructions for Gemini 3 Models**: Pasting instructions as flowing prose without XML tags or markdown delimiters reduces reliable parsing. For Gemini 3 models, wrap each pillar in consistent tags (e.g., `<role>...</role>`, `<task>...</task>`, `<constraints>...</constraints>`) or use consistent markdown headers. Google explicitly recommends "use consistent structure: employ XML tags or markdown delimiters throughout."
+6.  **No Example Outputs in Instructions**: Relying on description alone for output format. Google's official guidance "strongly recommends always including few-shot examples in your prompts." Without examples, the model infers what "structured feedback" or "numbered list" means — and different runs produce different formats. Add 1-3 concrete input/output pairs in the Context or Format pillar to anchor the expected style.
+7.  **Burying Critical Constraints**: Placing the most important constraints or role definition deep in the instructions, after secondary content. Google's Gemini 3 guidance explicitly states: "Prioritize critical instructions: place essential constraints and role definitions first." Models attend more reliably to early instruction content. A strict boundary ("Never discuss X") buried after three paragraphs of context may be inconsistently honored.
 
 ---
 

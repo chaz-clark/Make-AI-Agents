@@ -11,7 +11,7 @@
 
 Identifies documentation patterns from cached AI platform docs that are missing from the repo's templates and surfaces them as scored, source-cited proposals for human approval.
 
-**What it does**: Reads cached source docs from `source_docs/`, diffs their content against `make_agent.md`, `make_agent.json`, `make_gem_qc.md`, `make_gem_qc.json`, and `README.md`, scores each candidate addition, and presents a numbered proposal list. It halts before applying any change — no file is modified without explicit per-proposal approval. When approved proposals change the make_agent.* or make_gem_qc.* templates, it also checks whether `README.md` needs updating to stay accurate.
+**What it does**: Reads cached source docs from `source_docs/`, diffs their content against `make_agent.md`, `make_agent.json`, `make_gems/make_gem.md`, `make_gems/make_gem.json`, `make_gems/make_gem_qc.md`, `make_gems/make_gem_qc.json`, and `README.md`, scores each candidate addition, and presents a numbered proposal list. It halts before applying any change — no file is modified without explicit per-proposal approval. When approved proposals change the make_agent.* or make_gem_qc.* templates, it also checks whether `README.md` needs updating to stay accurate.
 
 **Why it exists**: AI platform documentation evolves continuously. Without a systematic process to detect and adopt new patterns, the repo's templates silently become outdated. This agent closes that gap by treating template improvement as a reviewable, traceable workflow.
 
@@ -29,7 +29,7 @@ Identifies documentation patterns from cached AI platform docs that are missing 
 
 2. **[Load Sources]**: Read all available `source_docs/*.md` files, parsing metadata headers and body content
 
-3. **[Load Targets]**: Read current content of all target files from `doc_analysis_agent.json → primary_data.update_targets` — `make_agent.md`, `make_agent.json`, `make_gem_qc.md`, `make_gem_qc.json`, and `README.md`
+3. **[Load Targets]**: Read current content of all target files from `doc_analysis_agent.json → primary_data.update_targets` — `make_agent.md`, `make_agent.json`, `make_gems/make_gem.md`, `make_gems/make_gem.json`, `make_gems/make_gem_qc.md`, `make_gems/make_gem_qc.json`, and `README.md`
 
 4. **[Read for Intent]**: Before diffing, internalize each template section's purpose in one sentence
    - Ask: "What is this section trying to accomplish?" — not just "what words does it contain?"
@@ -127,7 +127,7 @@ For scoring rubric, proposal template, update targets, and diff rules, see `doc_
 **How**: For each template section being evaluated, write an intent summary: "This section exists to [accomplish X]." Then for each source candidate ask: "Does this add to X, or does it describe X in different words?" Only candidates that genuinely add to the intent proceed to the necessity test. See `doc_analysis_agent.json → primary_data.reading_protocol` for the per-section procedure.
 
 ### 7. Keep .md/.json Companion Pairs in Sync
-**Description**: Every template file has a companion — `make_agent.json` pairs with `make_agent.md`, `make_gem_qc.json` pairs with `make_gem_qc.md`. A proposal that changes one without checking the other risks silent drift between the structured schema and the narrative that explains it.
+**Description**: Every template file has a companion — `make_agent.json` pairs with `make_agent.md`, `make_gems/make_gem_qc.json` pairs with `make_gems/make_gem_qc.md`. A proposal that changes one without checking the other risks silent drift between the structured schema and the narrative that explains it.
 
 **Why**: The JSON file tells practitioners *what* fields exist; the MD tells them *why* those fields matter and what pitfalls to avoid. If a new parameter is added to JSON but no narrative is added to MD, practitioners will see the field but have no guidance on when and how to use it correctly.
 
@@ -146,7 +146,7 @@ For scoring rubric, proposal template, update targets, and diff rules, see `doc_
 
 ### Prerequisites
 - `source_docs/` folder populated with recent cache files (run `doc_refresh_agent` if stale)
-- All target files present: `make_agent.md`, `make_agent.json`, `make_gem_qc.md`, `make_gem_qc.json`, `README.md`
+- All target files present: `make_agent.md`, `make_agent.json`, `make_gems/make_gem.md`, `make_gems/make_gem.json`, `make_gems/make_gem_qc.md`, `make_gems/make_gem_qc.json`, `README.md`
 - `doc_analysis_agent.json` loaded for scoring rubric and proposal template
 - No LLM API key required for reading cached docs; LLM needed for diff interpretation and proposal generation
 

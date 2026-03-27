@@ -106,8 +106,8 @@ The `make_agent` and `make_gem_qc` templates are kept up to date with evolving A
 
 | Agent | Files | What it does |
 |-------|-------|-------------|
-| **Doc Refresh Agent** | `doc_refresh_agent.md` / `doc_refresh_agent.json` | Fetches live documentation from Anthropic, Google, OpenAI, and xAI and writes results to `source_docs/` cache files |
-| **Doc Analysis Agent** | `doc_analysis_agent.md` / `doc_analysis_agent.json` | Reads cached docs, diffs against templates using an intent-first reading protocol, and proposes minimal additive improvements — always updating both the `.json` and companion `.md` together |
+| **Doc Refresh Agent** | `update_agents/doc_refresh_agent.md` / `update_agents/doc_refresh_agent.json` | Fetches live documentation from Anthropic, Google, OpenAI, and xAI and writes results to `source_docs/` cache files |
+| **Doc Analysis Agent** | `update_agents/doc_analysis_agent.md` / `update_agents/doc_analysis_agent.json` | Reads cached docs, diffs against templates using an intent-first reading protocol, and proposes minimal additive improvements — always updating both the `.json` and companion `.md` together |
 
 **Typical cadence**: Run `doc_refresh_agent` monthly (or after a major platform release), then run `doc_analysis_agent` to surface any proposals worth adding to the templates.
 
@@ -117,7 +117,7 @@ doc_analysis_agent →  proposes scored changes; each JSON change paired with co
 make_agent_qc      →  validates templates (10 dimensions, including MD/JSON companion sync)
 ```
 
-Cached source documentation lives in `source_docs/` (one `.md` file per platform source). See `update_agent.md` for a quick navigation guide to both agents.
+Cached source documentation lives in `source_docs/` (one `.md` file per platform source). See `update_agents/update_agent.md` for a quick navigation guide to both agents.
 
 ---
 

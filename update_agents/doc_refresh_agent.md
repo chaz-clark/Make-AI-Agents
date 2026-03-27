@@ -86,7 +86,7 @@ For source list, staleness threshold, and fetch config, see `doc_refresh_agent.j
 **How**: On fetch failure, write the original file back with `fetch_status: failed`, updated `last_fetched`, and a `fetch_error` note. Log clearly to run summary.
 
 ### 4. Never Modify Template Files
-**Description**: This agent only writes to `source_docs/`. It never touches `make_agent.md`, `make_agent.json`, `make_gem_qc.md`, or `make_gem_qc.json`.
+**Description**: This agent only writes to `source_docs/`. It never touches `make_agent.md`, `make_agent.json`, `make_gems/make_gem_qc.md`, or `make_gems/make_gem_qc.json`.
 
 **Why**: Separation of concerns. Refresh = fetch + cache. Analysis = diff + propose. Mixing them makes both agents harder to trust.
 
