@@ -128,7 +128,7 @@ Cached source documentation lives in `source_docs/` (one `.md` file per platform
 **You implement**: Your agent's actual code (Python, JS, etc.).
 **We provide**: Templates that an AI can fill on your behalf to document your agent consistently.
 
-## Suggested folder layout
+## Suggested folder layout (your project)
 ```
 project/
 ├── src/agents/
@@ -140,6 +140,21 @@ project/
     └── test_<agent>.py           # Reference validation.test_cases from JSON
 ```
 
+## This repo's structure
+```
+Make-AI-Agents/
+├── make_agent.md / .json         # Agent spec template (the meta-skill)
+├── make_agent_qc.md / .json      # Agent spec QC template
+├── make_gems/                    # Gemini Gem templates (sibling to make_agent)
+│   ├── make_gem.md / .json
+│   └── make_gem_qc.md / .json
+├── knowledge/                    # Source-of-truth knowledge files
+│   ├── behavioral_discipline.md  # Toyota Way + Karpathy framework — narrative
+│   └── behavioral_discipline.json# Same — structured rules for skill consumption
+├── update_agents/                # Doc refresh + analysis agents
+└── source_docs/                  # Cached platform docs (Anthropic/Google/OpenAI/xAI)
+```
+
 ## Tier System (choose based on your needs)
 
 **Tier 1 (Core)** - *For prototypes, internal tools.* (15 min)
@@ -147,6 +162,34 @@ project/
 **Tier 3 (Complex)** - *For frameworks, platform components.* (40 min)
 
 (See `make_agent.json` for full details on which fields belong to which tier).
+
+## Behavioral Discipline (baked into every agent)
+
+Every agent built from `make_agent.md` inherits a behavioral discipline drawn from the **Toyota Production System** (system-level discipline) reinforced by **Andrej Karpathy's four coding-agent guidelines** (worker-level habits). The discipline produces agents that are visible, predictable, and correctable — the three properties end users need in order to extend trust.
+
+The source of truth lives in `knowledge/`:
+
+- **`knowledge/behavioral_discipline.md`** — narrative explanation of the 10 principles (P-001 through P-010), the foundation, when to deviate, and how it composes with `karpathy-guidelines`.
+- **`knowledge/behavioral_discipline.json`** — structured rules that `make_agent` reads when generating new agents: which principles apply to which agent type, the trust markers QC checks for, override rules, the compact boilerplate template, and non-interactive (cron/webhook) mode mappings.
+
+The discipline includes principles like:
+- **Read Before Claiming** (Genchi Genbutsu) — read the actual source, don't theorize from priors
+- **Plan Before Acting** (Nemawashi + TBP) — propose the plan, wait for confirmation
+- **Stop on Defect** (Jidoka + Andon) — first failure, halt and surface
+- **Document the Change** (A3) — structured one-page change reports
+- **Reflect, and Tell the User** (Hansei) — name the lesson where future sessions see it
+
+`make_agent` picks the applicable subset based on agent type (read-only vs multi-step batch vs single-call API vs conversational). `make_agent_qc` validates that new agents have adopted the discipline appropriately for their type. See `knowledge/behavioral_discipline.md` → "How agents inherit this" for the full mechanism.
+
+## Optional sections in agent specs
+
+Beyond the core sections, `make_agent.md` supports several optional sections that earn their place when relevant:
+
+- **Domain Terms** — vocabulary table for agents operating in domains with non-obvious terminology
+- **Existing Tooling** — reuse-first inventory when integrating with an existing codebase
+- **External System Lessons** — hard-won knowledge about external systems' non-obvious behavior (distinct from agent-design pitfalls)
+- **Quality Bar** — per-response professional standards checklist (distinct from validation test cases)
+- **File I/O Mode** — declare whether the agent operates on a single text input, a single file, or a folder of files (drives downstream tooling like AgentJ to render the right UI control)
 
 ## Why this design (alternatives considered)
 

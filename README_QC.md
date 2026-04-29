@@ -82,9 +82,11 @@ The `make_agent_qc` files define a **standardized validator** for the NGAI ecosy
 *   **`make_agent_qc.json`**: Contains the *rules*, *scoring weights*, and *logic*. (e.g., "If 'mission' is missing, deduct 20 points.")
 *   **`make_agent_qc.md`**: Contains the *philosophy* and *explanations*. (e.g., "Why we value specificity over generic templates.")
 
-## The 8 Quality Dimensions
+## The 14 Quality Dimensions
 
 The QC agent evaluates your work across these key areas (defined in `make_agent_qc.json`):
+
+**Core dimensions** (always checked):
 
 1.  **Completeness**: Are all required sections present?
 2.  **Specificity**: Are templates/placeholders (like `[Your Name]`) removed?
@@ -94,6 +96,17 @@ The QC agent evaluates your work across these key areas (defined in `make_agent_
 6.  **Validation**: Are there actual test cases?
 7.  **Dependencies**: Are packages/files listed?
 8.  **Documentation**: Is the narrative clear and helpful?
+
+**Conditional dimensions** (apply when relevant):
+
+9.  **LLM Parameter Completeness** *(llm_agent type only)*: Are `tool_choice`, `response_format`, `disable_parallel_tool_use`, `mcp_servers`, and per-tool `strict` fields present?
+10. **MD/JSON Companion Sync**: Does every JSON entry in `known_failures`, `guardrails`, and `best_practices` have matching MD narrative coverage?
+11. **Pitfall vs External System Lesson Separation**: Are agent-design mistakes in Pitfalls and external system quirks in External System Lessons — not mixed?
+12. **Graceful Degradation Coverage** *(agents with optional tools)*: Do agents with optional dependencies or MCP servers document fallback behavior?
+13. **Autonomy Guidance** *(agents with write operations)*: Do write-capable agents document when they propose vs. execute?
+14. **I/O Contract Consistency**: When the input type is `file` or `folder`, does the system prompt match — single-file invocation or per-file independence language?
+
+For the canonical rule definitions, scoring weights, and severity levels, see `make_agent_qc.json` → `implementation.rule_based.rules` (rule_ids 1–16) and `validation_rules_detailed.dimensions`.
 
 ## Why this design?
 

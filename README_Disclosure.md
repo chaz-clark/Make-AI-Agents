@@ -7,3 +7,5 @@ The purpose of this approach is to serve as a practical, real-world demonstratio
 This project embodies the core principle that an AI, when equipped with specific "meta-skills" (like those defined in `make_agent.json` and `make_agent_qc.json`), can become a highly efficient and purpose-built specialist. By guiding these agents through a structured, conversational workflow, complex development tasks can be streamlined, allowing the human to focus on higher-level design and validation rather than boilerplate creation.
 
 This is not merely a collection of files; it is a testament to the power of AI-assisted development in a CLI environment, showcasing how focused AI agents can accelerate the creation of robust and well-documented software.
+
+The project's evolution has also produced a **behavioral discipline framework** in `knowledge/behavioral_discipline.md` and `.json` — drawing from the Toyota Production System and Andrej Karpathy's coding-agent guidelines — that every agent built from these templates inherits. The goal: agents that are visible, predictable, and correctable for the non-technical end users who depend on them.
