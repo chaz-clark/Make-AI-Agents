@@ -115,6 +115,70 @@
           "action": "Flag unmatched JSON entries as consistency issues; list which concepts lack MD narrative",
           "priority": "medium",
           "weight": 0.05
+        },
+        {
+          "rule_id": 11,
+          "name": "Pitfall vs. External System Lesson Separation",
+          "condition": "Common Pitfalls section describes agent design/usage mistakes only. If any pitfall entry describes external system behavior (API quirks, undocumented requirements, data format surprises from a third-party system), it belongs in External System Lessons instead.",
+          "action": "Flag misplaced external system content in Pitfalls as a medium consistency issue. Note: agents with no external system dependencies have no External System Lessons section — this is correct.",
+          "priority": "medium",
+          "weight": 0.03
+        },
+        {
+          "rule_id": 12,
+          "name": "Graceful Degradation for Optional Tools",
+          "condition": "If the agent has optional tools or services (listed in dependencies.optional_dependencies or mcp_servers, or described as 'may not be available'), then error_handling.fallbacks must include at least one entry for when that tool is unavailable, AND the system prompt must contain language about not blocking when the tool is absent.",
+          "action": "Flag missing fallback coverage for optional tools as a medium issue. Not applicable to agents with no optional dependencies.",
+          "priority": "medium",
+          "weight": 0.03
+        },
+        {
+          "rule_id": 13,
+          "name": "Autonomy / Propose-Before-Execute Guidance",
+          "condition": "If the agent performs write operations (POST/PUT/DELETE API calls, file writes, database mutations) or operates in a multi-turn loop, the system prompt or constraints.safety_boundaries.human_in_the_loop must describe when the agent proposes vs. executes — i.e., specify the conditions under which it acts autonomously vs. waits for confirmation.",
+          "action": "Flag agents with write operations that lack any propose/confirm/execute guidance as a medium issue. Read-only agents are exempt.",
+          "priority": "medium",
+          "weight": 0.03
+        },
+        {
+          "rule_id": 14,
+          "name": "Domain Terms Specificity",
+          "condition": "If the agent MD contains a Domain Terms section, all rows must be filled with agent-specific content. Generic placeholder rows ([TERM], [What it means]) count as placeholders and trigger rule_id 2 deductions.",
+          "action": "Apply placeholder penalty (rule_id 2) to any unfilled Domain Terms rows. An absent Domain Terms section is acceptable — a present but empty/placeholder one is not.",
+          "priority": "medium",
+          "weight": 0.02
+        },
+        {
+          "rule_id": 15,
+          "name": "Optional Section Content Quality",
+          "condition": "Optional sections (Domain Terms, Existing Tooling, External System Lessons, Quality Bar) when present must contain agent-specific content, not template placeholder text. Their presence signals real agent characteristics; placeholder content signals template-filling.",
+          "action": "Flag placeholder content in present optional sections same as placeholder content in core sections (rule_id 2). Absent optional sections are not flagged.",
+          "priority": "medium",
+          "weight": 0.02
+        },
+        {
+          "rule_id": 16,
+          "name": "I/O Contract Type Consistency",
+          "condition": "If io_contract.inputs[].type is 'file', the MD system prompt must contain language indicating single-file invocation. If type is 'folder', the MD system prompt must contain language indicating per-file invocation AND independence between invocations. Folder-mode inputs should also declare a file_filter unless the agent intentionally accepts all file types.",
+          "action": "Flag missing per-file/single-file invocation language as a high-severity consistency issue. Flag folder-mode inputs without file_filter as a low-severity informational note. Read-only or string-input agents are exempt.",
+          "priority": "high",
+          "weight": 0.10
+        },
+        {
+          "rule_id": 17,
+          "name": "Behavioral Discipline Compliance",
+          "condition": "Every agent generated from make_agent.md MUST embed the behavioral discipline correctly. Delegates to BD-QC-001 through BD-QC-006 in knowledge/behavioral_discipline.json → qc_checks: (1) MD has `## Behavioral Discipline (core)` section after Key Principles; (2) llm_agent system_prompt contains discipline boilerplate; (3) applicable_principles in the agent's `behavioral_discipline` JSON object matches the declared interaction_pattern's `always_include` array in knowledge/behavioral_discipline.json → agent_type_applicability; (4) validation.test_cases include at least one trust marker from the discipline JSON's trust_markers array; (5) any skipped/optional principle has an override_decisions entry with a stated reason; (6) the four no-override principles (P-001, P-003, P-007, P-010) are present in applicable_principles regardless of interaction_pattern.",
+          "action": "Run BD-QC-001 through BD-QC-006. Critical failures (BD-QC-006 — no-override missing) fail the agent regardless of other scores. Other BD-QC failures contribute to the discipline score per their declared severity. The canonical rule definitions live in knowledge/behavioral_discipline.json — do not duplicate them here.",
+          "priority": "critical",
+          "weight": 0.10
+        },
+        {
+          "rule_id": 18,
+          "name": "Behavioral Discipline Non-Interactive Mode",
+          "condition": "If the agent's io_contract has `non_interactive_mode: true`, the agent MUST declare an `alert_channel` (Slack webhook URL, monitoring endpoint, email address, or error log path). Delegates to BD-QC-007 in knowledge/behavioral_discipline.json.",
+          "action": "Flag missing alert_channel on a non-interactive agent as a critical failure. Without it, P-003 (Stop on Defect) has nowhere to surface to. The agent is unsafe to deploy unattended. Interactive-mode agents are exempt.",
+          "priority": "critical",
+          "weight": 0.05
         }
       ],
       "evaluation_order": "priority",
@@ -650,6 +714,57 @@
           "No principle or pitfall in MD references a JSON field that does not exist"
         ]
       },
+      "pitfall_lesson_separation": {
+        "weight": 0.03,
+        "applies_to": "agents with external system interactions",
+        "checks": [
+          "Common Pitfalls entries describe agent design/usage mistakes, not external system behavior",
+          "External system quirks (API behavior, undocumented requirements, data format surprises) are in External System Lessons section, not Pitfalls",
+          "If no external system interactions exist, External System Lessons section is absent (correct)"
+        ]
+      },
+      "graceful_degradation": {
+        "weight": 0.03,
+        "applies_to": "agents with optional_dependencies or optional mcp_servers",
+        "checks": [
+          "error_handling.fallbacks contains at least one entry for each optional tool/service",
+          "system_prompt contains language about not blocking when optional tool is unavailable",
+          "Fallback behavior is specific (not just 'handle gracefully')"
+        ]
+      },
+      "autonomy_guidance": {
+        "weight": 0.03,
+        "applies_to": "agents with write operations or multi-turn loops",
+        "checks": [
+          "system_prompt or constraints.safety_boundaries.human_in_the_loop describes when agent proposes vs. executes",
+          "Conditions for autonomous execution vs. confirmation-required are explicit",
+          "Read-only agents are exempt from this check"
+        ]
+      },
+      "io_contract_consistency": {
+        "weight": 0.10,
+        "checks": [
+          "If io_contract.inputs[].type is 'file', MD prompt mentions single-file invocation",
+          "If io_contract.inputs[].type is 'folder', MD prompt mentions per-file invocation and independence between invocations",
+          "If io_contract.outputs[].type is 'file' or 'folder', the format field is present and descriptive",
+          "file_filter field is present when type='folder' and the agent expects specific file types",
+          "No hardcoded paths exist in the spec — examples use placeholder paths like '/path/to/your/folder/'"
+        ]
+      },
+      "behavioral_discipline_integration": {
+        "weight": 0.10,
+        "_canonical_source": "knowledge/behavioral_discipline.json → qc_checks (BD-QC-001 through BD-QC-007). This dimension delegates to those checks; do not duplicate the rules here.",
+        "checks": [
+          "BD-QC-001: agent MD has `## Behavioral Discipline (core)` section embedded after `## Key Principles (core)`",
+          "BD-QC-002: agent's llm_agent.system_prompt contains the discipline boilerplate (or equivalent language referencing P-001 through P-010)",
+          "BD-QC-003: applicable_principles in agent's behavioral_discipline JSON matches always_include for the declared interaction_pattern (under-inclusion is high-severity; over-inclusion is low-severity warning)",
+          "BD-QC-004: validation.test_cases include at least one trust marker from knowledge/behavioral_discipline.json → trust_markers",
+          "BD-QC-005: any principle skipped or partially applied has an override_decisions entry with a stated reason per the hard rule",
+          "BD-QC-006: P-001, P-003, P-007, P-010 are present in applicable_principles regardless of interaction_pattern (CRITICAL — fails the agent if missing)",
+          "BD-QC-007: if io_contract.non_interactive_mode is true, alert_channel is declared (CRITICAL)",
+          "Composite-pattern agents: if the developer was asked to choose interaction_pattern (because the request fit multiple patterns) but the spec doesn't document the choice rationale, flag as low-severity informational"
+        ]
+      },
     "severity_levels": {
       "critical": "Prevents agent from functioning - fail immediately in strict mode",
       "high": "Significantly impacts quality - major score reduction",
@@ -678,6 +793,49 @@
   "changelog": {
     "_tier": "tier_3_optional",
     "versions": [
+      {
+        "version": "1.5",
+        "date": "2026-04-10",
+        "changes": [
+          "Added rule_id 17: Behavioral Discipline Compliance — delegates to BD-QC-001 through BD-QC-006 in knowledge/behavioral_discipline.json. Critical priority. Validates discipline section, system prompt boilerplate, applicable_principles match, trust markers, override_decisions documentation, and the no-override invariant (P-001/P-003/P-007/P-010 always present).",
+          "Added rule_id 18: Behavioral Discipline Non-Interactive Mode — delegates to BD-QC-007. Critical priority. Validates that agents with non_interactive_mode: true declare an alert_channel.",
+          "Added behavioral_discipline_integration dimension to validation_rules_detailed (weight 0.10) — references the canonical BD-QC checks in the discipline JSON; does not duplicate.",
+          "Quality dimensions count now 15 (was 14).",
+          "Source: step 4 of the make_agent v2 integration sequence — QC the new make_agent.md template's discipline-baking output."
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      },
+      {
+        "version": "1.4",
+        "date": "2026-04-10",
+        "changes": [
+          "Added rule_id 16: I/O Contract Type Consistency — flags mismatch between declared input type (string/file/folder) and system prompt boilerplate; flags folder-mode without file_filter as informational",
+          "Added io_contract_consistency dimension to validation_rules_detailed (weight 0.10)",
+          "Added Pitfall #9 to make_agent_qc.md: Folder-mode agent without per-file invocation language",
+          "Updated Quality Dimensions count from 13 to 14",
+          "Source: AGENTJ_HANDOFF_folder_io_update.md — cross-repo handoff from AgentJ Sprint 3 (Spec-Driven File I/O); rule_id renumbered from handoff's proposed 11 to 16 to avoid collision with v1.3 additions"
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      },
+      {
+        "version": "1.3",
+        "date": "2026-04-10",
+        "changes": [
+          "Added rule_id 11: Pitfall vs. External System Lesson Separation — flags agent design mistakes mixed into external system lessons and vice versa",
+          "Added rule_id 12: Graceful Degradation for Optional Tools — checks fallback coverage for optional dependencies and mcp_servers",
+          "Added rule_id 13: Autonomy/Propose-Before-Execute Guidance — checks write-capable agents document when they propose vs. execute",
+          "Added rule_id 14: Domain Terms Specificity — applies placeholder penalty to unfilled Domain Terms rows",
+          "Added rule_id 15: Optional Section Content Quality — flags placeholder content in present optional sections",
+          "Added 3 new validation dimensions: pitfall_lesson_separation, graceful_degradation, autonomy_guidance",
+          "Updated Quality Dimensions count from 10 to 13 in make_agent_qc.md",
+          "Added Principles 7 and 8 to make_agent_qc.md: Pitfalls vs. External System Lessons, Optional Sections Must Earn Their Presence",
+          "Source: gap analysis against canvas-sync.md — 3 surfacing failures from AI company docs, 3 genuine gaps from real deployment experience"
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      },
       {
         "version": "1.2",
         "date": "2026-03-12",

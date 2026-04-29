@@ -165,11 +165,12 @@
   "agent_type_applicability": {
     "_description": "Which principles apply to each agent type. make_agent reads this to pick the compact subset to embed in a new agent's spec.",
     "default_when_uncertain": "Include all ten principles with override-when-applicable rather than pre-skipping. Better to over-include (the agent can apply overrides) than under-include (the agent never knows the principle existed).",
+    "_no_override_invariant": "The four no-override principles (P-001 Read Before Claiming, P-003 Stop on Defect, P-007 Pull Don't Push, P-010 Respect Intent) are present in EVERY always_include array regardless of interaction pattern. They are constraints on the agent's reasoning itself, not workflow choices, and cannot be skipped. The skill that picks principles by interaction_pattern can trust always_include as authoritative — there is no separate add-back step.",
     "types": {
       "read_only": {
-        "description": "Inspection, search, factual query, summary — no write operations.",
-        "always_include": ["P-001", "P-007", "P-008", "P-009", "P-010"],
-        "skip_unless_applicable": ["P-002", "P-003", "P-004", "P-005", "P-006"]
+        "description": "Inspection, search, factual query, summary — no write operations. Stop on Defect still applies to malformed input, upstream errors, and unresolved ambiguity.",
+        "always_include": ["P-001", "P-003", "P-007", "P-008", "P-009", "P-010"],
+        "skip_unless_applicable": ["P-002", "P-004", "P-005", "P-006"]
       },
       "single_write_workflow": {
         "description": "One-step state change with confirmation. E.g. 'update one record.'",

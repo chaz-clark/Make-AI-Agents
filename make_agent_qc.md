@@ -109,6 +109,31 @@ For detailed validation rules and scoring criteria, see `make_agent_qc.json`.
 
 **How**: For each JSON array entry in the sections above, check that the MD has at least one section that covers the same concept — even in different words. Use QC rule 10 (MD/JSON Companion Sync) and the `consistency` dimension checks. Flag unmatched entries as medium issues.
 
+### 7. Pitfalls vs. External System Lessons — Different Things
+**Description**: Agent design mistakes belong in `## Common Pitfalls`. Non-obvious behaviors of external systems the agent operates on belong in `## External System Lessons`. Mixing them dilutes both.
+
+**Why**: A pitfall describes something the agent builder did wrong and can fix. An external system lesson describes something the external system does that will surprise you regardless of how well the agent is built. They require different responses: pitfalls are fixed by changing the agent; external system lessons are handled by documenting them so the agent knows in advance.
+
+**How**: When reviewing pitfalls, flag any entry that is actually describing external system behavior (API quirks, undocumented requirements, data format surprises) and recommend moving it to the External System Lessons section. An agent that interacts with no external systems has no External System Lessons section.
+
+### 8. Optional Sections Must Earn Their Presence
+**Description**: Every optional section — Domain Terms, Existing Tooling, External System Lessons, Quality Bar — must reflect real agent characteristics, not template-filling.
+
+**Why**: An empty Domain Terms table or a Quality Bar with generic placeholder checklist items signals the creator filled in sections without thinking about whether they apply. This adds noise and reduces trust in the rest of the document.
+
+**How**: Check that optional sections, when present, contain content specific to the agent's domain. Generic placeholder rows (`[TERM]`, `[script or file path]`) in optional sections are treated as incomplete, same as placeholders in core sections.
+
+### 9. Behavioral Discipline as Enforced Inheritance
+**Description**: Every agent built from `make_agent.md` MUST embed the behavioral discipline correctly. The QC validates the embedding is structurally complete — not just that the words "Behavioral Discipline" appear somewhere in the file.
+
+**Why**: A skill generating a new agent can paste a placeholder discipline section and call it done. Without enforcement, the discipline becomes aspirational decoration rather than runtime behavior. The four no-override principles (P-001 Read Before Claiming, P-003 Stop on Defect, P-007 Pull Don't Push, P-010 Respect Intent) are the load-bearing core — if any are missing, the agent has lost the trust-producing foundation.
+
+**How**: Rule 17 (Behavioral Discipline Compliance) delegates to BD-QC-001 through BD-QC-006 in `knowledge/behavioral_discipline.json` → `qc_checks`. Rule 18 covers non-interactive mode (BD-QC-007: alert_channel required). The canonical rules live in the discipline JSON; the QC engine reads them by ID rather than duplicating them. When the discipline file is updated, every QC run picks up the new rules automatically — no QC sync required.
+
+**Critical failure modes**:
+- **BD-QC-006** — any of P-001, P-003, P-007, P-010 missing from `applicable_principles`. Fails the agent regardless of other scores.
+- **BD-QC-007** — `non_interactive_mode: true` without `alert_channel`. The agent has no way to surface stop-on-defect to a human; unsafe to deploy unattended.
+
 ---
 
 ## How to Use This Agent (core)
@@ -289,7 +314,25 @@ For the complete list of API endpoints with parameters and examples, see `my_age
 
 **Solution**: Match complexity to sections used. Simple agents should only have tier_1_core. Standard agents add tier_2. Complex agents may need tier_3.
 
-### 7. Penalizing Empty Dependencies for LLM Agents
+### 9. Folder-mode agent without per-file invocation language
+
+**Problem**: Agent declares `io_contract.inputs[0].type: "folder"` but the system prompt is written as if the agent receives the entire folder as one input. AgentJ invokes the agent once per file, so the agent will produce wrong output on every invocation.
+
+**Why it happens**: Builder updated the JSON to switch from string to folder mode but forgot to update the MD system prompt to match. The two files drifted out of sync.
+
+**Solution**: When folder mode is declared, the MD system prompt must explicitly tell the LLM that it will be invoked once per file. The contents of one file is passed as the user message on each invocation; there is no batched view of the folder.
+
+**Example fix**:
+```markdown
+You will be invoked once per file in the input folder. The contents of one file
+will be passed as your user input on each invocation. Process that single file
+and return your output. Do not assume context from other files — each invocation
+is independent.
+```
+
+**Validation approach**: Rule_id 16 (I/O Contract Type Consistency) flags this automatically. High severity because the agent will produce wrong output on every run.
+
+### 10. Penalizing Empty Dependencies for LLM Agents
 
 **Problem**: Flagging empty `packages: []` array as incomplete when the agent is LLM-based and does text analysis only.
 
@@ -411,11 +454,11 @@ The validation section includes:
 
 ### Quality Dimensions Explained
 
-**10 Quality Dimensions** (see JSON for scoring rubrics):
+**15 Quality Dimensions** (see JSON for scoring rubrics):
 
 1. **Completeness**: All tier_1_core sections present and filled
-2. **Specificity**: Content is agent-specific, not generic templates
-3. **Cleanup**: Unused optional sections removed
+2. **Specificity**: Content is agent-specific, not generic templates — includes optional sections when present
+3. **Cleanup**: Unused optional sections removed; present optional sections have real content
 4. **Consistency**: MD and JSON files align, no contradictions — includes companion sync check
 5. **Examples**: Concrete, runnable examples with real data
 6. **Validation**: Actionable test cases with clear pass/fail criteria
@@ -423,6 +466,11 @@ The validation section includes:
 8. **Documentation**: Clear mission, principles, and usage instructions
 9. **LLM Parameter Completeness**: For llm_agent type — tool_choice, response_format, disable_parallel_tool_use, mcp_servers, and strict present
 10. **MD/JSON Companion Sync**: Every JSON known_failure, guardrail, and best_practice entry has corresponding MD narrative
+11. **Pitfall/Lesson Separation**: Agent design mistakes in Pitfalls; external system quirks in External System Lessons — not mixed
+12. **Graceful Degradation Coverage**: Agents with optional tools document fallback behavior in error_handling.fallbacks and system prompt
+13. **Autonomy Guidance**: Workflow agents (those with multi-step loops or API writes) document propose-vs-execute behavior in system prompt or constraints
+14. **I/O Contract Consistency**: Declared input type (string/file/folder) matches the system-prompt boilerplate; folder mode declares a file_filter; no hardcoded paths in the spec
+15. **Behavioral Discipline Integration**: Agent embeds the discipline correctly per BD-QC-001 through BD-QC-007 in `knowledge/behavioral_discipline.json`. Critical: P-001/P-003/P-007/P-010 always present; non-interactive agents declare an alert_channel.
 
 ### Automated Testing
 ```bash

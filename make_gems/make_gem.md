@@ -1,5 +1,6 @@
 # <Your Gem Name> Gem Guide
 
+
 ## Gem Instructions
 1. Read this guide to understand the Gem's mission, persona, and core pillars.
 2. Use `<your_gem_name>.json` to define the specific instructions for Persona, Task, Context, and Format.

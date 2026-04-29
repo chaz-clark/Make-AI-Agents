@@ -1,0 +1,340 @@
+{
+  "_metadata": {
+    "template_version": "1.0",
+    "last_updated": "2026-03-27",
+    "description": "Implement Gem Agent — reads a completed gem.txt and produces tool recommendations, knowledge file specs, and scaffolded knowledge files.",
+    "instructions": "Load tool_evaluation_rules and knowledge_file_patterns. Read the input gem.txt. Score each tool. Identify knowledge files. Write [gemname]_implement.md and scaffold all knowledge files into the same folder.",
+    "companion_files": {
+      "conceptual_guide": "implement_gem.md",
+      "upstream_agents": ["make_gem.md", "make_gems/make_gem_qc.md"]
+    },
+    "agent_details": {
+      "agent_name": "ImplementGem",
+      "version": "1.0",
+      "last_updated": "2026-03-27",
+      "description": "Completes the last 10% of Gem deployment: evaluates tools and scaffolds knowledge files based on the gem's instructions.",
+      "owner": "Repo Maintainer",
+      "complexity": "simple"
+    }
+  },
+  "agent_type": {
+    "_tier": "tier_1_core",
+    "type": "workflow",
+    "description": "Linear: read gem.txt → analyze purpose/task/context → score tools → identify knowledge files → write outputs to same folder."
+  },
+  "implementation": {
+    "_tier": "tier_1_core",
+    "workflow_based": {
+      "steps": [
+        {
+          "step": 1,
+          "name": "Read Input",
+          "description": "Read the target [gemname].txt file in full. Parse the four XML sections: <role>, <task>, <constraints>, <context>, <format>.",
+          "input": "Path to [gemname].txt",
+          "output": "Parsed gem content — role, task, constraints, context, format"
+        },
+        {
+          "step": 2,
+          "name": "Analyze Gem Purpose",
+          "description": "Extract: (a) what the gem's core task is, (b) whether it needs live/current data, (c) whether it produces iterative documents or code, (d) whether it involves visual/audio output, (e) whether it teaches or coaches step-by-step, (f) what domain-specific reference data it needs repeatedly.",
+          "input": "Parsed gem content",
+          "output": "Analysis summary used to drive tool scoring and knowledge file identification"
+        },
+        {
+          "step": 3,
+          "name": "Score Each Tool",
+          "description": "Apply tool_evaluation_rules to the gem analysis. Assign Enable / Optional / Not Needed to each of the 6 tools with a one-sentence rationale.",
+          "input": "Gem analysis summary + tool_evaluation_rules",
+          "output": "Tool recommendation set (6 entries)"
+        },
+        {
+          "step": 4,
+          "name": "Identify Knowledge Files",
+          "description": "Apply knowledge_file_patterns to identify what reference data would improve the gem. For each file: name it, describe its purpose, classify content as generatable (Claude writes it) or user-provided (user must fill it). Maximum 4 knowledge files — prioritize by impact.",
+          "input": "Gem analysis summary + knowledge_file_patterns",
+          "output": "Knowledge file manifest (name, purpose, content classification per file)"
+        },
+        {
+          "step": 5,
+          "name": "Write [gemname]_implement.md",
+          "description": "Write the implementation guide using the implement_output_template. File goes in the same folder as the input .txt file.",
+          "input": "Tool recommendation set + knowledge file manifest",
+          "output": "[gemname]_implement.md in the same folder as input .txt"
+        },
+        {
+          "step": 6,
+          "name": "Scaffold Knowledge Files",
+          "description": "For each knowledge file in the manifest: create the file in the same folder as the input .txt. Generatable files get real content (min 5 example rows/entries). User-provided files get structure + <!-- USER: --> markers. Never create an empty file.",
+          "input": "Knowledge file manifest",
+          "output": "One .md file per recommended knowledge file, same folder as input .txt"
+        }
+      ],
+      "entry_point": "User provides path to a [gemname].txt file",
+      "exit_point": "[gemname]_implement.md + scaffolded knowledge files in gem_instructions/ folder"
+    }
+  },
+  "io_contract": {
+    "_tier": "tier_1_core",
+    "inputs": [
+      {
+        "name": "gem_txt_path",
+        "type": "string",
+        "format": "Relative file path to a completed Gem instructions .txt file",
+        "example": "make_gems/gem_instructions/byui_gap_analyst.txt",
+        "required": true
+      }
+    ],
+    "outputs": [
+      {
+        "name": "implement_md",
+        "type": "file",
+        "format": "Markdown — tool recommendations + knowledge file manifest",
+        "example": "make_gems/gem_instructions/byui_gap_analyst_implement.md",
+        "conditions": "Always produced"
+      },
+      {
+        "name": "knowledge_files",
+        "type": "files",
+        "format": "One .md file per recommended knowledge file, same folder as input",
+        "example": "make_gems/gem_instructions/byui_catalog_index.md",
+        "conditions": "Produced for each entry in the knowledge file manifest; min 1, max 4"
+      }
+    ],
+    "side_effects": "Creates new files in gem_instructions/ folder only. Never modifies the input .txt or any other existing file."
+  },
+  "primary_data": {
+    "_tier": "tier_1_core",
+    "tool_evaluation_rules": [
+      {
+        "tool": "Google Search",
+        "enable_when": [
+          "Gem needs real-time or current information (job postings, news, prices, live catalog pages, company info)",
+          "Gem instructs users to provide URLs it will then read",
+          "Gem needs to verify facts that change over time"
+        ],
+        "optional_when": [
+          "Gem could benefit from web search occasionally but has stable knowledge files covering most use cases"
+        ],
+        "not_needed_when": [
+          "Gem operates entirely on user-provided input with no need for external lookups",
+          "All reference data is provided via knowledge files and does not change"
+        ],
+        "signal_phrases": ["research", "find", "look up", "search for", "current", "real", "live", "catalog", "job posting", "company", "industry"]
+      },
+      {
+        "tool": "Deep Research",
+        "enable_when": [
+          "Gem's task requires synthesizing information across many sources (industry reports, academic content, multi-company comparisons)",
+          "Gem produces thorough research reports or analyses as its primary output"
+        ],
+        "optional_when": [
+          "Gem occasionally needs deep research but primarily uses simpler lookups"
+        ],
+        "not_needed_when": [
+          "Gem only needs quick fact lookups (Google Search is sufficient)",
+          "Gem operates on user-provided data without external research"
+        ],
+        "signal_phrases": ["thorough research", "comprehensive analysis", "industry report", "compare across", "synthesize", "in-depth"]
+      },
+      {
+        "tool": "Canvas",
+        "enable_when": [
+          "Gem produces documents, reports, plans, or code that the user will iterate on collaboratively in the same session",
+          "The gem's output format is a structured document (resume, project plan, report)"
+        ],
+        "optional_when": [
+          "Gem could benefit from canvas for some outputs but primarily produces conversational responses"
+        ],
+        "not_needed_when": [
+          "Gem produces only conversational text with no structured document output",
+          "Gem output is consumed as-is without user editing"
+        ],
+        "signal_phrases": ["report", "plan", "document", "draft", "write", "create a", "generate a", "table", "structured output"]
+      },
+      {
+        "tool": "Image Generation",
+        "enable_when": [
+          "Gem's core task involves creating or describing visual output (design, illustration, diagrams, art)",
+          "Gem is explicitly for visual/creative work"
+        ],
+        "optional_when": [
+          "Gem could use visuals to support explanations (charts, diagrams) but is primarily text-based"
+        ],
+        "not_needed_when": [
+          "Gem has no visual output component",
+          "Gem's domain is text, data, or audio only"
+        ],
+        "signal_phrases": ["design", "visual", "image", "illustration", "diagram", "art", "creative", "logo", "sketch"]
+      },
+      {
+        "tool": "Create Music",
+        "enable_when": [
+          "Gem's core task involves music creation, composition, or audio production"
+        ],
+        "optional_when": [
+          "Gem involves creative arts broadly and music could be a relevant output in some conversations"
+        ],
+        "not_needed_when": [
+          "Gem has no music or audio component"
+        ],
+        "signal_phrases": ["music", "song", "audio", "compose", "melody", "beat", "sound"]
+      },
+      {
+        "tool": "Guided Learning",
+        "enable_when": [
+          "Gem's primary role is teaching, tutoring, or coaching users through a learning sequence",
+          "Gem uses Socratic questioning, checkpoints, or structured lesson progression"
+        ],
+        "optional_when": [
+          "Gem explains concepts as part of a larger workflow but is not primarily a tutor"
+        ],
+        "not_needed_when": [
+          "Gem's workflow is already defined as a step-by-step sequence in its own instructions (the gem handles its own progression)",
+          "Gem is primarily an analyst, generator, or advisor rather than a teacher"
+        ],
+        "signal_phrases": ["teach", "tutor", "learn", "lesson", "quiz", "Socratic", "checkpoint", "explain step by step", "guide through"]
+      }
+    ],
+    "knowledge_file_patterns": [
+      {
+        "pattern_id": "catalog_index",
+        "name": "[institution]_catalog_index.md",
+        "use_when": "Gem needs to navigate a course catalog or curriculum database for a specific institution",
+        "content": "Table of programs (major/minor/cert) with direct catalog URLs. Prevents the Gem from guessing URL patterns.",
+        "generatable": "partial",
+        "generation_note": "Scaffold the table structure and fill common programs from public knowledge. Mark institution-specific URLs for user verification.",
+        "example_row": "| Business Management (BS) | College of Business | https://www.byui.edu/catalog/2024-25/college-of-business/business-management/ |"
+      },
+      {
+        "pattern_id": "employer_reference",
+        "name": "[domain]_employer_reference.md",
+        "use_when": "Gem recommends companies or employers to users who don't know where to target",
+        "content": "2-3 companies per sub-industry with hiring reputation notes and typical entry-level role titles",
+        "generatable": "yes",
+        "generation_note": "Generate from public knowledge. Include remote-friendly and regional options where relevant.",
+        "example_row": "| Salesforce | SaaS/CRM | Business Analyst, Sales Development Rep | Strong campus recruiting, BYUI has alumni there |"
+      },
+      {
+        "pattern_id": "domain_glossary",
+        "name": "[domain]_glossary.md",
+        "use_when": "Gem operates in a specialized domain with jargon the model may not apply consistently",
+        "content": "Term definitions, acronyms, and how the Gem should use or explain each term to the user",
+        "generatable": "yes",
+        "generation_note": "Generate from domain knowledge. Keep to <50 entries.",
+        "example_row": "| Gap Analysis | The process of comparing current state vs. target state to identify what must be bridged | Core methodology of this Gem |"
+      },
+      {
+        "pattern_id": "evaluation_rubric",
+        "name": "[task]_rubric.md",
+        "use_when": "Gem scores, evaluates, or grades user submissions against defined criteria",
+        "content": "Scoring dimensions, weight per dimension, what qualifies as low/mid/high for each",
+        "generatable": "partial",
+        "generation_note": "Scaffold dimensions from the gem's task description. User must confirm weights and threshold definitions.",
+        "example_row": "| Technical Skills Match | 40% | <50% match = Low | 50-75% = Medium | >75% = High |"
+      },
+      {
+        "pattern_id": "process_guide",
+        "name": "[process]_guide.md",
+        "use_when": "Gem applies a specific methodology or process the model needs to apply consistently",
+        "content": "Step-by-step process description, decision points, and examples of correct application",
+        "generatable": "yes",
+        "generation_note": "Extract from the gem's <task> and <format> sections and formalize into a reference document.",
+        "example_row": "See Toyota Gap Analysis: Define Current State → Define Target State → Identify Gaps → Prioritize → Close"
+      },
+      {
+        "pattern_id": "example_outputs",
+        "name": "[gemname]_example_outputs.md",
+        "use_when": "Gem produces structured reports or analyses and needs anchor examples to maintain consistent format",
+        "content": "2-3 complete example outputs showing correct format, depth, and tone",
+        "generatable": "partial",
+        "generation_note": "Generate 1 complete example from the gem's few_shot_examples if present. User should add 1-2 real examples from actual usage.",
+        "example_row": "See byui_gap_analyst example: full gap table + next steps for a Marketing junior with no internship experience"
+      }
+    ],
+    "implement_output_template": {
+      "description": "Structure for [gemname]_implement.md",
+      "sections": [
+        {
+          "heading": "# [Gem Name] — Implementation Guide",
+          "content": "One-sentence summary of what this file covers."
+        },
+        {
+          "heading": "## Gemini Tools",
+          "content": "Table: Tool | Recommendation | Rationale. One row per tool. Recommendation = Enable / Optional / Not Needed."
+        },
+        {
+          "heading": "## Knowledge Files",
+          "content": "Table: File | Purpose | Status. One row per recommended file. Status = Generated (ready to upload) / Needs User Input (see file for <!-- USER: --> markers)."
+        },
+        {
+          "heading": "## Deployment Checklist",
+          "content": "Ordered steps: 1. Open Gemini Gem interface. 2. Paste [gemname].txt into Instructions field. 3. Enable/disable tools per table above. 4. Upload knowledge files listed as Generated. 5. Complete user-input sections in flagged files, then upload. 6. Run validation test cases from [gemname].json."
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "_tier": "tier_1_core",
+    "files": [
+      "implement_gem.md",
+      "implement_gem.json",
+      "[gemname].txt (input — must exist before running)"
+    ],
+    "apis": [],
+    "environment_variables": []
+  },
+  "validation": {
+    "_tier": "tier_1_core",
+    "pre_run_checklist": [
+      "Input [gemname].txt exists and has been QC'd (score >= 80 from make_gem_qc)",
+      "implement_gem.json is loaded with tool_evaluation_rules and knowledge_file_patterns"
+    ],
+    "post_run_checklist": [
+      "[gemname]_implement.md exists in same folder as input .txt",
+      "All 6 tools have a recommendation with rationale",
+      "At least 1 knowledge file has been scaffolded",
+      "No knowledge file is empty — all have real content or <!-- USER: --> markers",
+      "No output file was written outside the input .txt folder"
+    ],
+    "test_cases": [
+      {
+        "name": "Career/Research Gem",
+        "input": "make_gems/gem_instructions/byui_gap_analyst.txt",
+        "expected_output": "Google Search = Enable, Deep Research = Optional, Canvas = Optional, Image = Not Needed, Music = Not Needed, Guided Learning = Not Needed. Knowledge files: byui_catalog_index.md + employer_reference.md",
+        "validation_method": "exact"
+      },
+      {
+        "name": "Teaching/Tutoring Gem",
+        "input": "A gem.txt where <role> is a tutor and <task> uses Socratic questioning and checkpoints",
+        "expected_output": "Guided Learning = Enable, Canvas = Enable, Google Search = Optional. Knowledge files: domain glossary + example outputs",
+        "validation_method": "regex"
+      },
+      {
+        "name": "Creative/Design Gem",
+        "input": "A gem.txt where <task> involves creating visual designs or illustrations",
+        "expected_output": "Image Generation = Enable. Music and Guided Learning = Not Needed.",
+        "validation_method": "regex"
+      }
+    ]
+  },
+  "operational_guidance": {
+    "_tier": "tier_2_recommended",
+    "when_to_use": [
+      "After make_gem_qc scores the .txt at 80 or above",
+      "Before configuring the Gem in the Gemini interface"
+    ],
+    "when_not_to_use": [
+      "On a .txt file that hasn't passed make_gem_qc — fix the instructions first",
+      "On a .json file — this agent reads .txt compiled instructions only"
+    ]
+  },
+  "changelog": {
+    "versions": [
+      {
+        "version": "1.0",
+        "date": "2026-03-27",
+        "changes": ["Initial version — tool evaluation rules for 6 Gemini tools, 6 knowledge file patterns, workflow output template"]
+      }
+    ]
+  }
+}
