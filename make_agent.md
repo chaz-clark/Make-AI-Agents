@@ -184,13 +184,13 @@ The discipline lookup uses `interaction_pattern` only. `agent_type.type` is unre
 When generating a new agent spec, the skill MUST follow this flow. Each step is a hard requirement, not a suggestion:
 
 1. **MUST read** `knowledge/behavioral_discipline.json` directly. Do not infer the contents from training data — open the file. (Verification: tool-trace shows the read.)
-2. **MUST determine** the new agent's `interaction_pattern` using this decision flow:
-   - Does the agent only read/return data with no writes? → `read_only`
-   - Does the agent perform exactly one state change with confirmation? → `single_write_workflow`
-   - Does the agent fire as a one-shot call (webhook, single-fire job) with no future session? → `single_call_api`
-   - Is the agent's output naturally varied prose (chat, advisory)? → `conversational`
-   - Does the agent perform multi-resource workflows, batches, or migrations? → `multi_step_batch`
-   - **If two or more of the above describe the agent (composite case)** → MUST ask the user explicitly which pattern dominates. Do not silently default. Do not pick "the safest over-include" — `multi_step_batch` for a primarily read-only agent over-applies discipline (e.g., A3 documentation on every read) and produces noise the user didn't ask for. The right move is to ask, or to split into sub-agents per pattern.
+2. **MUST determine** the new agent's `interaction_pattern` using this decision flow. **Evaluate top-to-bottom — first matching criterion wins.** If a later criterion would also match (e.g., a read-only Q&A bot also fits "naturally varied prose"), the earlier match resolves it. If two or more criteria of equal priority match (genuine composite case), MUST ask the user.
+   1. Does the agent only read/return data with no writes? → `read_only`
+   2. Does the agent perform exactly one state change with confirmation? → `single_write_workflow`
+   3. Does the agent fire as a one-shot call (webhook, single-fire job) with no future session? → `single_call_api`
+   4. Does the agent perform multi-resource workflows, batches, or migrations? → `multi_step_batch`
+   5. Is the agent's output naturally varied prose (chat, advisory) and not primarily read-only? → `conversational`
+   6. **Genuine composite case** (the workflow legitimately spans multiple patterns, not just overlap from above) → MUST ask the user explicitly which pattern dominates. Do not silently default. Do not pick "the safest over-include" — `multi_step_batch` for a primarily read-only agent over-applies discipline (e.g., A3 documentation on every read) and produces noise the user didn't ask for. The right move is to ask, or to split into sub-agents per pattern.
 3. **MUST pull** the `always_include` array of principle IDs (P-001 through P-010) from `agent_type_applicability.types[<interaction_pattern>]`.
 4. **MUST embed** the discipline in the new agent's MD using `compact_boilerplate.md_section_template`. Place this section **immediately after `## Key Principles (core)`** in the new agent's MD. Substitute:
    - `{{agent_type}}` — the `interaction_pattern` value
@@ -659,7 +659,8 @@ A one-page summary for experienced users:
 | **Purpose** | [One sentence] |
 | **Input** | [What it takes] |
 | **Output** | [What it produces] |
-| **Agent Type** | [class_based\|workflow\|llm_agent\|etc.] |
+| **Agent Type** (implementation) | [class_based\|workflow\|llm_agent\|api_agent\|data_processor\|multi_agent\|rule_based\|other] |
+| **Interaction Pattern** (behavior) | [read_only\|single_write_workflow\|multi_step_batch\|single_call_api\|conversational] — see `## Behavioral Discipline (core)` for the orthogonal-classifications table and decision flow |
 | **Complexity** | [simple\|standard\|complex] |
 | **Key Files** | `<your_agent_name>.json`, `<your_agent_name>.md` |
 | **Quickstart** | `agent = Agent.from_config('agent.json'); result = agent.process(input)` |

@@ -164,7 +164,7 @@
     "_required_in_md": "Every agent's MD MUST contain a `## Behavioral Discipline (core)` section, embedded immediately after `## Key Principles (core)`, populated using compact_boilerplate.md_section_template from knowledge/behavioral_discipline.json.",
     "_required_in_system_prompt": "Every llm_agent's implementation.llm_agent.system_prompt MUST contain the discipline boilerplate, embedded using compact_boilerplate.system_prompt_template from knowledge/behavioral_discipline.json.",
     "interaction_pattern": "read_only|single_write_workflow|multi_step_batch|single_call_api|conversational",
-    "_interaction_pattern_doc": "Drives which principles get embedded. Distinct from agent_type.type — interaction_pattern is the BEHAVIORAL pattern (how the agent interacts with users and external systems); agent_type.type is the IMPLEMENTATION pattern (how it's built). The two are orthogonal: an llm_agent can be read_only or multi_step_batch; an api_agent is usually single_call_api. Look up the applicable principles in knowledge/behavioral_discipline.json → agent_type_applicability.types[<interaction_pattern>].",
+    "_interaction_pattern_doc": "Drives which principles get embedded. Distinct from agent_type.type — interaction_pattern is the BEHAVIORAL pattern (how the agent interacts with users and external systems); agent_type.type is the IMPLEMENTATION pattern (how it's built). The two are orthogonal — an agent's interaction_pattern depends on its workflow shape, NOT on its implementation type. Examples (note opposite shapes from the same implementation): an api_agent webhook handler with one fire-and-done call → single_call_api; an api_agent changelog generator that hits a GitHub API across many PRs → multi_step_batch. An llm_agent doc-Q&A bot → read_only; an llm_agent data-migration assistant → multi_step_batch. Look up the applicable principles in knowledge/behavioral_discipline.json → agent_type_applicability.types[<interaction_pattern>] using the decision flow in make_agent.md → '## Behavioral Discipline (core)' → integration step 2.",
     "applicable_principles": [],
     "_applicable_principles_doc": "Array of principle IDs (P-001 through P-010) embedded in this agent's discipline section. Populated from agent_type_applicability.types[<interaction_pattern>].always_include. The four no-override principles (P-001, P-003, P-007, P-010) MUST always be present regardless of interaction_pattern.",
     "override_decisions": [],
@@ -215,6 +215,18 @@
     "pre_run_checklist": [],
     "post_run_checklist": [],
     "success_criteria": [],
+    "discipline_validation": {
+      "_description": "Behavioral discipline checks every generated agent must pass. Canonical rules live in knowledge/behavioral_discipline.json → qc_checks (BD-QC-001 through BD-QC-007). make_agent_qc rules 17 (delegates to BD-QC-001 through BD-QC-006) and 18 (delegates to BD-QC-007) enforce these. Surfaced here so a JSON-only consumer of this template sees the discipline contract without crossing into make_agent_qc.",
+      "required_checks": [
+        "BD-QC-001 — `## Behavioral Discipline (core)` section present in agent MD",
+        "BD-QC-002 — discipline boilerplate present in implementation.llm_agent.system_prompt",
+        "BD-QC-003 — applicable_principles match interaction_pattern's always_include array",
+        "BD-QC-004 — at least one trust marker in validation.test_cases output",
+        "BD-QC-005 — every override has a documented reason in override_decisions",
+        "BD-QC-006 — P-001, P-003, P-007, P-010 always present (CRITICAL — never skip)",
+        "BD-QC-007 — alert_channel declared if non_interactive_mode is true (CRITICAL when applicable)"
+      ]
+    },
     "test_cases": [
       {
         "name": "",
@@ -230,7 +242,8 @@
     },
     "commands": [
       "pytest ...",
-      "python -m smoke_test ..."
+      "python -m smoke_test ...",
+      "make_agent_qc — validate this spec via the QC meta-skill in make_agent_qc.md/.json. Conversational invocation: 'Use make_agent_qc to validate <agent>.md and <agent>.json. Apply all 18 rules. Report critical issues first.' make_agent_qc rules 17 and 18 enforce the discipline_validation.required_checks above. Score must be ≥95 for a passing agent; critical issues fail the agent regardless of score."
     ]
   },
   "operational_guidance": {
