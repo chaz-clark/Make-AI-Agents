@@ -272,6 +272,24 @@ If the user requests a non-interactive (cron, webhook, scheduled batch) agent, s
 2. **Use `non_interactive_mode.principle_surface_mechanisms`** from the knowledge JSON for each applicable principle. The discipline does NOT change — only the surface mechanism does (e.g., "wait for confirmation" → "log plan to runlog and proceed if no defect").
 3. **Apply the graduation pattern**: non-interactive mode is opt-in only after the agent has been validated interactively. The make_agent skill should warn the user if they request non-interactive mode for a brand-new agent that hasn't been tested in interactive mode.
 
+### Switching non-interactive mode mid-spec
+
+When a user flips `io_contract.non_interactive_mode` after the agent spec has been initially generated (the common case: built and tested interactively, now graduating to cron/webhook/scheduled batch), the make_agent skill MUST re-run discipline embedding rather than just flipping the JSON flag. A flag-flip-only update produces silent corruption: the system prompt still contains interactive surface mechanism language ("wait for confirmation", "ask the user") while the JSON declares non-interactive — the runtime LLM and the runner (e.g., AgentJ) will disagree about how the agent should behave.
+
+The mid-spec flip checklist:
+
+1. **Halt before flipping the flag**. If `io_contract.alert_channel` is not already declared, ask the user to provide one (Slack webhook, monitoring endpoint, email, error log path). Do NOT flip `non_interactive_mode: true` until alert_channel is set. Without an alert channel, P-003 (Stop on Defect) has nowhere to surface to — the agent halts silently and the user never knows.
+
+2. **Re-embed discipline with NI surface mechanisms**. Replace the interactive language in `implementation.llm_agent.system_prompt` with the corresponding NI versions from `knowledge/behavioral_discipline.json` → `non_interactive_mode.principle_surface_mechanisms`. The principles themselves don't change — only the surface mechanism per principle does. Example: P-002 Plan Before Acting under interactive mode says "propose plan and wait for user confirmation"; under NI mode it says "log plan to runlog before acting; proceed if no defects detected."
+
+3. **Update the agent's JSON**: set `io_contract.non_interactive_mode: true`, set `io_contract.alert_channel: <value>`. No structural change to `behavioral_discipline.applicable_principles` is needed (the principles list is the same; only their surface mechanisms differ).
+
+4. **Re-run make_agent_qc**. Specifically rule 18 (BD-QC-007) — confirm alert_channel is declared and non-empty. Rule 17 should still pass since applicable_principles are unchanged.
+
+5. **Apply the graduation warning**. If `validation.test_cases` is empty or all test cases describe interactive scenarios (no NI runlog format), warn the user that the agent has not been validated under NI mode and propose interactive validation first. NI mode is opt-in only after observed correct behavior under direct supervision.
+
+This produces a deterministic spec state that downstream runners (AgentJ in particular) can consume reliably: `non_interactive_mode: true` + `alert_channel` set + system prompt language matches NI surface mechanisms + QC passing. A spec missing any of these is ambiguous and should not be deployed unattended.
+
 ### When the discipline is over- or under-applied
 
 - **Over-application** (e.g., a read-only inspection agent with full A3 documentation) is a low-severity warning — the agent works, just with unnecessary structure.
