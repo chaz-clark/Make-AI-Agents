@@ -2,6 +2,11 @@ GEMINI.md
 gem_instructions/
 qc_reports/
 gpt.qmd
+*.qmd
 CLAUDE.md
 handoffs/
 gh_issues_agent/
+.github_issues/
+.DS_Store
+AGENTJ_*.md
+canvas-sync.md
