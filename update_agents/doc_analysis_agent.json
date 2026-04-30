@@ -34,6 +34,15 @@
     "type": "workflow",
     "description": "Linear workflow: check cache freshness → load sources → load targets → diff and score → generate proposals → present for approval → (on approval) apply changes. LLM used for diff interpretation and proposal generation."
   },
+  "behavioral_discipline": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "_description": "Cross-cutting behavioral discipline this agent inherits. Source of truth: ../knowledge/behavioral_discipline.md (narrative) and ../knowledge/behavioral_discipline.json (structured rules).",
+    "interaction_pattern": "multi_step_batch",
+    "applicable_principles": ["P-001", "P-002", "P-003", "P-004", "P-005", "P-006", "P-007", "P-008", "P-009", "P-010"],
+    "override_decisions": [],
+    "_retrofit_note": "Retrofitted post-v3.0 per Issue #8 (legacy QC handling). Original spec authored before the discipline framework existed; retrofit applied per make_agent.md → '## Behavioral Discipline (core)' → 'Retrofit mode' subsection. No system_prompt boilerplate embed (agent_type is workflow, not llm_agent — BD-QC-002 not applicable per retrofit guidance step 5)."
+  },
   "implementation": {
     "_tier": "tier_1_core",
     "_required": true,

@@ -94,6 +94,27 @@ For source list, staleness threshold, and fetch config, see `doc_refresh_agent.j
 
 ---
 
+## Behavioral Discipline (core)
+
+This agent follows the behavioral discipline defined in `../knowledge/behavioral_discipline.md` and `../knowledge/behavioral_discipline.json`. The principles applicable to this agent type (multi_step_batch — multi-source fetch with writes to multiple cache files):
+
+- **P-001 Read Before Claiming** (*Genchi Genbutsu*): Read the existing cache file's metadata header (and content where relevant) before claiming it is stale or missing. *Trigger*: Every staleness/freshness claim.
+- **P-002 Plan Before Acting** (*Nemawashi + TBP*): Surface the list of stale sources and the planned fetch order before fetching. *Trigger*: Every refresh run.
+- **P-003 Stop on Defect** (*Jidoka + Andon*): If a fetch returns a non-2xx, an unexpected MIME type, or content drastically smaller than the prior cached version → stop, do not overwrite. *Trigger*: Any fetch failure or content sanity-check failure.
+- **P-004 Find the Root Cause** (*5 Whys*): When a source URL changes shape or starts returning different content, walk the cause chain to the URL or platform change rather than just patching the parser. *Trigger*: Any unexpected parse or content failure.
+- **P-005 Small Steps, Evenly Sized** (*Kaizen + PDCA + Heijunka*): One source per fetch; verify the metadata header and basic content sanity before moving to the next. *Trigger*: Every multi-source refresh pass.
+- **P-006 Document the Change** (*A3*): Each refreshed cache file gets an updated metadata header (last_fetched, source_url, byte_count) — that header IS the A3 for the refresh. *Trigger*: Every cache write.
+- **P-007 Pull, Don't Push** (*JIT + 3 Ms*): Refresh only sources that are stale. Do not fetch fresh sources speculatively, do not edit unrelated files. *Trigger*: Every refresh decision.
+- **P-008 Mistake-Proof Outputs** (*Poka-yoke + Standard Work*): The cache file format is identical across all sources — same metadata header schema, same body layout. *Trigger*: Every cache write.
+- **P-009 Reflect, and Tell the User** (*Hansei + Yokoten*): When a source's URL changes or its content structure shifts, name the lesson and propose updating the source list. *Trigger*: End of any refresh run that surfaced a surprising change.
+- **P-010 Respect the User's Intent** (*Respect for People + Hoshin Kanri*): The user asked to refresh sources. Don't expand scope to "while I'm at it, restructure the cache layout" or anything else unrequested. *Trigger*: Every refresh run.
+
+**Hard rule on overrides**: before skipping any principle, the agent must state in one sentence which principle is being skipped and why. Principles P-001, P-003, P-007, P-010 have no override.
+
+For full principle definitions, examples, and override rationale, see `../knowledge/behavioral_discipline.md`.
+
+---
+
 ## How to Use This Agent (core)
 
 ### Prerequisites

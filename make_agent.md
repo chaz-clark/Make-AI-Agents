@@ -290,6 +290,28 @@ The mid-spec flip checklist:
 
 This produces a deterministic spec state that downstream runners (AgentJ in particular) can consume reliably: `non_interactive_mode: true` + `alert_channel` set + system prompt language matches NI surface mechanisms + QC passing. A spec missing any of these is ambiguous and should not be deployed unattended.
 
+### Retrofit mode: applying the discipline to a pre-discipline agent
+
+When an agent spec exists from before v3.0 (the discipline framework landed in v3.0; agents authored earlier lack the `## Behavioral Discipline (core)` section in MD and the `behavioral_discipline` object in JSON), the make_agent skill MUST support retrofitting the discipline into the existing spec rather than requiring a regenerate. The output is structurally indistinguishable from a greenfield-generated agent — only the entry point differs.
+
+Retrofit checklist (parallel to the integration flow above, but starting from an existing spec):
+
+1. **Read the existing agent fully** — MD + JSON. Note current section structure (some pre-discipline agents use non-standard section names; that's fine, retrofit doesn't rewrite them).
+
+2. **Determine `interaction_pattern`** using the decision flow above. **MUST ask the user to confirm** the pattern rather than silently default. Pre-discipline agents have no declared pattern, so the right value depends on the author's intent — which the user knows and the spec doesn't capture.
+
+3. **Insert `## Behavioral Discipline (core)` in the MD** immediately after `## Key Principles (core)` (or, if Key Principles is absent or named differently, after the section that most closely plays that role — e.g., a "Two-Agent Architecture" or "Workflow" section in a navigation-style spec). Use `compact_boilerplate.md_section_template` from the knowledge JSON, substituted with the confirmed `interaction_pattern`.
+
+4. **Add the `behavioral_discipline` object to JSON** at the top level alongside `agent_type`, `implementation`, `io_contract`, etc. Populate `interaction_pattern`, `applicable_principles` (from `agent_type_applicability.types[<pattern>].always_include`), and `override_decisions` (empty unless overrides apply).
+
+5. **Embed the boilerplate in `implementation.llm_agent.system_prompt`** when the agent type is `llm_agent`. For non-llm types (workflow, api_agent, class_based, etc.), skip this and document the skip in the retrofit report — BD-QC-002 applies only to llm_agent.
+
+6. **Run `make_agent_qc`**. Specifically rules 17 (BD-QC-001 through BD-QC-006) and 18 (BD-QC-007 if non-interactive). Other rules already passed at original generation; the retrofit only adds discipline content.
+
+7. **Don't rewrite anything else**. Per P-007 (Pull, Don't Push), retrofit ONLY adds the discipline section and JSON object. Do not refactor existing pitfalls, reorganize sections, modernize prose, or "improve" anything that wasn't asked. The pre-discipline agent was correct for its time; retrofit makes it discipline-compliant without rewriting it.
+
+The retrofit is also the migration path for `update_agents/*` agents authored before v3.0 (currently failing BD-QC-006 and -001 if make_agent_qc rule 17 is run against them). Once retrofitted, those agents pass BD-QC alongside any greenfield-generated agent.
+
 ### When the discipline is over- or under-applied
 
 - **Over-application** (e.g., a read-only inspection agent with full A3 documentation) is a low-severity warning — the agent works, just with unnecessary structure.
