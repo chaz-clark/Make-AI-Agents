@@ -47,6 +47,15 @@ The QC agent evaluates Gems based on these key dimensions:
 **Bad**: "I answer math questions."
 **Good**: "I guide students to the answer by asking Socratic questions. I encourage them to try first."
 
+### 6. Behavioral Discipline Integration
+**Rule**: Every Gem must embed the Gem-tailored behavioral discipline (per `make_gem.md` → `## Behavioral Discipline for Gems (core)`). The six applicable principles — P-001 (Read Before Claiming), P-003 (Stop on Defect), P-007 (Pull Don't Push), P-008 (Mistake-Proof Outputs), P-009 partial (Reflect on knowledge gaps), P-010 (Respect Intent) — must be reflected in the appropriate pillars. The four no-override principles (P-001, P-003, P-007, P-010) are required.
+
+**Bad**: A Gem with rich Persona/Task/Context/Format but no language about staying within knowledge sources, no fallback for out-of-knowledge questions, and no constraint against substituting the user's question.
+
+**Good**: A Gem whose Context pillar explicitly bounds answers to uploaded materials (P-001), names the fallback phrase for out-of-knowledge cases (P-003), and whose Format pillar specifies a consistent response shape (P-008).
+
+The canonical rules live in `knowledge/behavioral_discipline.json` → `qc_checks` and are referenced by rule_id 9 in this skill's `make_gem_qc.json` — no duplication.
+
 ---
 
 ## How to Use This QC Skill
@@ -78,6 +87,10 @@ The QC agent evaluates Gems based on these key dimensions:
 *   **Issue**: Format is undefined.
 *   **Fix**: Request specific structures (Lists, Tables, Code Blocks).
 
+### The "Free-Floating Knowledge Gem" (Discipline Failure)
+*   **Issue**: Gem instructions don't bound answers to uploaded knowledge files. The Gem confidently answers from training data, sounds plausible, but isn't grounded in the source material the Gem was supposed to use. Or it goes outside knowledge silently — no fallback phrase, no flag.
+*   **Fix**: Embed the discipline boilerplate from `make_gem.md` → `## Behavioral Discipline for Gems (core)` into the Context pillar. Specifically: bound the Gem to uploaded materials (P-001), declare a fallback phrase for out-of-knowledge questions (P-003). Verify with a test prompt deliberately outside the knowledge base — the Gem should refuse, not improvise.
+
 ---
 
 ## Validation Rules (Technical)
@@ -85,6 +98,7 @@ See `make_gem_qc.json` for the exact logic.
 - **Pillar Completeness**: 25% weight. Checks for the *presence* of Role, Task, Context, and Format concepts, even if grouped under headers like "Behaviors and Rules" or "Purpose".
 - **Specificity**: 20% weight.
 - **Persona/Task/Context/Format**: 10-15% weight each.
+- **Behavioral Discipline Integration** (rule_id 9): 15% weight. Validates that the Gem-tailored discipline (P-001, P-003, P-007, P-008, P-009 partial, P-010) is embedded in the appropriate pillars per `make_gem.md` → `## Behavioral Discipline for Gems (core)`. Delegates to BD-QC checks in `knowledge/behavioral_discipline.json`. Critical failure if any of the four no-override principles (P-001, P-003, P-007, P-010) is missing.
 
 ## Resources
 - `make_gem.json`: The schema being validated.

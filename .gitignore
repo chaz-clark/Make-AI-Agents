@@ -2,3 +2,6 @@ GEMINI.md
 gem_instructions/
 qc_reports/
 gpt.qmd
+CLAUDE.md
+handoffs/
+gh_issues_agent/

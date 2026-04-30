@@ -112,6 +112,14 @@
         "condition": "Format section defines a sequence/chain (e.g. 'Step 1', 'First', 'Then', 'Understand request')",
         "action": "Flag Format sections that only define visuals (bold/lists) without defining the conversation flow",
         "weight": 0.15
+      },
+      {
+        "rule_id": 9,
+        "name": "Behavioral Discipline Integration",
+        "condition": "Every Gem MUST embed the Gem-tailored behavioral discipline per make_gem.md → \"## Behavioral Discipline for Gems (core)\". The six applicable principles (P-001 Read Before Claiming, P-003 Stop on Defect, P-007 Pull Don't Push, P-008 Mistake-Proof Outputs, P-009 partial, P-010 Respect Intent) must be reflected in the appropriate pillars: P-001 in Context (knowledge boundary), P-003 in Context (fallback phrase), P-007 in Task (output quality), P-008 in Format (response shape consistency), P-009 in Format (interaction chain for partial-knowledge cases), P-010 in Persona (pedagogical stance). Delegates to BD-QC checks in knowledge/behavioral_discipline.json.",
+        "action": "Critical failure if any of the four no-override principles (P-001, P-003, P-007, P-010) is missing or unmapped. High failure if P-008 or P-009 mapping is missing. The discipline file is the canonical source — do not duplicate principle definitions in the Gem's compiled instructions; embed pointer-quality references plus the per-pillar mappings.",
+        "priority": "critical",
+        "weight": 0.15
       }
     ]
   },

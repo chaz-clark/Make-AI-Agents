@@ -279,7 +279,7 @@ Every agent built from `make_agent.md` includes a compact version of this discip
 
 `make_agent` reads `behavioral_discipline.json` → `agent_type_applicability` to pick which principles apply to the agent it's generating. Read-only agents skip planning and A3 by default; multi-step batch agents include all ten; conversational agents skip the structured-output principles. See the JSON for the canonical mapping.
 
-`make_agent_qc` reads `behavioral_discipline.json` → `qc_checks` to validate that new agents have adopted the discipline appropriately for their type. The checks (BD-QC-001 through BD-QC-006) are referenced by ID from `make_agent_qc.json` once integrated.
+`make_agent_qc` reads `behavioral_discipline.json` → `qc_checks` to validate that new agents have adopted the discipline appropriately for their type. The checks (BD-QC-001 through BD-QC-007) are referenced by ID from `make_agent_qc.json` (rules 17 and 18). Sibling QC skills delegate to the same canonical checks: `make_gems/make_gem_qc.json` (rule 9), `make_AGENTS_qc.json` (rules 2 and 6).
 
 When this knowledge file is updated, the compact versions in agent specs don't need to update — they reference here. Update once, propagate everywhere.
 

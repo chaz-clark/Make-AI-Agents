@@ -143,8 +143,11 @@ project/
 ## This repo's structure
 ```
 Make-AI-Agents/
+├── AGENTS.md                     # project context for any agentic dev tool (canonical; supersedes CLAUDE.md)
 ├── make_agent.md / .json         # Agent spec template (the meta-skill)
 ├── make_agent_qc.md / .json      # Agent spec QC template
+├── make_AGENTS.md / .json        # AGENTS.md generation template
+├── make_AGENTS_qc.md / .json     # AGENTS.md QC template
 ├── make_gems/                    # Gemini Gem templates (sibling to make_agent)
 │   ├── make_gem.md / .json
 │   └── make_gem_qc.md / .json
@@ -180,6 +183,12 @@ The discipline includes principles like:
 - **Reflect, and Tell the User** (Hansei) — name the lesson where future sessions see it
 
 `make_agent` picks the applicable subset based on agent type (read-only vs multi-step batch vs single-call API vs conversational). `make_agent_qc` validates that new agents have adopted the discipline appropriately for their type. See `knowledge/behavioral_discipline.md` → "How agents inherit this" for the full mechanism.
+
+The discipline propagates across the meta-skill family:
+
+- **`make_agent` / `make_agent_qc`** — bake all 10 principles into agent specs based on declared `interaction_pattern`.
+- **`make_gem` / `make_gem_qc`** — bake the Gem-tailored subset (P-001, P-003, P-007, P-008, P-009 partial, P-010) into Gemini Gem instructions. See `make_gems/make_gem.md` → "Behavioral Discipline for Gems (core)".
+- **`make_AGENTS` / `make_AGENTS_qc`** — embed the discipline pointer in every generated `AGENTS.md` (project-level context file). The Gem and AGENTS QC skills delegate to the same canonical BD-QC checks in `knowledge/behavioral_discipline.json` — no rule duplication.
 
 ## Optional sections in agent specs
 

@@ -1,0 +1,251 @@
+{
+  "_metadata": {
+    "template_version": "1.0",
+    "last_updated": "2026-04-29",
+    "description": "make_AGENTS skill — generates tool-agnostic AGENTS.md project context files. Sibling to make_agent.md and make_gem.md.",
+    "instructions": "MD = the why (mission, principles, narrative). JSON = the what (required/optional sections, template strings, compact boilerplate, validation). Update both files together.",
+    "companion_files": {
+      "conceptual_guide": "make_AGENTS.md",
+      "discipline_source": "knowledge/behavioral_discipline.md",
+      "discipline_rules": "knowledge/behavioral_discipline.json"
+    },
+    "skill_details": {
+      "skill_name": "make_AGENTS",
+      "version": "1.0",
+      "last_updated": "2026-04-29",
+      "description": "Generates AGENTS.md project context files that are tool-agnostic and embed the behavioral discipline.",
+      "owner": "Project: Make-AI-Agents",
+      "complexity": "simple-to-standard"
+    }
+  },
+
+  "agent_type": {
+    "_tier": "tier_1_core",
+    "type": "workflow",
+    "description": "Workflow-based skill: identify project context → generate AGENTS.md → propose write → wait for confirmation → write file."
+  },
+
+  "behavioral_discipline": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "_description": "make_AGENTS itself operates under the behavioral discipline. Source: knowledge/behavioral_discipline.md/.json.",
+    "interaction_pattern": "single_write_workflow",
+    "applicable_principles": ["P-001", "P-002", "P-003", "P-004", "P-006", "P-007", "P-008", "P-009", "P-010"],
+    "_skipped_principles_rationale": {
+      "P-005": "Single-step workflow (one AGENTS.md per invocation), no decomposition needed."
+    },
+    "override_decisions": []
+  },
+
+  "io_contract": {
+    "_tier": "tier_1_core",
+    "inputs": [
+      {
+        "name": "project_root",
+        "type": "folder",
+        "format": "Absolute or relative path to the project's root directory",
+        "example": "/Users/chazclar/Documents/GitHub/Make-AI-Agents",
+        "required": true,
+        "file_filter": ""
+      },
+      {
+        "name": "existing_claude_md",
+        "type": "file",
+        "format": "Path to an existing CLAUDE.md to migrate from (optional)",
+        "example": "/Users/chazclar/Documents/GitHub/Make-AI-Agents/CLAUDE.md",
+        "required": false
+      }
+    ],
+    "outputs": [
+      {
+        "name": "agents_md",
+        "type": "file",
+        "format": "Generated AGENTS.md written at project root",
+        "example": "/Users/chazclar/Documents/GitHub/Make-AI-Agents/AGENTS.md",
+        "conditions": "Created if absent, or proposed-as-update if present (per P-002 — never silently overwrites)"
+      }
+    ],
+    "side_effects": "Creates or updates AGENTS.md at project root after user confirmation. Does NOT delete the existing CLAUDE.md — that is a separate follow-up step.",
+    "non_interactive_mode": false,
+    "alert_channel": ""
+  },
+
+  "agents_md_required_sections": {
+    "_tier": "tier_1_core",
+    "_description": "Sections that EVERY generated AGENTS.md must contain, in this order. Used by make_AGENTS to generate and by validation to check.",
+    "sections": [
+      {
+        "id": "title",
+        "heading": "# <Project Name>",
+        "description": "H1 with project name + one-line description below. Tag line, not paragraph.",
+        "required": true
+      },
+      {
+        "id": "project_purpose",
+        "heading": "## Project Purpose",
+        "description": "What the repo IS (3-5 bullets) and what it is NOT (2-4 bullets). Includes audience.",
+        "required": true,
+        "subsections_recommended": ["What this is", "What this is NOT", "Audience"]
+      },
+      {
+        "id": "structure",
+        "heading": "## Structure",
+        "description": "Annotated folder layout in a code block. Reference, not exhaustive — top-level + key subfolders only.",
+        "required": true
+      },
+      {
+        "id": "working_style",
+        "heading": "## Working Style",
+        "description": "Behavioral discipline pointer (substituted from compact_boilerplate.working_style_template) plus any project-specific rules.",
+        "required": true,
+        "must_include": ["discipline pointer to knowledge/behavioral_discipline.md or equivalent"]
+      },
+      {
+        "id": "active_context",
+        "heading": "## Active Context",
+        "description": "Current state, in-flight work, recent major changes, open issues. Date-stamped.",
+        "required": true,
+        "must_include": ["_Last updated: YYYY-MM-DD_ line at the top of the section"]
+      }
+    ]
+  },
+
+  "agents_md_optional_sections": {
+    "_tier": "tier_1_core",
+    "_description": "Sections to include only when the inclusion criteria apply.",
+    "sections": [
+      {
+        "id": "domain_terms",
+        "heading": "## Domain Terms",
+        "include_when": "The project has non-obvious vocabulary that an LLM would interpret wrong without explicit definitions.",
+        "format": "Term | Definition table"
+      },
+      {
+        "id": "external_system_lessons",
+        "heading": "## External System Lessons",
+        "include_when": "The project interacts with external systems (Canvas API, GitHub API, Stripe, etc.) with non-obvious behaviors discovered through use.",
+        "format": "Per-system entry: Behavior / Why it matters / How to handle"
+      },
+      {
+        "id": "migration_notes",
+        "heading": "## Migration Notes",
+        "include_when": "The project is mid-migration (CLAUDE.md → AGENTS.md, library swap, framework upgrade). Remove section once migration completes.",
+        "format": "Status, target state, items remaining"
+      },
+      {
+        "id": "existing_tooling",
+        "heading": "## Existing Tooling",
+        "include_when": "The project has scripts or utilities the LLM should reuse before generating new code.",
+        "format": "Tool / Purpose / When to use table"
+      }
+    ]
+  },
+
+  "agents_md_template": {
+    "_tier": "tier_1_core",
+    "_description": "The skeleton AGENTS.md the make_AGENTS skill substitutes into. Placeholders use {{double_braces}}.",
+    "template": "# {{project_name}}\n\n{{one_line_description}}\n\n## Project Purpose\n\n**This is**: {{what_this_is}}\n\n**This is NOT**: {{what_this_is_not}}\n\n**Audience**: {{audience}}\n\n## Structure\n\n```\n{{folder_layout}}\n```\n\n## Working Style\n\n{{working_style_block}}\n\n{{project_specific_rules}}\n\n## Active Context\n\n_Last updated: {{iso_date}}_\n\n{{active_context_bullets}}\n\n{{optional_sections_block}}\n"
+  },
+
+  "compact_boilerplate": {
+    "_tier": "tier_1_core",
+    "_description": "Templates substituted into the generated AGENTS.md. The discipline pointer is the most important — it propagates the behavioral discipline from this repo into every project that uses an AGENTS.md generated by this skill.",
+    "working_style_template": "This project follows the behavioral discipline defined in `knowledge/behavioral_discipline.md` (if present in this repo) or the equivalent discipline loaded via the host tool's skill system.\n\nIn short, every contributor — human or LLM — operates under these principles: read before claiming, plan before acting on changes, stop on the first defect rather than papering over, find root causes for bugs, document non-trivial changes in a structured form, generate exactly what was asked (no speculative additions), produce mistake-proof outputs, reflect and tell the user about non-obvious learnings, and respect the user's intent without substitution or drift.\n\nFor the full principles and override rules, see `knowledge/behavioral_discipline.md` → \"The Ten Principles\". The four no-override principles (P-001 Read Before Claiming, P-003 Stop on Defect, P-007 Pull Don't Push, P-010 Respect Intent) apply unconditionally.",
+    "project_specific_rules_template": "**Project-specific rules**:\n{{rules_bullets}}",
+    "active_context_template": "{{active_bullets}}\n\nNext up: {{next_up}}"
+  },
+
+  "validation": {
+    "_tier": "tier_1_core",
+    "pre_run_checklist": [
+      "project_root exists and is a directory",
+      "knowledge/behavioral_discipline.md is readable (or equivalent discipline source declared)",
+      "If existing_claude_md is provided, it is readable"
+    ],
+    "post_run_checklist": [
+      "AGENTS.md exists at project_root",
+      "All required sections present in order: title, project_purpose, structure, working_style, active_context",
+      "Working Style section contains a pointer to the behavioral discipline",
+      "Active Context section starts with a `_Last updated: YYYY-MM-DD_` line",
+      "No tool-specific language in the file body (no 'Claude Code does X' style instructions)"
+    ],
+    "success_criteria": [
+      "Generated AGENTS.md is tool-agnostic (readable by any agentic dev tool)",
+      "Behavioral discipline embed present in Working Style",
+      "Each optional section present has its inclusion criteria met"
+    ],
+    "test_cases": [
+      {
+        "name": "Generate AGENTS.md for a fresh project",
+        "input": "project_root=/tmp/example-repo (no existing CLAUDE.md)",
+        "expected_output": "AGENTS.md created with all 5 required sections, no optional sections, discipline pointer in Working Style.",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Generate AGENTS.md for a project with existing CLAUDE.md",
+        "input": "project_root=/Users/chazclar/Documents/GitHub/Make-AI-Agents, existing_claude_md=CLAUDE.md",
+        "expected_output": "AGENTS.md created. Workspace rules from CLAUDE.md migrated to project_purpose + working_style. Migration Notes section included documenting CLAUDE.md deletion as a follow-up step.",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Reject silently overwriting an existing AGENTS.md",
+        "input": "project_root=/path/with/existing/AGENTS.md",
+        "expected_output": "Per P-002: skill proposes the new AGENTS.md as a diff against the existing file, waits for confirmation. Does not silently overwrite.",
+        "validation_method": "behavioral"
+      }
+    ]
+  },
+
+  "qc_checks": {
+    "_description": "Skill-specific validation checks. These are NOT the BD-QC checks (those live in knowledge/behavioral_discipline.json) — these are checks specific to whether the GENERATED AGENTS.md meets the contract.",
+    "checks": [
+      {
+        "check_id": "AGENTS-QC-001",
+        "name": "All required sections present",
+        "rule": "Generated AGENTS.md contains all 5 required sections from agents_md_required_sections in the specified order.",
+        "severity": "critical"
+      },
+      {
+        "check_id": "AGENTS-QC-002",
+        "name": "Working Style contains discipline pointer",
+        "rule": "Working Style section references `knowledge/behavioral_discipline.md` or an equivalent discipline source. Without this, the discipline doesn't propagate from this repo to the project.",
+        "severity": "critical"
+      },
+      {
+        "check_id": "AGENTS-QC-003",
+        "name": "Active Context has date stamp",
+        "rule": "Active Context section starts with `_Last updated: YYYY-MM-DD_`. The date stamp signals freshness; without it, stale context goes undetected.",
+        "severity": "high"
+      },
+      {
+        "check_id": "AGENTS-QC-004",
+        "name": "No tool-specific language",
+        "rule": "Generated AGENTS.md body does not contain tool-specific instructions (e.g., 'When using Claude Code...', 'In Cursor only...'). Tool-specific guidance belongs in tool-specific config files, not AGENTS.md.",
+        "severity": "medium"
+      },
+      {
+        "check_id": "AGENTS-QC-005",
+        "name": "Optional sections meet inclusion criteria",
+        "rule": "If an optional section is present, the project must satisfy that section's `include_when` criterion in agents_md_optional_sections. Empty optional sections (e.g., a Domain Terms table with placeholder rows) fail this check.",
+        "severity": "medium"
+      }
+    ]
+  },
+
+  "changelog": {
+    "_tier": "tier_3_optional",
+    "versions": [
+      {
+        "version": "1.0",
+        "date": "2026-04-29",
+        "changes": [
+          "Initial bare-bones make_AGENTS skill — sibling to make_agent and make_gem.",
+          "Defines required and optional sections for AGENTS.md.",
+          "Embeds behavioral discipline pointer (compact_boilerplate.working_style_template) so every generated AGENTS.md inherits the discipline.",
+          "5 skill-specific QC checks (AGENTS-QC-001 through AGENTS-QC-005).",
+          "Skill itself operates as interaction_pattern: single_write_workflow with applicable_principles P-001, P-002, P-003, P-004, P-006, P-007, P-008, P-009, P-010 (skip P-005)."
+        ]
+      }
+    ]
+  }
+}

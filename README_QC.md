@@ -82,7 +82,7 @@ The `make_agent_qc` files define a **standardized validator** for the NGAI ecosy
 *   **`make_agent_qc.json`**: Contains the *rules*, *scoring weights*, and *logic*. (e.g., "If 'mission' is missing, deduct 20 points.")
 *   **`make_agent_qc.md`**: Contains the *philosophy* and *explanations*. (e.g., "Why we value specificity over generic templates.")
 
-## The 14 Quality Dimensions
+## The 15 Quality Dimensions
 
 The QC agent evaluates your work across these key areas (defined in `make_agent_qc.json`):
 
@@ -105,8 +105,9 @@ The QC agent evaluates your work across these key areas (defined in `make_agent_
 12. **Graceful Degradation Coverage** *(agents with optional tools)*: Do agents with optional dependencies or MCP servers document fallback behavior?
 13. **Autonomy Guidance** *(agents with write operations)*: Do write-capable agents document when they propose vs. execute?
 14. **I/O Contract Consistency**: When the input type is `file` or `folder`, does the system prompt match — single-file invocation or per-file independence language?
+15. **Behavioral Discipline Integration**: Agent embeds the discipline correctly per BD-QC-001 through BD-QC-007 in `knowledge/behavioral_discipline.json`. Critical: P-001/P-003/P-007/P-010 always present; non-interactive agents declare an alert_channel.
 
-For the canonical rule definitions, scoring weights, and severity levels, see `make_agent_qc.json` → `implementation.rule_based.rules` (rule_ids 1–16) and `validation_rules_detailed.dimensions`.
+For the canonical rule definitions, scoring weights, and severity levels, see `make_agent_qc.json` → `implementation.rule_based.rules` (rule_ids 1–18) and `validation_rules_detailed.dimensions`.
 
 ## Why this design?
 

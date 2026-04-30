@@ -1,0 +1,466 @@
+{
+  "_metadata": {
+    "template_version": "1.0",
+    "last_updated": "2026-04-29",
+    "description": "Quality control skill for AGENTS.md files. Validates against the contract in make_AGENTS.json.",
+    "instructions": "MD = the why and how (philosophy, pitfalls, examples). JSON = the rules, scoring, test cases. Update both files together.",
+    "companion_files": {
+      "conceptual_guide": "make_AGENTS_qc.md",
+      "contract_source": "make_AGENTS.json",
+      "discipline_source": "knowledge/behavioral_discipline.json"
+    },
+    "skill_details": {
+      "skill_name": "make_AGENTS_qc",
+      "version": "1.0",
+      "last_updated": "2026-04-29",
+      "description": "Validates AGENTS.md files against the contract in make_AGENTS.json. Sibling to make_agent_qc and make_gems/make_gem_qc.",
+      "owner": "Project: Make-AI-Agents",
+      "complexity": "simple"
+    }
+  },
+
+  "agent_type": {
+    "_tier": "tier_1_core",
+    "type": "rule_based",
+    "description": "Rule-based validation system. 9 weighted rules across 6 quality dimensions. Score 0-100 with status mapping."
+  },
+
+  "behavioral_discipline": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "_description": "make_AGENTS_qc operates as read_only — reads files, produces a report. No state changes.",
+    "interaction_pattern": "read_only",
+    "applicable_principles": ["P-001", "P-003", "P-007", "P-008", "P-009", "P-010"],
+    "_skipped_principles_rationale": {
+      "P-002": "No state changes to plan; QC reads + reports.",
+      "P-004": "Root cause analysis is for bug-fixing; QC is for finding failures, not fixing them.",
+      "P-005": "Single-pass validation; no decomposition.",
+      "P-006": "No documentation artifact produced beyond the report itself."
+    },
+    "override_decisions": []
+  },
+
+  "io_contract": {
+    "_tier": "tier_1_core",
+    "inputs": [
+      {
+        "name": "agents_md_path",
+        "type": "file",
+        "format": "Absolute path to the target AGENTS.md",
+        "example": "/Users/chazclar/Documents/GitHub/Make-AI-Agents/AGENTS.md",
+        "required": true
+      },
+      {
+        "name": "repo_root",
+        "type": "folder",
+        "format": "Absolute path to the repo root the AGENTS.md describes (optional but recommended — enables Genchi Genbutsu rules 7 and 9)",
+        "example": "/Users/chazclar/Documents/GitHub/Make-AI-Agents",
+        "required": false
+      },
+      {
+        "name": "strict_mode",
+        "type": "boolean",
+        "format": "true|false",
+        "example": false,
+        "required": false,
+        "description": "If true, fail on any critical or high-severity issue. Default: false (NEEDS_IMPROVEMENT for medium issues, FAIL only for <80 score)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "validation_report",
+        "type": "object",
+        "format": "Structured report — see output_format.report_template",
+        "example": "See validation.test_cases for samples",
+        "conditions": "Always returned, even when AGENTS.md is malformed (with error status)"
+      }
+    ],
+    "side_effects": "None — read-only.",
+    "non_interactive_mode": false,
+    "alert_channel": ""
+  },
+
+  "implementation": {
+    "_tier": "tier_1_core",
+    "rule_based": {
+      "rules": [
+        {
+          "rule_id": 1,
+          "name": "Required Sections Present and In Order",
+          "condition": "AGENTS.md contains all 5 required sections from make_AGENTS.json → agents_md_required_sections.sections (title, project_purpose, structure, working_style, active_context) in that order. Headings match the contract exactly.",
+          "action": "Critical failure if any required section is missing. High failure if sections are present but out of order.",
+          "priority": "critical",
+          "weight": 0.20,
+          "dimension": "completeness"
+        },
+        {
+          "rule_id": 2,
+          "name": "Working Style Discipline Pointer",
+          "condition": "Working Style section references the behavioral discipline by file path — `knowledge/behavioral_discipline.md` (or an equivalent project-specific discipline source).",
+          "action": "Critical failure if no discipline reference exists. The Working Style section without a discipline pointer is a contract violation.",
+          "priority": "critical",
+          "weight": 0.15,
+          "dimension": "discipline_integration"
+        },
+        {
+          "rule_id": 3,
+          "name": "Active Context Date Stamp Present",
+          "condition": "Active Context section starts with `_Last updated: YYYY-MM-DD_` (or close variant — italic markdown, ISO 8601 date).",
+          "action": "High failure if missing. Without a date stamp, freshness cannot be verified.",
+          "priority": "high",
+          "weight": 0.07,
+          "dimension": "currency"
+        },
+        {
+          "rule_id": 4,
+          "name": "No Tool-Specific Directive Language",
+          "condition": "AGENTS.md body does NOT contain phrases that direct one specific agentic tool. Example violations: 'When using Claude Code do X', 'In Cursor only', 'Aider should always'. Naming tools as a list of consumers is fine: 'readable by Claude Code, Cursor, Aider'.",
+          "action": "Medium failure per occurrence. Recommend rewording to tool-agnostic prose ('the LLM', 'your agentic tool').",
+          "priority": "medium",
+          "weight": 0.08,
+          "dimension": "tool_agnosticism"
+        },
+        {
+          "rule_id": 5,
+          "name": "Optional Sections Meet Inclusion Criteria",
+          "condition": "For each optional section present in AGENTS.md (Domain Terms, External System Lessons, Migration Notes, Existing Tooling), the project must satisfy that section's `include_when` criterion in make_AGENTS.json → agents_md_optional_sections. Empty rows or placeholder content (e.g., `[TERM] | [Definition]`) count as failure to meet criterion.",
+          "action": "Medium failure per orphaned optional section. Recommend removal.",
+          "priority": "medium",
+          "weight": 0.10,
+          "dimension": "optional_section_justification"
+        },
+        {
+          "rule_id": 6,
+          "name": "Discipline Pointer Quality (Not a Duplicate)",
+          "condition": "Working Style section contains the discipline pointer plus AT MOST ~3 sentences of original prose about the discipline. More than that is paraphrasing the source — which rots when the source updates.",
+          "action": "High failure if Working Style contains >3 sentences of original prose paraphrasing the principles or restating the override rules. Recommend replacing the paraphrase with a pure pointer.",
+          "priority": "high",
+          "weight": 0.10,
+          "dimension": "discipline_integration"
+        },
+        {
+          "rule_id": 7,
+          "name": "Structure Section Matches Repo State (Genchi Genbutsu)",
+          "condition": "When repo_root is provided: the file paths and folder structure listed in AGENTS.md → Structure section match the actual tracked content (per `git ls-files`). Tracked files mentioned in AGENTS.md must exist; major tracked folders must appear in the tree. **In-flight content exception**: files that exist on disk but are not yet tracked are NOT drift if AGENTS.md → Active Context (or Migration Notes) explicitly flags them as in-flight / about-to-commit. The reader can correlate the Structure listing with the in-flight context.",
+          "action": "High failure for each non-trivial drift (gitignored files presented as tracked, listed files that don't exist, tracked content that's missing from the tree). Low/info severity for uncommitted-but-imminent files when in-flight context covers them. Skip this rule with a note when repo_root is not provided.",
+          "priority": "high",
+          "weight": 0.15,
+          "dimension": "completeness",
+          "requires_repo_access": true
+        },
+        {
+          "rule_id": 8,
+          "name": "Active Context Date Stamp Within Freshness Threshold",
+          "condition": "The date stamp in Active Context is within 90 days of today. Stamps older than 90 days flag the AGENTS.md as stale; the content claims may not reflect current state.",
+          "action": "Medium failure for stamps 90-180 days old. High failure for stamps >180 days old.",
+          "priority": "medium",
+          "weight": 0.08,
+          "dimension": "currency"
+        },
+        {
+          "rule_id": 9,
+          "name": "Specificity — No Template Placeholders",
+          "condition": "AGENTS.md body does NOT contain placeholder patterns: `[Project Name]`, `[Description]`, `<your_*>`, `{{...}}` substitution markers, `TODO:`, `FIXME:`. Headings can contain placeholder-style text only if the section is intentionally kept as scaffolding.",
+          "action": "Medium failure per placeholder. High failure if placeholders appear in required sections (1-5).",
+          "priority": "medium",
+          "weight": 0.07,
+          "dimension": "specificity"
+        }
+      ],
+      "evaluation_order": "priority",
+      "default_action": "If all rules pass, score 100. If any rule with severity=critical fails, score caps at 70 regardless of other rules."
+    }
+  },
+
+  "primary_data": {
+    "_tier": "tier_1_core",
+    "_description": "Pattern data used by the rules.",
+    "placeholder_patterns": [
+      "\\[Project Name\\]",
+      "\\[Description\\]",
+      "\\[TERM\\]",
+      "\\[script or file path\\]",
+      "<your_[a-z_]+>",
+      "\\{\\{[a-z_]+\\}\\}",
+      "TODO:",
+      "FIXME:",
+      "path/to/your"
+    ],
+    "tool_specific_directive_patterns": [
+      "When using Claude Code,? (you|do|the agent)",
+      "In Cursor,? (only|always|the agent)",
+      "Aider (should|must) always",
+      "Antigravity-only",
+      "Claude Code-specific",
+      "(Claude|Cursor|Aider|Antigravity) does"
+    ],
+    "_tool_specific_pattern_note": "These patterns catch tool-NAME-as-actor language. Patterns like 'readable by Claude Code, Cursor, Aider, Antigravity' (tools as a list of consumers) are not violations and are not in this list.",
+    "required_section_headings_canonical": [
+      "# ",
+      "## Project Purpose",
+      "## Structure",
+      "## Working Style",
+      "## Active Context"
+    ],
+    "optional_section_headings_canonical": {
+      "domain_terms": "## Domain Terms",
+      "external_system_lessons": "## External System Lessons",
+      "migration_notes": "## Migration Notes",
+      "existing_tooling": "## Existing Tooling"
+    }
+  },
+
+  "validation_rules_detailed": {
+    "_tier": "tier_1_core",
+    "_description": "The 6 quality dimensions and how rules map to them.",
+    "dimensions": {
+      "completeness": {
+        "weight": 0.25,
+        "rules": [1, 7],
+        "checks": [
+          "All 5 required sections present and in order",
+          "Structure section accurately reflects the repo (when repo accessible)"
+        ]
+      },
+      "specificity": {
+        "weight": 0.15,
+        "rules": [9],
+        "checks": [
+          "No placeholder patterns in body",
+          "Concrete project content, not template scaffolding"
+        ]
+      },
+      "discipline_integration": {
+        "weight": 0.20,
+        "rules": [2, 6],
+        "checks": [
+          "Working Style references the discipline by path",
+          "Pointer-quality, not duplicate-quality (no inline paraphrasing of principles)"
+        ]
+      },
+      "currency": {
+        "weight": 0.15,
+        "rules": [3, 8],
+        "checks": [
+          "Active Context has a date stamp",
+          "Date stamp is within 90 days"
+        ]
+      },
+      "tool_agnosticism": {
+        "weight": 0.10,
+        "rules": [4],
+        "checks": [
+          "No tool-specific directive language in body",
+          "Tool names appear only as a list of consumers, not as actors"
+        ]
+      },
+      "optional_section_justification": {
+        "weight": 0.15,
+        "rules": [5],
+        "checks": [
+          "Each present optional section meets its include_when criterion",
+          "No empty or placeholder rows in optional sections"
+        ]
+      }
+    },
+    "severity_levels": {
+      "_canonical_scoring_model": "ONE scoring path. Each dimension starts at 100. For each rule that fails, deduct from its dimension based on severity (per-occurrence). Dimension score is floored at 0. Overall score = weighted average of dimension scores using the dimension weights below (which sum to 1.0). Status is determined by overall score AND critical-issue presence (a single critical → FAIL regardless of score). Per-issue deduction values are listed below; do not apply additional deductions outside this model.",
+      "deductions_per_failed_rule": {
+        "critical": -100,
+        "high": -25,
+        "medium": -10,
+        "low": -3,
+        "_note": "Deductions apply within the failed rule's mapped dimension only. A critical failure zeroes its dimension."
+      },
+      "status_mapping": {
+        "PASS": "score ≥ 95 AND zero critical issues",
+        "NEEDS_IMPROVEMENT": "score 80-94 AND zero critical issues",
+        "FAIL": "score < 80 OR any critical issue"
+      },
+      "strict_mode_override": "If strict_mode=true, status downgrades to FAIL on any critical OR high-severity issue regardless of score."
+    }
+  },
+
+  "output_format": {
+    "_tier": "tier_1_core",
+    "_description": "Standard report format used by every QC run. Per P-008 — same shape every time.",
+    "report_template": {
+      "summary": {
+        "score": "0-100",
+        "status": "PASS | NEEDS_IMPROVEMENT | FAIL",
+        "agents_md_path": "string",
+        "repo_root": "string or null",
+        "rules_evaluated": "integer (1-9)",
+        "rules_skipped": "array of rule_ids skipped (e.g. [7] if no repo_root)",
+        "timestamp": "ISO 8601"
+      },
+      "dimensions": {
+        "completeness": "0-100",
+        "specificity": "0-100",
+        "discipline_integration": "0-100",
+        "currency": "0-100",
+        "tool_agnosticism": "0-100",
+        "optional_section_justification": "0-100"
+      },
+      "issues": {
+        "critical": "array of issue objects",
+        "high": "array of issue objects",
+        "medium": "array of issue objects",
+        "low": "array of issue objects"
+      },
+      "issue_object_shape": {
+        "rule_id": "integer (1-9)",
+        "rule_name": "string",
+        "severity": "critical|high|medium|low",
+        "location": "string (line number or section name in AGENTS.md)",
+        "finding": "string (what's wrong)",
+        "recommendation": "string (concrete fix)"
+      },
+      "recommendations": "array of strings — overall guidance prioritized by impact",
+      "worth_noting": "string or null — per P-009, surface non-obvious authorship lessons here"
+    }
+  },
+
+  "validation": {
+    "_tier": "tier_1_core",
+    "pre_run_checklist": [
+      "agents_md_path exists and is a readable file",
+      "If repo_root provided, the directory exists and `git ls-files` runs",
+      "make_AGENTS.json is readable (for contract definitions)"
+    ],
+    "post_run_checklist": [
+      "Report contains all dimension scores",
+      "Issues are sorted by severity (critical first)",
+      "Each issue references a rule_id and includes a recommendation",
+      "Score is calculated correctly per the deduction rules"
+    ],
+    "success_criteria": [
+      "Generated AGENTS.md from make_AGENTS scores ≥95",
+      "AGENTS.md with deliberate violations (placeholder rows, no date stamp, structure drift) scores <70",
+      "Same input → same output (deterministic per P-008)"
+    ],
+    "test_cases": [
+      {
+        "name": "Validate this repo's AGENTS.md (the iter-3 ship)",
+        "input": {
+          "agents_md_path": "/Users/chazclar/Documents/GitHub/Make-AI-Agents/AGENTS.md",
+          "repo_root": "/Users/chazclar/Documents/GitHub/Make-AI-Agents",
+          "strict_mode": false
+        },
+        "expected_output": {
+          "score": "≥95",
+          "status": "PASS",
+          "critical_count": 0,
+          "high_count": 0
+        },
+        "validation_method": "range"
+      },
+      {
+        "name": "Reject AGENTS.md with placeholder rows in Domain Terms",
+        "input": {
+          "agents_md_path": "/tmp/broken_agents.md (Domain Terms table contains [TERM] | [Definition] rows)",
+          "repo_root": null,
+          "strict_mode": false
+        },
+        "expected_output": {
+          "score": "<80",
+          "status": "NEEDS_IMPROVEMENT",
+          "issues": ["AGENTS-QC rule_id 5 medium", "AGENTS-QC rule_id 9 medium"]
+        },
+        "validation_method": "structural"
+      },
+      {
+        "name": "Reject AGENTS.md without discipline pointer",
+        "input": {
+          "agents_md_path": "/tmp/no_discipline_agents.md (Working Style section has no reference to knowledge/behavioral_discipline.md)",
+          "repo_root": null,
+          "strict_mode": false
+        },
+        "expected_output": {
+          "score": "≤70",
+          "status": "FAIL",
+          "critical_count": 1,
+          "issues": ["AGENTS-QC rule_id 2 critical"]
+        },
+        "validation_method": "structural"
+      },
+      {
+        "name": "Detect Structure section drift via Genchi Genbutsu",
+        "input": {
+          "agents_md_path": "/path/to/stale-agents.md (lists folder X that no longer exists)",
+          "repo_root": "/path/to/repo (folder X actually removed)",
+          "strict_mode": false
+        },
+        "expected_output": {
+          "score": "<90",
+          "status": "NEEDS_IMPROVEMENT",
+          "issues": ["AGENTS-QC rule_id 7 high"]
+        },
+        "validation_method": "structural"
+      },
+      {
+        "name": "Skip rule 7 cleanly when repo_root not provided",
+        "input": {
+          "agents_md_path": "/tmp/some_agents.md",
+          "repo_root": null,
+          "strict_mode": false
+        },
+        "expected_output": {
+          "rules_skipped": [7],
+          "score": "calculated from remaining rules only"
+        },
+        "validation_method": "structural"
+      }
+    ],
+    "tolerance": {
+      "numeric": "Score ranges allow ±2 points for rounding",
+      "string": "case_insensitive for status matching",
+      "structural": "Issue array length comparisons allow exact match"
+    },
+    "commands": [
+      "Conversational invocation through any agentic dev tool — see make_AGENTS_qc.md → How to Use This Skill"
+    ]
+  },
+
+  "operational_guidance": {
+    "_tier": "tier_2_recommended",
+    "when_to_use": [
+      "After generating a new AGENTS.md via make_AGENTS",
+      "Before merging a PR that modifies AGENTS.md",
+      "Quarterly drift audit",
+      "During CLAUDE.md → AGENTS.md migrations",
+      "When an LLM gives clearly wrong project-state answers (suspected drift)"
+    ],
+    "when_not_to_use": [
+      "Validating agent specs (use make_agent_qc)",
+      "Validating Gem instructions (use make_gems/make_gem_qc)",
+      "Validating arbitrary markdown documentation",
+      "Real-time editing feedback (too heavyweight)"
+    ],
+    "best_practices": [
+      "Run with repo_root set whenever possible — Rule 7 catches the highest-impact drift",
+      "Use non-strict mode during development; strict mode for release gates",
+      "Fix critical issues first (Rules 1, 2). Most other issues become trivial once those are resolved.",
+      "Keep a known-good AGENTS.md (the one in this repo, scoring ≥95) as a regression baseline."
+    ]
+  },
+
+  "changelog": {
+    "_tier": "tier_3_optional",
+    "versions": [
+      {
+        "version": "1.0",
+        "date": "2026-04-29",
+        "changes": [
+          "Initial QC skill for AGENTS.md.",
+          "9 rules across 6 quality dimensions: completeness, specificity, discipline_integration, currency, tool_agnosticism, optional_section_justification.",
+          "Rule 7 (Structure Genchi Genbutsu) catches drift between AGENTS.md claims and actual repo state when repo_root is provided. Includes an in-flight-content exception for files documented as about-to-commit.",
+          "Rule 6 catches the over-paraphrasing-Working-Style failure mode observed during AGENTS.md iteration 1.",
+          "Skill itself operates as interaction_pattern: read_only with applicable_principles P-001, P-003, P-007, P-008, P-009, P-010 (skip P-002, P-004, P-005, P-006).",
+          "Single canonical scoring model: dimensions start at 100, deductions per failed rule by severity (-100 critical / -25 high / -10 medium / -3 low) within the rule's dimension; overall score = weighted dimension average; critical issue → FAIL regardless of score.",
+          "Output format is fixed (P-008 Mistake-Proof Outputs): every report has the same structure."
+        ]
+      }
+    ]
+  }
+}
