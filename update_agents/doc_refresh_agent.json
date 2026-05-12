@@ -142,35 +142,39 @@
       {
         "platform": "Anthropic",
         "label": "Tool Use Guide",
-        "url": "https://docs.anthropic.com/en/docs/build-with-claude/tool-use",
+        "url": "https://platform.claude.com/docs/en/docs/build-with-claude/tool-use",
+        "url_history": ["https://docs.anthropic.com/en/docs/build-with-claude/tool-use (until 2026-04 — migrated to platform.claude.com via 301 redirect)"],
         "cache_file": "source_docs/anthropic_tool_use.md",
         "section_focus": "tool_choice, fallback handling, strict mode, parallel tool use, tool runner, MCP tools",
         "fetch_method": "auto",
         "last_refresh_status": "success",
-        "last_refresh_date": "2026-03-11",
-        "notes": ""
+        "last_refresh_date": "2026-05-12",
+        "notes": "Migrated to platform.claude.com in 2026-04 (301 redirect)."
       },
       {
         "platform": "Anthropic",
         "label": "Claude Agent SDK",
-        "url": "https://docs.anthropic.com/en/docs/claude-code/sdk",
+        "url": "https://code.claude.com/docs/en/agent-sdk/overview",
+        "url_history": ["https://docs.anthropic.com/en/docs/claude-code/sdk (until 2026-04 — Claude Code SDK renamed to Claude Agent SDK; migrated to code.claude.com)"],
         "cache_file": "source_docs/anthropic_agent_sdk.md",
         "section_focus": "agent SDK, agent loop, subagents, sessions, hooks, compaction, permissions",
         "fetch_method": "auto",
         "last_refresh_status": "success",
-        "last_refresh_date": "2026-03-11",
-        "notes": "Formerly Claude Code SDK. Redirects to platform.claude.com/docs/en/agent-sdk/overview."
+        "last_refresh_date": "2026-05-12",
+        "notes": "Renamed and migrated to code.claude.com in 2026-04. WebFetch hit a redirect loop in 2026-04-30 refresh (docs → platform → code); resolved with manual fetch."
       },
       {
         "platform": "Google",
-        "label": "Gemini API Agentic Capabilities",
-        "url": "https://ai.google.dev/gemini-api/docs/agentic-capabilities",
+        "label": "Gemini Agentic Capabilities (function calling + Google Search)",
+        "url": "https://ai.google.dev/gemini-api/docs/function-calling",
+        "url_2": "https://ai.google.dev/gemini-api/docs/google-search",
+        "url_history": ["https://ai.google.dev/gemini-api/docs/agentic-capabilities (404 since 2026-04 — RETIRED by Google; concept split across topic-specific pages)"],
         "cache_file": "source_docs/google_gemini_agentic.md",
-        "section_focus": "function calling, parallel/compositional calling, thinking models, MCP, best practices",
+        "section_focus": "function calling, parallel/compositional calling, thinking models, MCP, best practices, Google Search built-in tool",
         "fetch_method": "auto",
         "last_refresh_status": "success",
-        "last_refresh_date": "2026-03-27",
-        "notes": "Original agentic-capabilities URL 404s. Content fetched from https://ai.google.dev/gemini-api/docs/function-calling — full function calling reference including Gemini 3 IDs, modes (AUTO/ANY/NONE/VALIDATED), MCP, best practices."
+        "last_refresh_date": "2026-05-12",
+        "notes": "Google RETIRED the standalone agentic-capabilities page in 2026 (between 2026-03 and 2026-04 refresh cycles). This source now combines the 2 closest live successors: function-calling (primary) + google-search (secondary). A grounding URL attempted as a third candidate also returned 404. Multi-URL pattern matches Anthropic agent skills entry above."
       },
       {
         "platform": "Google",

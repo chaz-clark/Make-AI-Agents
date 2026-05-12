@@ -1,209 +1,170 @@
 ---
 platform: Anthropic
 label: Tool Use with Claude
-source_url: https://docs.anthropic.com/en/docs/build-with-claude/tool-use
-last_fetched: 2026-03-11
+source_url: https://platform.claude.com/docs/en/docs/build-with-claude/tool-use
+last_fetched: 2026-05-12
 fetch_status: success
-notes: Covers client tools, server tools, MCP tools, parallel/sequential tool use, tool_choice, strict mode, tool runner (beta)
+fetch_error: none
+notes: Covers client tools vs server tools, the agentic loop, MCP connector reference, strict tool use, and per-model token costs for tool_choice variants. URL history: docs.anthropic.com/en/docs/build-with-claude/tool-use (until 2026-04) → platform.claude.com/docs/en/docs/build-with-claude/tool-use (current; 2026-04-30 refresh hit 301 to new domain).
 ---
+# Tool use with Claude
 
-## Tool use with Claude
-
-Claude is capable of interacting with tools and functions, allowing you to extend Claude's capabilities to perform a wider variety of tasks. Each tool defines a contract: you specify what operations are available and what they return; Claude decides when and how to call them.
-
-**Tip — Guarantee schema conformance with strict tool use:** Add `strict: true` to your tool definitions to ensure Claude's tool calls always match your schema exactly, eliminating type mismatches or missing fields. Perfect for production agents where invalid tool parameters would cause failures.
-
----
-
-## Two Types of Tools
-
-**Client tools** — Execute on your systems:
-- User-defined custom tools you create and implement
-- Anthropic-defined tools like computer use and text editor that require client implementation
-
-**Server tools** — Execute on Anthropic's servers:
-- Web search, web fetch tools
-- Must be specified in the API request but don't require client implementation
-- Versioned types (e.g., `web_search_20250305`) ensure compatibility across model versions
+Connect Claude to external tools and APIs. Learn where tools execute and how the agentic loop works.
 
 ---
 
-## Client Tool — 4-Step Integration
+Tool use lets Claude call functions you define or that Anthropic provides. Claude decides when to call a tool based on the user's request and the tool's description, then returns a structured call that your application executes (client tools) or that Anthropic executes (server tools).
 
-1. **Provide tools + prompt**: Define client tools with names, descriptions, and input schemas
-2. **Claude decides**: If helpful, Claude constructs a properly formatted tool use request; API response has `stop_reason: "tool_use"`
-3. **Execute + return**: Extract tool name/input, run on your system, return results via `tool_result` content block
-4. **Claude formulates response**: Claude analyzes tool results to craft final response
+Here's the simplest example using a server tool, where Anthropic handles execution:
 
-Note: Steps 3 and 4 are optional — Claude's tool use request alone may be all you need.
-
----
-
-## Server Tool — `pause_turn` Handling
-
-The server-side sampling loop has a default limit of 10 iterations. If Claude reaches this limit:
-- API returns `stop_reason: "pause_turn"`
-- **Action**: Continue the conversation by sending the response back as a new user message to let Claude finish
-
----
-
-## MCP Tools
-
-If using the Model Context Protocol, convert MCP tools to Claude format:
-- Rename `inputSchema` → `input_schema`
-
-```python
-from mcp import ClientSession
-
-async def get_claude_tools(mcp_session: ClientSession):
-    mcp_tools = await mcp_session.list_tools()
-    claude_tools = []
-    for tool in mcp_tools.tools:
-        claude_tools.append({
-            "name": tool.name,
-            "description": tool.description or "",
-            "input_schema": tool.inputSchema,  # Rename inputSchema to input_schema
-        })
-    return claude_tools
+<CodeGroup>
+```bash cURL
+curl https://api.anthropic.com/v1/messages \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "content-type: application/json" \
+  -d '{
+    "model": "claude-opus-4-7",
+    "max_tokens": 1024,
+    "tools": [{"type": "web_search_20260209", "name": "web_search"}],
+    "messages": [{"role": "user", "content": "What'\''s the latest on the Mars rover?"}]
+  }'
 ```
 
----
-
-## Tool Definition Schema
-
-| Parameter | Description |
-|-----------|-------------|
-| `name` | Must match `^[a-zA-Z0-9_-]{1,64}$` |
-| `description` | Detailed plaintext: what it does, when to use, how parameters affect behavior, caveats |
-| `input_schema` | JSON Schema object defining expected parameters |
-| `input_examples` | (Optional) Array of example input objects for complex tools |
-| `strict` | (Optional) `true` for guaranteed schema validation on inputs |
-
----
-
-## Best Practices for Tool Definitions
-
-**This is the single most important factor in tool performance.**
-
-- **Provide extremely detailed descriptions** — at least 3–4 sentences per tool. Include: what it does, when to use it (and when NOT to), what each parameter means and how it affects behavior, important caveats and limitations
-- **Consolidate related operations into fewer tools** — Rather than `create_pr`, `review_pr`, `merge_pr`, use one `pr_manager` tool with an `action` parameter. Fewer, more capable tools reduce selection ambiguity
-- **Use meaningful namespacing in tool names** — Prefix with service name when tools span multiple services (e.g., `github_list_prs`, `slack_send_message`)
-- **Design tool responses to return only high-signal information** — Return semantic, stable identifiers (slugs, UUIDs). Include only fields Claude needs to reason about next steps. Bloated responses waste context
-- **Use `input_examples` for complex tools** — Especially useful for nested objects or format-sensitive parameters
-
----
-
-## Controlling Tool Use
-
-### tool_choice options
-
-| Value | Behavior |
-|-------|----------|
-| `auto` | Claude decides whether to call any tool (default) |
-| `any` | Claude must use one of the provided tools |
-| `tool` | Forces Claude to always use a specific tool |
-| `none` | Prevents Claude from using any tools |
-
-Note: When `tool_choice` is `any` or `tool`, the API prefills the assistant message — Claude will not emit natural language before `tool_use` blocks.
-
-### Parallel Tool Use
-
-Claude can call multiple tools in parallel within a single response. All `tool_use` blocks appear in a single assistant message; all corresponding `tool_result` blocks must be in the subsequent user message.
-
-**Disable parallel tool use:**
-- Set `disable_parallel_tool_use: true` with `tool_choice: auto` → Claude uses **at most one** tool
-- Set `disable_parallel_tool_use: true` with `tool_choice: any/tool` → Claude uses **exactly one** tool
-
-**Prompt to maximize parallel tool use (Claude 4 models):**
-```
-For maximum efficiency, whenever you need to perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially.
+```bash CLI
+ant messages create --transform content --format yaml \
+  --model claude-opus-4-7 \
+  --max-tokens 1024 \
+  --tool '{type: web_search_20260209, name: web_search}' \
+  --message '{role: user, content: "What is the latest on the Mars rover?"}'
 ```
 
-**Stronger parallel tool use prompt:**
-```xml
-<use_parallel_tool_calls>
-For maximum efficiency, whenever you perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially. Prioritize calling tools in parallel whenever possible.
-</use_parallel_tool_calls>
+```python Python
+import anthropic
+
+client = anthropic.Anthropic()
+response = client.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=1024,
+    tools=[{"type": "web_search_20260209", "name": "web_search"}],
+    messages=[{"role": "user", "content": "What's the latest on the Mars rover?"}],
+)
+print(response.content)
 ```
 
-Warning: Claude Sonnet 3.7 may be less likely to make parallel tool calls. Use Claude 4 models for improved parallel tool calling.
+```typescript TypeScript
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+const response = await client.messages.create({
+  model: "claude-opus-4-7",
+  max_tokens: 1024,
+  tools: [{ type: "web_search_20260209", name: "web_search" }],
+  messages: [{ role: "user", content: "What's the latest on the Mars rover?" }]
+});
+console.log(response.content);
+```
+</CodeGroup>
 
 ---
 
-## Sequential Tool Chaining
+## How tool use works
 
-Some tasks require calling multiple tools in sequence, using the output of one as input to the next. If prompted to call all at once, Claude may guess parameters for downstream tools.
+Tools differ primarily by where the code executes. **Client tools** (including user-defined tools and Anthropic-schema tools like bash and text_editor) run in your application: Claude responds with `stop_reason: "tool_use"` and one or more `tool_use` blocks, your code executes the operation, and you send back a `tool_result`. **Server tools** (web_search, code_execution, web_fetch, tool_search) run on Anthropic's infrastructure: you see the results directly without handling execution.
 
-**Pattern**: Let Claude call Tool A first, receive the result, then call Tool B with the actual result.
+For the full conceptual model including the agentic loop and when to choose each approach, see [How tool use works](/docs/en/agents-and-tools/tool-use/how-tool-use-works).
+
+For connecting to MCP servers, see the [MCP connector](/docs/en/agents-and-tools/mcp-connector). For building your own MCP client, see [modelcontextprotocol.io](https://modelcontextprotocol.io/docs/develop/build-client).
+
+<Tip>
+**Guarantee schema conformance with strict tool use**
+
+Add `strict: true` to your tool definitions to ensure Claude's tool calls always match your schema exactly. See [Strict tool use](/docs/en/agents-and-tools/tool-use/strict-tool-use).
+</Tip>
+
+Tool access is one of the highest-leverage primitives you can give an agent. On benchmarks like [LAB-Bench FigQA](https://lab-bench.org/) (scientific figure interpretation) and [SWE-bench](https://www.swebench.com/) (real-world software engineering), adding even basic tools produces outsized capability gains, often surpassing human expert baselines.
 
 ---
 
-## Chain-of-Thought Prompt for Tool Selection
+## Tool use examples
 
-For Sonnet/Haiku models that may call tools prematurely, use this system prompt to trigger analysis first:
+For a complete hands-on walkthrough, see the [tutorial](/docs/en/agents-and-tools/tool-use/build-a-tool-using-agent). For reference examples of individual concepts, see [Define tools](/docs/en/agents-and-tools/tool-use/define-tools) and [Handle tool calls](/docs/en/agents-and-tools/tool-use/handle-tool-calls).
 
-```
-Answer the user's request using relevant tools (if they are available). Before calling a tool, do some analysis. First, think about which of the provided tools is the relevant tool to answer the user's request. Second, go through each of the required parameters of the relevant tool and determine if the user has directly provided or given enough information to infer a value. If all of the required parameters are present or can be reasonably inferred, proceed with the tool call. BUT, if one of the values for a required parameter is missing, DO NOT invoke the function and instead ask the user to provide the missing parameters. DO NOT ask for more information on optional parameters if it is not provided.
-```
+<section title="What happens when Claude needs more information">
 
----
+If the user's prompt doesn't include enough information to fill all the required parameters for a tool, Claude Opus is much more likely to recognize that a parameter is missing and ask for it. Claude Sonnet may ask, especially when prompted to think before outputting a tool request. But it may also do its best to infer a reasonable value.
 
-## Tool Result Formatting
+For example, given a `get_weather` tool that requires a `location` parameter, if you ask Claude "What's the weather?" without specifying a location, Claude (particularly Claude Sonnet) may make a guess about tool inputs:
 
-Critical: In the user message containing tool results, `tool_result` blocks must come **FIRST** in the content array. Any text must come **AFTER** all tool results.
-
-```json
-// ✅ Correct
+```json JSON
 {
-  "role": "user",
-  "content": [
-    { "type": "tool_result", "tool_use_id": "toolu_01" },
-    { "type": "text", "text": "What should I do next?" }
-  ]
+  "type": "tool_use",
+  "id": "toolu_01A09q90qw90lq917835lq9",
+  "name": "get_weather",
+  "input": { "location": "New York, NY", "unit": "fahrenheit" }
 }
 ```
 
-Tool results can include images alongside text.
+This behavior is not guaranteed, especially for more ambiguous prompts and for less intelligent models. If Claude Opus doesn't have enough context to fill in the required parameters, it is far more likely to respond with a clarifying question instead of making a tool call.
+
+</section>
 
 ---
 
-## Tool Runner (Beta)
+## Pricing
 
-An out-of-the-box solution for executing tools. Automatically:
-- Executes tools when Claude calls them
-- Handles the request/response cycle
-- Manages conversation state
-- Provides type safety and validation
-- Supports automatic compaction when token usage exceeds a threshold (allows long-running tasks to continue beyond context window limits)
+Tool use requests are priced based on:
+1. The total number of input tokens sent to the model (including in the `tools` parameter)
+2. The number of output tokens generated
+3. For server-side tools, additional usage-based pricing (e.g., web search charges per search performed)
 
-**Python with `@beta_tool` decorator:**
-```python
-import anthropic
-from anthropic import beta_tool
+Client-side tools are priced the same as any other Claude API request, while server-side tools may incur additional charges based on their specific usage.
 
-client = anthropic.Anthropic()
+The additional tokens from tool use come from:
 
-@beta_tool
-def get_weather(location: str, unit: str = "fahrenheit") -> str:
-    """Get the current weather in a given location.
-    Args:
-        location: The city and state, e.g. San Francisco, CA
-        unit: Temperature unit, either 'celsius' or 'fahrenheit'
-    """
-    return json.dumps({"temperature": "20°C", "condition": "Sunny"})
+- The `tools` parameter in API requests (tool names, descriptions, and schemas)
+- `tool_use` content blocks in API requests and responses
+- `tool_result` content blocks in API requests
 
-runner = client.beta.messages.tool_runner(
-    model="claude-opus-4-6",
-    max_tokens=1024,
-    tools=[get_weather],
-    messages=[{"role": "user", "content": "What's the weather like in Paris?"}],
-)
-```
+When you use `tools`, we also automatically include a special system prompt for the model which enables tool use. The number of tool use tokens required for each model are listed below (excluding the additional tokens listed above). Note that the table assumes at least 1 tool is provided. If no `tools` are provided, then a tool choice of `none` uses 0 additional system prompt tokens.
+
+| Model                    | Tool choice                                          | Tool use system prompt token count          |
+|--------------------------|------------------------------------------------------|---------------------------------------------|
+| Claude Opus 4.7                | `auto`, `none`<hr />`any`, `tool`   | 346 tokens<hr />313 tokens |
+| Claude Opus 4.6              | `auto`, `none`<hr />`any`, `tool`   | 346 tokens<hr />313 tokens |
+| Claude Opus 4.5            | `auto`, `none`<hr />`any`, `tool`   | 346 tokens<hr />313 tokens |
+| Claude Opus 4.1            | `auto`, `none`<hr />`any`, `tool`   | 346 tokens<hr />313 tokens |
+| Claude Opus 4            | `auto`, `none`<hr />`any`, `tool`   | 346 tokens<hr />313 tokens |
+| Claude Sonnet 4.6          | `auto`, `none`<hr />`any`, `tool`   | 346 tokens<hr />313 tokens |
+| Claude Sonnet 4.5          | `auto`, `none`<hr />`any`, `tool`   | 346 tokens<hr />313 tokens |
+| Claude Sonnet 4          | `auto`, `none`<hr />`any`, `tool`   | 346 tokens<hr />313 tokens |
+| Claude Sonnet 3.7 ([deprecated](/docs/en/about-claude/model-deprecations))        | `auto`, `none`<hr />`any`, `tool`   | 346 tokens<hr />313 tokens |
+| Claude Haiku 4.5         | `auto`, `none`<hr />`any`, `tool`   | 346 tokens<hr />313 tokens |
+| Claude Haiku 3.5         | `auto`, `none`<hr />`any`, `tool`   | 264 tokens<hr />340 tokens |
+| Claude Opus 3 ([deprecated](/docs/en/about-claude/model-deprecations))            | `auto`, `none`<hr />`any`, `tool`   | 530 tokens<hr />281 tokens |
+| Claude Sonnet 3          | `auto`, `none`<hr />`any`, `tool`   | 159 tokens<hr />235 tokens |
+| Claude Haiku 3           | `auto`, `none`<hr />`any`, `tool`   | 264 tokens<hr />340 tokens |
+
+These token counts are added to your normal input and output tokens to calculate the total cost of a request.
+
+Refer to the [models overview table](/docs/en/about-claude/models/overview#latest-models-comparison) for current per-model prices.
+
+When you send a tool use prompt, just like any other API request, the response will output both input and output token counts as part of the reported `usage` metrics.
 
 ---
 
-## Model Guidance
+## Next steps
 
-- **Claude Opus 4.6**: Best for complex tools and ambiguous queries; handles multiple tools better, seeks clarification when needed
-- **Claude Haiku**: Good for straightforward tools, but may infer missing parameters
-- **Claude Sonnet 3.7**: Less likely to make parallel tool calls; upgrade to Claude 4 models for better parallel tool calling
+### Choose your path
+
+<CardGroup>
+  <Card href="/docs/en/agents-and-tools/tool-use/how-tool-use-works" title="Understand the concepts">
+    Where tools run, how the loop works, and when to use tools.
+  </Card>
+  <Card href="/docs/en/agents-and-tools/tool-use/build-a-tool-using-agent" title="Build step by step">
+    The tutorial: from a single tool call to production.
+  </Card>
+  <Card href="/docs/en/agents-and-tools/tool-use/tool-reference" title="Browse all tools">
+    Directory of Anthropic-provided tools and properties.
+  </Card>
+</CardGroup>
