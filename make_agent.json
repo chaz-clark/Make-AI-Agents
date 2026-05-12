@@ -262,7 +262,7 @@
       },
       {
         "practice": "low_temperature_for_tool_agents",
-        "description": "Use low temperature (0.0–0.2) for agents that rely on deterministic tool selection and parameter generation. Higher temperatures increase tool call variability — the model may choose different tools or generate different parameter values for identical inputs. Conversational agents can use higher temperatures (0.7+) for natural variation. Document the temperature choice in implementation.llm_agent.parameters with a note on why."
+        "description": "Use low temperature (0.0–0.2) for agents that rely on deterministic tool selection and parameter generation. Higher temperatures increase tool call variability — the model may choose different tools or generate different parameter values for identical inputs. Conversational agents can use higher temperatures (0.7+) for natural variation. Document the temperature choice in implementation.llm_agent.parameters with a note on why. Exception: Gemini 3 models are tuned at the default temperature of 1.0 and Google explicitly warns that lowering it (including to 0.1–0.2) may cause looping or degraded performance on complex reasoning and math-heavy tasks; for Gemini 3 tool-calling agents, leave temperature at 1.0 unless a measured benefit justifies overriding the default, and record the model + chosen value in implementation.llm_agent.parameters."
       }
     ],
     "alternatives": []
@@ -347,6 +347,19 @@
           "description": "First tool output becomes the final response — useful when the tool result IS the answer (e.g., database lookup)"
         },
         "notes": "Four approaches: 'run_llm_again' (default agentic loop), 'stop_on_first_tool' (tool result = final response), StopAtToolName (stop when specific tool called), custom function (inspect tool results and decide dynamically)."
+      },
+      {
+        "name": "memory_state_strategy",
+        "description": "Choose stateless, manual-history, or platform-managed session memory before building the agent — retrofitting later forces changes in system prompt, tool runner, or surrounding application.",
+        "before": {
+          "code": "implementation.llm_agent.parameters.memory: ''",
+          "description": "Strategy unspecified; runtime defaults inconsistently across calls; multi-turn behavior emerges accidentally."
+        },
+        "after": {
+          "code": "implementation.llm_agent.parameters.memory: 'stateless' | 'manual_history' | 'platform_session:<provider>'",
+          "description": "Strategy declared at spec time; runtime persists exactly what the strategy requires; session lifecycle is auditable."
+        },
+        "notes": "stateless = each call independent (right for single_call_api). manual_history = application appends prior turns (right for cross-provider portability). platform_session = store a session ID and resume (right for multi_step_batch and long-running interactive agents). Anthropic: resume=session_id, fork=session_id. OpenAI: Sessions primitive with SQLAlchemy/SQLite/Encrypted backends. Google: documented manual conversation history pattern. For session-stateful agents, document loop-vs-terminate criteria in constraints.safety_boundaries.human_in_the_loop."
       }
     ]
   },
@@ -430,6 +443,36 @@
     "_tier": "tier_3_optional",
     "optional": true,
     "versions": [
+      {
+        "version": "3.5",
+        "date": "2026-05-12",
+        "changes": [
+          "Added Recommended Principle 'Choose a Memory/State Strategy Before Building' to make_agent.md (after Prefer MCP Servers). Three options: stateless, manual_history, platform_session. Source: Anthropic sessions + OpenAI Sessions primitive + Google manual conversation history convergence.",
+          "Added 'memory_state_strategy' entry to common_patterns.patterns with before/after contrast. Companion to the new principle.",
+          "Added Pitfall #10 'Lowering Temperature on Gemini 3 Models' to make_agent.md Common Pitfalls (former placeholder #10 renumbered to #11). Documents Google's explicit warning against lowering temperature on Gemini 3 — a direct exception to the wave-1 'Temperature by Agent Mode' principle.",
+          "Extended operational_guidance.best_practices.low_temperature_for_tool_agents description with the Gemini 3 carve-out so JSON-side readers see the exception alongside the original recommendation.",
+          "DEFERRED: Multi-Agent Handoffs principle + companion pattern (wave-2 proposals 1+2). Per user direction, this design space is large enough to deserve its own skill (make_orchestrator_agent or make_multi_agent) rather than a principle inside make_agent.md."
+        ],
+        "breaking_changes": [],
+        "contributors": [
+          "doc_analysis_agent wave-2 run 2026-05-12 against refreshed source_docs (commit cecbc2c)"
+        ]
+      },
+      {
+        "version": "3.4",
+        "date": "2026-05-12",
+        "changes": [
+          "Added Recommended Principle 'Enable Strict Tool Use When Schemas Have Real Constraints' to make_agent.md (after Explicit Tool Control). Source: Anthropic + OpenAI tool-use docs convergence.",
+          "Added Recommended Principle 'Configure Reasoning Effort for Complex Tasks' to make_agent.md (after Temperature by Agent Mode). Source: Anthropic extended thinking + OpenAI reasoning_effort + xAI reasoning docs convergence.",
+          "Added Recommended Principle 'Prefer MCP Servers Over Custom Tools When Available' to make_agent.md (after Graceful Degradation). Source: Anthropic + OpenAI + Google MCP-as-first-class-integration convergence.",
+          "Added Pitfall #9 'Conflating Server Tools and Client Tools' to make_agent.md Common Pitfalls section (replaces former placeholder; placeholder renumbered to #10). Source: Anthropic tool-use docs distinguishing server-side vs. client-side execution.",
+          "Updated dedup table in Behavioral Discipline section to list the three new LLM-implementation principles."
+        ],
+        "breaking_changes": [],
+        "contributors": [
+          "doc_analysis_agent run 2026-05-12 against refreshed source_docs (commit cecbc2c)"
+        ]
+      },
       {
         "version": "3.3",
         "date": "2026-03-27",

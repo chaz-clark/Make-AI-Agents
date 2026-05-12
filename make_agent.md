@@ -111,6 +111,11 @@ Common principles across successful agents:
 **Why**: Default (`auto`) is correct for conversational agents, but agentic loops often need `required` to prevent the model skipping tool calls, or a specific tool name to force a deterministic step.
 **How**: Set `tool_choice` in `implementation.llm_agent.parameters`. Use `required` only when you know a tool call is mandatory; reset to `auto` after the first forced call to avoid infinite loops.
 
+**Enable Strict Tool Use When Schemas Have Real Constraints**
+**Description**: When a tool's `input_schema` contains required fields, enums, or precise format constraints that matter, enable strict tool use so the model is guaranteed to produce schema-conformant arguments.
+**Why**: Without strict mode, the model produces arguments that are *usually* valid but occasionally drift — a missing required field, an enum value not in the allowed list, an extra property the runtime doesn't expect. The runtime then has to validate, reject, and retry, or worse, accept the drift silently. Strict mode pushes validation to the model side: invalid arguments are simply never generated. The trade-off is a small latency cost and a hard requirement that your schema be fully specified.
+**How**: Set `strict: true` on tool definitions where schema conformance matters. For Anthropic, this is on the tool object. For OpenAI function calling, it is `strict: true` on the function definition. Note that strict mode requires the schema to be exhaustively defined — no implicit optional fields. If the schema is exploratory or evolving, leave strict off; if it is stable and the runtime depends on it, turn it on.
+
 **Guardrails as a Separate Layer**
 **Description**: Input validation and output validation belong outside the agent's core logic — not inside system prompts or tool implementations.
 **Why**: Embedding safety checks in prompts makes them invisible to reviewers and easy to override. A dedicated guardrail layer is auditable, replaceable, and testable independently.
@@ -131,6 +136,11 @@ Common principles across successful agents:
 **Why**: Tool selection and parameter generation require consistency across runs. At temperature 0.7 (the template default), a model may choose different tools or generate different parameter values for identical inputs. This causes non-deterministic agentic behavior that is difficult to debug. Conversational agents benefit from higher temperature for natural variation.
 **How**: For tool-calling agents, set `temperature: 0.0–0.2` in `implementation.llm_agent.parameters`. For conversational agents, the default 0.7 is appropriate. Document the choice in the parameters section. Three platforms (Anthropic, Google, xAI) independently recommend low temperature for deterministic tool use.
 
+**Configure Reasoning Effort for Complex Tasks**
+**Description**: For agents that perform multi-step planning, ambiguous tool selection, or chain-of-reasoning over evidence, set a higher reasoning effort (or extended thinking budget) than the default. For simple lookups, leave it at default to save latency and cost.
+**Why**: Models with adjustable reasoning effort (Claude extended thinking, OpenAI reasoning_effort, xAI reasoning models) produce noticeably better tool selection and plan quality when given more thinking budget — but at the cost of latency and tokens. The default is tuned for fast turns, not for hard agentic decisions. Agents that fail intermittently on ambiguous inputs often succeed reliably with higher reasoning effort.
+**How**: Set the reasoning parameter in `implementation.llm_agent.parameters` to match the agent's typical decision complexity. For Anthropic: `thinking: { type: "enabled", budget_tokens: <value> }`. For OpenAI: `reasoning_effort: "low" | "medium" | "high"`. For agents that mix simple and hard requests, consider routing — short-circuit easy cases to the default and reserve high reasoning for the hard branch.
+
 **Structured Output vs. Function Calling — Different Jobs**
 **Description**: Use structured output (`response_format`) when you want the model's final answer in a specific schema. Use function calling (tools) when you need the model to request an action during the conversation.
 **Why**: Conflating these leads to over-engineering — defining tools when structured output would suffice, or expecting a formatted final response from a tool-calling loop that produces raw text. The distinction is: structured output shapes the terminal response; function calling shapes intermediate steps.
@@ -140,6 +150,21 @@ Common principles across successful agents:
 **Description**: When a tool or external service may not be available in all environments, the agent must adapt — not block.
 **Why**: Real deployments are heterogeneous. An MCP server, a local script, or an external API may exist in one environment and not another. An agent that halts with "tool not found" forces manual intervention for what could be a soft fallback.
 **How**: For each optional tool, define a fallback in `error_handling.fallbacks`: what the agent does when the tool is unavailable (use an alternate tool, use embedded data, ask the user, or proceed in degraded mode). Document this in the system prompt too: "X may or may not be available — do not block if it is absent, fall back to Y." See `operational_guidance.when_not_to_use` for environment prerequisites.
+
+**Prefer MCP Servers Over Custom Tools When Available**
+**Description**: When functionality exists as an MCP (Model Context Protocol) server — official or community-maintained — prefer connecting it via `mcp_servers` over reimplementing the same tools in your agent.
+**Why**: MCP servers are maintained outside the agent's lifecycle. Bug fixes, auth updates, and new capabilities flow to the agent for free when depending on an MCP server instead of duplicating its logic in the tool list. The cost of custom tools is not the initial implementation — it is the long-tail maintenance as the underlying API changes. Three platforms (Anthropic, OpenAI, Google) now support MCP as a first-class integration; using it where available reduces duplicated maintenance across the ecosystem.
+**How**: Before defining a custom tool, check whether an MCP server already exposes the operation (search the official MCP registry, the platform's MCP catalog, or the underlying service's own documentation). If yes, add it to `implementation.llm_agent.mcp_servers[]` in the JSON. Reserve custom tools in `implementation.llm_agent.tools[]` for: agent-specific logic with no general utility, very small wrappers around internal-only APIs, or cases where the MCP server is unmaintained or missing required features.
+
+**Choose a Memory/State Strategy Before Building**
+**Description**: Decide up front whether the agent is stateless (each call independent), keeps state manually in conversation history, or uses a platform-managed session that can be paused, resumed, or forked.
+**Why**: Memory strategy is a design-time decision that determines what the agent's runtime must persist, how multi-turn requests behave, and how recovery from interruption works. Picking it after the agent is built almost always means retrofitting either the system prompt, the tool runner, or the surrounding application — none of which is cheap. Anthropic exposes session IDs with `resume=session_id` and `fork=session_id`; OpenAI's Agents SDK has a `Sessions` primitive (SQLAlchemy, Advanced SQLite, Encrypted variants); Google documents manual conversation-history management on the client. All three platforms treat this as a first-class concern, not an implementation afterthought.
+**How**: Pick one of three strategies and document it in `implementation.llm_agent.parameters.memory` and in the system prompt:
+- **Stateless** — every call is independent; no history carried across calls. Right for `single_call_api` and webhook-style agents.
+- **Manual history** — the application appends prior turns to the prompt on each call. Right when you need full control over what's retained, or when running across providers that don't share a session format.
+- **Platform-managed session** — store a session ID and resume on subsequent calls. Right for `multi_step_batch` and long-running interactive agents where the platform's session store handles trimming and recovery.
+
+For session-stateful agents, also document when the loop repeats vs. when it ends in `constraints.safety_boundaries.human_in_the_loop` — long sessions accumulate drift, and the agent should know when to terminate the session on its own.
 
 **Propose Before Execute**
 **Description**: When a request is open-ended or has irreversible consequences, propose a plan and wait for confirmation before acting. When a request is specific and one-step, execute and report.
@@ -209,7 +234,7 @@ Some entries in this template's "Recommended Principles for LLM Agents" subsecti
 | Propose Before Execute | P-002 Plan Before Acting | If P-002 is in the agent's `applicable_principles`, **drop "Propose Before Execute"** from Recommended Principles. Don't double-emit. |
 | Graceful Degradation for Optional Tools | P-003 Stop on Defect (NI surface mechanism) | Keep both — Graceful Degradation addresses the *optional tool not present* case, which is distinct from P-003's halt-on-defect. They complement, don't duplicate. |
 | Guardrails as a Separate Layer | (no direct discipline analog) | Keep. |
-| Explicit Tool Control, Stop Sequence Control, Temperature, Structured Output vs Function Calling | (LLM implementation details) | Keep. These are about *how the LLM is configured*, not how the agent behaves toward users. Discipline is silent on them. |
+| Explicit Tool Control, Strict Tool Use, Stop Sequence Control, Temperature, Reasoning Effort, Structured Output vs Function Calling, Prefer MCP Servers | (LLM implementation details) | Keep. These are about *how the LLM is configured*, not how the agent behaves toward users. Discipline is silent on them. |
 
 The general rule: **Key Principles is for this-agent-specific design choices and LLM implementation details. Behavioral Discipline is for cross-cutting interaction discipline.** When a Recommended Principle restates a discipline principle in different words, drop the Recommended Principle to avoid generating a system prompt with two copies of the same instruction.
 
@@ -510,7 +535,23 @@ result = agent.process(large_input, timeout=120, batch_size=100)
 
 **Solution**: Use parallel tool calls only for genuinely independent operations. For sequential chains, prompt the model to complete one step at a time and wait for results before proceeding. Set `disable_parallel_tool_use: true` in `implementation.llm_agent.parameters` when your workflow is strictly sequential.
 
-### 9. [Additional Pitfalls]
+### 9. Conflating Server Tools and Client Tools
+
+**Problem**: An agent that uses both server tools (e.g., Anthropic's `web_search`, `code_execution`) and client tools (custom tools the caller implements) treats them identically — and breaks when the runtime behavior differs.
+
+**Why it happens**: Server tools execute on the platform side and return results within a single API turn. Client tools require the agent to halt, return a `tool_use` block to the caller, wait for the caller's runtime to execute the tool, and resume with a `tool_result` block. Mixing them without recognizing the distinction leads to: client-tool calls that never resume because the runtime didn't implement the handler; server-tool results being re-executed by the client runtime; or `tool_choice` forcing a client tool that is actually a server tool name (or vice versa).
+
+**Solution**: In `implementation.llm_agent.tools[]`, mark each tool with its execution location (server vs. client) — either as a `_meta.execution` field or by separating them into two arrays. In the system prompt, distinguish them when behavior matters ("the `web_search` tool returns results in this turn; the `fetch_from_db` tool will pause execution for the runtime to fetch"). When configuring `tool_choice` to a specific tool name, verify which side executes it before setting it.
+
+### 10. Lowering Temperature on Gemini 3 Models
+
+**Problem**: Following the "Temperature by Agent Mode" principle (set 0.0–0.2 for tool-calling agents), a practitioner sets `temperature: 0.1` on a Gemini 3 model. The agent then loops on multi-step reasoning, returns degraded output on math-heavy tasks, or fails intermittently in ways that are absent at the default temperature.
+
+**Why it happens**: Gemini 3 was tuned at the default temperature of 1.0. Google's text-generation and function-calling docs both carry an explicit warning: "When using Gemini 3 models, we strongly recommend keeping the `temperature` at its default value of 1.0. Changing the temperature (setting it below 1.0) may lead to unexpected behavior, such as looping or degraded performance, particularly in complex mathematical or reasoning tasks." The "Temperature by Agent Mode" recommendation reflects convergent guidance from Anthropic, Google (pre-Gemini-3), and xAI for deterministic tool selection — it does not apply to Gemini 3 specifically.
+
+**Solution**: Treat the temperature recommendation as model-family-conditional. For Anthropic, OpenAI, xAI, and Gemini ≤ 2.5 tool-calling agents, low temperature (0.0–0.2) is correct. For Gemini 3 tool-calling agents, leave `temperature` at the default 1.0 unless you have measured that lowering it improves your specific workload — and even then, document the choice with a test result. Record the model and chosen temperature in `implementation.llm_agent.parameters` so the choice is auditable.
+
+### 11. [Additional Pitfalls]
 
 Document common pitfalls based on expected usage. Focus on mistakes that:
 - Are easy to make
