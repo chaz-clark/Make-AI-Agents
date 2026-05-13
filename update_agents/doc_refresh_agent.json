@@ -421,6 +421,94 @@
         "last_refresh_status": "partial",
         "last_refresh_date": "2026-05-12",
         "notes": "Added 2026-05-12 to ground make_agent_knowledge xAI retrieval. WebFetch summarized — manual fetch needed for full tool config schema. Companion source: xAI Files API (https://docs.x.ai/developers/files) not yet cached but noted in research report."
+      },
+      {
+        "platform": "Google",
+        "label": "Google ADK — A2A Protocol Intro",
+        "url": "https://adk.dev/a2a/intro/",
+        "cache_file": "source_docs/google_adk_a2a_intro.md",
+        "section_focus": "Agent2Agent (A2A) protocol overview, when to use, key concepts: AgentCard, Skills, Messages, Tasks, RemoteA2aAgent",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-13",
+        "notes": "Added 2026-05-13 via update_agents/fetch_doc.py (Tier 1 raw HTTP). One of 8 a2a child pages discovered from adk.dev/a2a/ hub via --list-links mode."
+      },
+      {
+        "platform": "Google",
+        "label": "Google ADK — A2A Quickstart: Exposing an Agent (Python)",
+        "url": "https://adk.dev/a2a/quickstart-exposing/",
+        "cache_file": "source_docs/google_adk_a2a_quickstart_exposing.md",
+        "section_focus": "Expose an ADK agent via A2A in Python: AgentCard authoring, to_a2a() wrapper, agent_executor, app_builder",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-13",
+        "notes": "Added 2026-05-13 via fetch_doc.py. Python quickstart — substantive content (~16KB)."
+      },
+      {
+        "platform": "Google",
+        "label": "Google ADK — A2A Quickstart: Exposing an Agent (Go)",
+        "url": "https://adk.dev/a2a/quickstart-exposing-go/",
+        "cache_file": "source_docs/google_adk_a2a_quickstart_exposing_go.md",
+        "section_focus": "Go implementation of A2A agent exposure",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-13",
+        "notes": "Added 2026-05-13 via fetch_doc.py. Go variant (~7KB) — mostly code samples; protocol concepts same as Python quickstart."
+      },
+      {
+        "platform": "Google",
+        "label": "Google ADK — A2A Quickstart: Exposing an Agent (Java)",
+        "url": "https://adk.dev/a2a/quickstart-exposing-java/",
+        "cache_file": "source_docs/google_adk_a2a_quickstart_exposing_java.md",
+        "section_focus": "Java implementation of A2A agent exposure",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-13",
+        "notes": "Added 2026-05-13 via fetch_doc.py. Java variant (~5KB) — mostly code samples; protocol concepts same as Python quickstart."
+      },
+      {
+        "platform": "Google",
+        "label": "Google ADK — A2A Quickstart: Consuming a Remote Agent (Python)",
+        "url": "https://adk.dev/a2a/quickstart-consuming/",
+        "cache_file": "source_docs/google_adk_a2a_quickstart_consuming.md",
+        "section_focus": "Consume a remote A2A agent in Python: RemoteA2aAgent, AGENT_CARD_WELL_KNOWN_PATH, task lifecycle",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-13",
+        "notes": "Added 2026-05-13 via fetch_doc.py. Python quickstart — substantive content (~13KB)."
+      },
+      {
+        "platform": "Google",
+        "label": "Google ADK — A2A Quickstart: Consuming a Remote Agent (Go)",
+        "url": "https://adk.dev/a2a/quickstart-consuming-go/",
+        "cache_file": "source_docs/google_adk_a2a_quickstart_consuming_go.md",
+        "section_focus": "Go implementation of A2A remote-agent consumption",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-13",
+        "notes": "Added 2026-05-13 via fetch_doc.py. Go variant (~8KB) — mostly code samples."
+      },
+      {
+        "platform": "Google",
+        "label": "Google ADK — A2A Quickstart: Consuming a Remote Agent (Java)",
+        "url": "https://adk.dev/a2a/quickstart-consuming-java/",
+        "cache_file": "source_docs/google_adk_a2a_quickstart_consuming_java.md",
+        "section_focus": "Java implementation of A2A remote-agent consumption",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-13",
+        "notes": "Added 2026-05-13 via fetch_doc.py. Java variant (~6KB) — mostly code samples."
+      },
+      {
+        "platform": "Google",
+        "label": "Google ADK — A2A Extension Spec",
+        "url": "https://adk.dev/a2a/a2a-extension/",
+        "cache_file": "source_docs/google_adk_a2a_extension.md",
+        "section_focus": "ADK-specific extension to the A2A protocol: state propagation, artifact transfer, ADK metadata in AgentCard",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-13",
+        "notes": "Added 2026-05-13 via fetch_doc.py. Extension spec (~4KB) — defines what ADK adds on top of the open A2A protocol."
       }
     ]
   },
@@ -460,7 +548,7 @@
     ],
     "models": [],
     "apis": ["WebFetch (HTTP GET with Cache-Control: no-cache)"],
-    "data_sources": ["26 public AI platform documentation URLs — see sources array (9 original + 17 added 2026-05-12 wave-2 to ground make_orchestrator_agent and make_agent_knowledge)"],
+    "data_sources": ["34 public AI platform documentation URLs — see sources array (9 original + 17 added 2026-05-12 wave-2 + 8 ADK A2A child pages added 2026-05-13 via fetch_doc.py)"],
     "environment_variables": [],
     "optional_dependencies": {
       "description": "No LLM required. Pure fetch + write workflow.",
@@ -509,7 +597,7 @@
       },
       {
         "name": "Template files untouched",
-        "input": "Full refresh run on all 26 sources",
+        "input": "Full refresh run on all 34 sources",
         "expected_output": "make_agent.md, make_agent.json, make_gems/make_gem_qc.md, make_gem_qc.json are byte-identical to pre-run state",
         "validation_method": "exact"
       }
@@ -565,6 +653,19 @@
     "_tier": "tier_3_optional",
     "optional": false,
     "versions": [
+      {
+        "version": "1.2",
+        "date": "2026-05-13",
+        "changes": [
+          "Added 8 ADK A2A child pages (google_adk_a2a_intro, google_adk_a2a_quickstart_exposing[_go|_java], google_adk_a2a_quickstart_consuming[_go|_java], google_adk_a2a_extension).",
+          "Discovered via new update_agents/fetch_doc.py --list-links mode on the adk.dev/a2a/ hub.",
+          "Fetched via fetch_doc.py Tier 1 (raw HTTP + bs4 + html2text) — bypasses the WebFetch summarization issue that plagued the 2026-05-12 refresh of openai-agents-python and ai.google.dev pages.",
+          "Source count: 26 → 34.",
+          "Companion tool: update_agents/fetch_doc.py (new in this version) — can be invoked standalone or wired into future doc_refresh_agent runs as a replacement for WebFetch."
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      },
       {
         "version": "1.1",
         "date": "2026-05-12",

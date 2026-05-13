@@ -8,7 +8,7 @@
       "size_before": 7245,
       "size_after": 25492,
       "fetch_status": "success",
-      "notes": "Renamed from Claude Code SDK to Claude Agent SDK. URL history: docs.anthropic.com/en/docs/claude-code/sdk (until 2026-04) \u2192 code.claude.com/docs/en/agent-sdk/overview (current; WebFetch hit a redirect..."
+      "notes": "Renamed from Claude Code SDK to Claude Agent SDK. URL history: docs.anthropic.com/en/docs/claude-code/sdk (until 2026-04) → code.claude.com/docs/en/agent-sdk/overview (current; WebFetch hit a redirect..."
     },
     "anthropic_agents": {
       "last_attempted": "2026-05-12",
@@ -40,7 +40,7 @@
       "size_before": 14460,
       "size_after": 24799,
       "fetch_status": "manual",
-      "notes": "JS-rendered support pages \u2014 not WebFetch-automatable. Manually downloaded as HTML on 2026-05-12, converted to markdown via html2text. Covers Gem creation workflow, 4-pillar instructions (persona/task/..."
+      "notes": "JS-rendered support pages — not WebFetch-automatable. Manually downloaded as HTML on 2026-05-12, converted to markdown via html2text. Covers Gem creation workflow, 4-pillar instructions (persona/task/..."
     },
     "google_structured_output": {
       "last_attempted": "2026-05-12",
@@ -209,6 +209,70 @@
       "size_after": 19366,
       "fetch_status": "success",
       "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (19KB). Full caching doc body now cached. || PRIOR: WAVE-2 ADD for Skill B (knowledge). WebFetch returned small-model summary (~1.3KB raw). Key facts captured: implicit caching (default for Gemini 2.5+, 1024-4096 token minimums by model) vs explicit caching (manual, default TTL 1h, Gemini 3 Flash 1024 / Gemini 3 Pro 4096 minimums, supports videos/PDFs/text/system-instructions); hit-rate strategies (large-common content first, similar-prefix bursts); cache_hit visible in usage_metadata; billing = cached tokens at reduced rates + storage duration + standard non-cached. Manual fetch needed for full Python/JS code samples and cache management API."
+    },
+    "google_adk_a2a_intro": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 12806,
+      "fetch_status": "success",
+      "notes": "WAVE-2 a2a deep-fetch 2026-05-13. Agent2Agent (A2A) protocol overview, when to use, key concepts: AgentCard, Skills, Messages, Tasks, RemoteA2aAgent. Source: https://adk.dev/a2a/intro/. Fetched via fetch_doc.py (Tier 1 raw HTTP)."
+    },
+    "google_adk_a2a_quickstart_exposing": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 16271,
+      "fetch_status": "success",
+      "notes": "WAVE-2 a2a deep-fetch 2026-05-13. Expose an ADK agent via A2A in Python: AgentCard authoring, to_a2a() wrapper, agent_executor, app_builder. Source: https://adk.dev/a2a/quickstart-exposing/. Fetched via fetch_doc.py (Tier 1 raw HTTP)."
+    },
+    "google_adk_a2a_quickstart_exposing_go": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 7445,
+      "fetch_status": "success",
+      "notes": "WAVE-2 a2a deep-fetch 2026-05-13. Go implementation of A2A agent exposure. Source: https://adk.dev/a2a/quickstart-exposing-go/. Fetched via fetch_doc.py (Tier 1 raw HTTP)."
+    },
+    "google_adk_a2a_quickstart_exposing_java": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 5544,
+      "fetch_status": "success",
+      "notes": "WAVE-2 a2a deep-fetch 2026-05-13. Java implementation of A2A agent exposure. Source: https://adk.dev/a2a/quickstart-exposing-java/. Fetched via fetch_doc.py (Tier 1 raw HTTP)."
+    },
+    "google_adk_a2a_quickstart_consuming": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 13215,
+      "fetch_status": "success",
+      "notes": "WAVE-2 a2a deep-fetch 2026-05-13. Consume a remote A2A agent in Python: RemoteA2aAgent, AGENT_CARD_WELL_KNOWN_PATH, task lifecycle. Source: https://adk.dev/a2a/quickstart-consuming/. Fetched via fetch_doc.py (Tier 1 raw HTTP)."
+    },
+    "google_adk_a2a_quickstart_consuming_go": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 8104,
+      "fetch_status": "success",
+      "notes": "WAVE-2 a2a deep-fetch 2026-05-13. Go implementation of A2A remote-agent consumption. Source: https://adk.dev/a2a/quickstart-consuming-go/. Fetched via fetch_doc.py (Tier 1 raw HTTP)."
+    },
+    "google_adk_a2a_quickstart_consuming_java": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 5946,
+      "fetch_status": "success",
+      "notes": "WAVE-2 a2a deep-fetch 2026-05-13. Java implementation of A2A remote-agent consumption. Source: https://adk.dev/a2a/quickstart-consuming-java/. Fetched via fetch_doc.py (Tier 1 raw HTTP)."
+    },
+    "google_adk_a2a_extension": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 3667,
+      "fetch_status": "success",
+      "notes": "WAVE-2 a2a deep-fetch 2026-05-13. ADK-specific extension to the A2A protocol: state propagation, artifact transfer, ADK metadata in AgentCard. Source: https://adk.dev/a2a/a2a-extension/. Fetched via fetch_doc.py (Tier 1 raw HTTP)."
     }
   }
 }
