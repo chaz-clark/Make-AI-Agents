@@ -61,11 +61,18 @@
         "name": "agents_md",
         "type": "file",
         "format": "Generated AGENTS.md written at project root",
-        "example": "/Users/chazclar/Documents/GitHub/Make-AI-Agents/AGENTS.md",
+        "example": "/Users/chazclar/Documents/GitHub/canvas-toolbox/AGENTS.md",
         "conditions": "Created if absent, or proposed-as-update if present (per P-002 — never silently overwrites)"
+      },
+      {
+        "name": "discipline_files_packaged",
+        "type": "file_pair",
+        "format": "knowledge/behavioral_discipline.md + knowledge/behavioral_discipline.json copied into the TARGET project's knowledge/ folder (with snapshot header indicating origin commit-sha)",
+        "example": "/Users/chazclar/Documents/GitHub/canvas-toolbox/knowledge/behavioral_discipline.{md,json}",
+        "conditions": "Required when the target repo does not already have these files (either at canonical knowledge/ path OR at a cloned-subdirectory path like make_ai_agents/knowledge/). Skipped if already present; the Working Style pointer is then updated to whichever local path resolves. Without this packaging step, the Working Style pointer is a broken reference."
       }
     ],
-    "side_effects": "Creates or updates AGENTS.md at project root after user confirmation. Does NOT delete the existing CLAUDE.md — that is a separate follow-up step.",
+    "side_effects": "Creates or updates AGENTS.md at project root after user confirmation. Copies knowledge/behavioral_discipline.{md,json} into the target's knowledge/ folder unless already present (with snapshot header for traceability). Does NOT delete the existing CLAUDE.md — that is a separate follow-up step.",
     "non_interactive_mode": false,
     "alert_channel": ""
   },
@@ -228,6 +235,12 @@
         "name": "Optional sections meet inclusion criteria",
         "rule": "If an optional section is present, the project must satisfy that section's `include_when` criterion in agents_md_optional_sections. Empty optional sections (e.g., a Domain Terms table with placeholder rows) fail this check.",
         "severity": "medium"
+      },
+      {
+        "check_id": "AGENTS-QC-006",
+        "name": "Discipline files co-located with AGENTS.md",
+        "rule": "The Working Style section's discipline pointer must resolve to a file that actually exists in the target repo. PASS conditions (any one): (a) `<target_repo>/knowledge/behavioral_discipline.md` and `behavioral_discipline.json` both exist at the canonical path; (b) the AGENTS.md pointer references a cloned-subdirectory path (e.g., `make_ai_agents/knowledge/behavioral_discipline.md`) AND that path resolves to a file; (c) the host tool's skill system loads the equivalent discipline at runtime (declare this explicitly in Working Style if relying on this path). FAIL: the pointer references a path that doesn't resolve. Without local discipline files, the pointer is a broken reference and the discipline does not propagate to agents working in this repo. Severity critical because the entire purpose of make_AGENTS is to propagate the discipline — a broken pointer defeats the skill.",
+        "severity": "critical"
       }
     ]
   },
@@ -242,7 +255,7 @@
           "Initial bare-bones make_AGENTS skill — sibling to make_agent and make_gem.",
           "Defines required and optional sections for AGENTS.md.",
           "Embeds behavioral discipline pointer (compact_boilerplate.working_style_template) so every generated AGENTS.md inherits the discipline.",
-          "5 skill-specific QC checks (AGENTS-QC-001 through AGENTS-QC-005).",
+          "5 skill-specific QC checks (AGENTS-QC-001 through AGENTS-QC-005). AGENTS-QC-006 added 2026-05-13 for discipline-file co-location enforcement.",
           "Skill itself operates as interaction_pattern: single_write_workflow with applicable_principles P-001, P-002, P-003, P-004, P-006, P-007, P-008, P-009, P-010 (skip P-005)."
         ]
       }

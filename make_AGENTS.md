@@ -30,9 +30,14 @@
 
 3. **[Generate]**: Write `AGENTS.md` at project root. Include all required core sections; add optional sections only if their criteria apply. Embed the behavioral discipline pointer in the "Working Style" section.
 
-4. **[Validate]**: Run `make_agent_qc` against the generated AGENTS.md if it makes sense — AGENTS.md is structurally similar to an agent spec but not identical. See `## Validation and Testing (core)` for what applies.
+4. **[Package the discipline files alongside]** (REQUIRED — added 2026-05-13): Copy `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json` from this repo (Make-AI-Agents) into the **target project's** `knowledge/` folder. **Without this step, the pointer in Working Style is a broken reference in any project that doesn't already have a Make-AI-Agents clone.** The discipline must travel WITH the AGENTS.md — co-located files, not a remote pointer. **Detection logic before copying**:
+   - If the target already has `knowledge/behavioral_discipline.{md,json}` at the canonical path — skip the copy. Optionally check the snapshot header / commit-sha and warn if stale.
+   - If the target has the discipline at a cloned-subdirectory path (e.g. `<consumer>/make_ai_agents/knowledge/behavioral_discipline.md` per the clone+gitignore pattern) — update the AGENTS.md Working Style pointer to that path; skip the copy. The clone-and-pull pattern provides freshness; the local copy is redundant.
+   - Otherwise — copy both files. Prepend a 4-line snapshot header to each: `<!-- SNAPSHOT_FROM: chaz-clark/Make-AI-Agents -->`, `<!-- SNAPSHOT_COMMIT: <sha> -->`, `<!-- SNAPSHOT_DATE: <YYYY-MM-DD> -->`, `<!-- REFRESH: copy the upstream file again to pick up changes -->`. Future refreshes can detect drift via the commit-sha line.
 
-5. **[Output]**: Confirm AGENTS.md location with the user. If migrating from `CLAUDE.md`, propose deletion as a separate step (per P-002 — don't bundle the deletion with the creation).
+5. **[Validate]**: Run `make_agent_qc` against the generated AGENTS.md if it makes sense — AGENTS.md is structurally similar to an agent spec but not identical. See `## Validation and Testing (core)` for what applies. AGENTS-QC-006 verifies the discipline files are co-located (or the pointer resolves to a cloned-subdirectory path).
+
+6. **[Output]**: Confirm AGENTS.md location with the user. If migrating from `CLAUDE.md`, propose deletion as a separate step (per P-002 — don't bundle the deletion with the creation).
 
 For detailed structure, see `make_AGENTS.json`.
 
@@ -147,13 +152,20 @@ The skill responds with a proposed AGENTS.md draft, waits for confirmation per P
 
 ## Common Pitfalls and Solutions (core)
 
-### 1. Duplicating make_agent.md content into AGENTS.md
+### 1. Duplicating discipline content INTO the AGENTS.md prose (vs. packaging the discipline FILES alongside)
 
-**Problem**: Generated AGENTS.md restates the behavioral discipline in full, duplicating `knowledge/behavioral_discipline.md`.
+**Problem**: There are two distinct mistakes that look similar:
+- **(a) Inlining the discipline content**: Generated AGENTS.md restates the behavioral discipline in full prose — copies all 10 principles, examples, override rules — into the Working Style section itself. AGENTS.md balloons to 1000+ lines and stays in sync with `knowledge/behavioral_discipline.md` only by manual effort.
+- **(b) Failing to package the files**: Generated AGENTS.md is lean (points at `knowledge/behavioral_discipline.md`) but the target repo doesn't actually have that file. The pointer is broken in every project that wasn't explicitly set up with the discipline.
 
-**Why it happens**: Skill generates "comprehensive" output instead of pointers.
+Both kill the propagation — (a) by duplication-drift, (b) by broken-reference.
 
-**Solution**: AGENTS.md is a pointer file. The Working Style section references the discipline by file path, doesn't duplicate it. The compact boilerplate from `make_AGENTS.json` is a 3-5 line summary, not a copy of the principles.
+**Why each happens**: (a) Skill writes "comprehensive" output instead of pointers. (b) Skill writes pointer-only output without ensuring the target file exists.
+
+**Solution**:
+- The AGENTS.md prose is a POINTER — Working Style references `knowledge/behavioral_discipline.md` by file path. The `compact_boilerplate.working_style_template` in `make_AGENTS.json` is a ~3-line summary naming the four no-override principles, not a copy of all 10.
+- The FILES are PACKAGED alongside — per Quickstart step 4, `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json` are copied from Make-AI-Agents into the target's `knowledge/` folder (with a snapshot header). The pointer in Working Style then resolves to a local file that exists.
+- Together: lean AGENTS.md prose + co-located discipline files = discipline propagates correctly to the target repo without duplication-drift OR broken-reference.
 
 ### 2. Stale Active Context
 
