@@ -212,7 +212,7 @@ Dimensions:
 Critical issues: 0
 High-severity issues: 0
 Medium-severity issues: 1
-  - AGENTS-QC-005: Domain Terms entry "subtree" is borderline non-obvious. Consider whether it earns its place or move to README.
+  - AGENTS-QC-005: Domain Terms entry "non_interactive_mode" is borderline non-obvious. Consider whether it earns its place or move to README.
 Recommendations:
   - Fresh-as-of-today; nothing actionable.
 ```

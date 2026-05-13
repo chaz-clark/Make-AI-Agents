@@ -103,7 +103,7 @@ _Last updated: 2026-05-13_
   - `m119-master` (local) — CLAUDE.md (2.7 KB, sparse) → AGENTS.md migration; canvas_toolbox/ clone present; local only
 
   **Next-sprint scope (4 targets — optional creates, no existing context to preserve):**
-  - `agentj` (GitHub) — no AGENTS.md, no CLAUDE.md; AI agent runtime, peer repo mentioned in handoff/canvas-toolbox docs as a subtree consumer
+  - `agentj` (GitHub) — no AGENTS.md, no CLAUDE.md; AI agent runtime, peer repo mentioned in handoff/canvas-toolbox docs as a clone+gitignore consumer
   - `m119-site` (GitHub) — no AGENTS.md, no CLAUDE.md; BYU-Idaho course site, recent activity
   - `DS250-Course-Polars` (GitHub) — no AGENTS.md, no CLAUDE.md; DS250 course; agents likely work on it without project context today
   - `gh-issues-agent` (GitHub) — no AGENTS.md, no CLAUDE.md, BUT already carries a `knowledge/` folder with 6 topic files (agile_sprint, canvas_api_gotchas, gh_issues_agent_mission, github_issues_reference, semantic_versioning, sprint_qc). Adding AGENTS.md would (a) give agents working on the tool itself project context, (b) make it a model "agent skill" repo with the discipline embedded, and (c) document it as a consumable-by-other-repos skill for cross-clone reuse. Should also package behavioral_discipline.{md,json} into its existing knowledge/ folder per AGENTS-QC-006 condition (a). Sprint-1 step-2 audit added it post-hoc after the maintainer flagged the omission 2026-05-13.
@@ -123,7 +123,7 @@ _Last updated: 2026-05-13_
 - Genchi Genbutsu (GG) the new skills further as they're used in canvas-toolbox / AgentJ — any GG findings fold back here.
 - Wave 4 doc-analysis cycle when source_docs next refreshes.
 - Operationalize `doc_refresh_agent` as a runner (Python) on top of `fetch_doc.py`, enabling scheduled refreshes.
-- Pop `temp/` subtree updates back upstream when ready (or migrate `temp/` from subtree → clone+gitignore per the 2026-05-13 cross-project rule).
+- Refresh `temp/` clone (`cd temp && git pull`) when the upstream `chaz-clark/andrej-karpathy-skills` ships new guidelines.
 
 ## Existing Tooling
 
@@ -173,7 +173,7 @@ The LLM reads the QC meta-skill, reads the target spec, runs the rule set, and r
 | `make_*` | Naming convention for **meta-skills** (templates that generate other things). `make_agent` generates single agents, `make_orchestrator_agent` generates multi-agent orchestrators, `make_agent_knowledge` generates runtime knowledge files, `make_gem` generates Gem instructions, `make_AGENTS` generates `AGENTS.md` files. |
 | `compact_boilerplate` | Template strings (in the `*.json` of a meta-skill) that get substituted into generated outputs. The discipline propagates through these. |
 | `non_interactive_mode` (NI mode) | An agent runs without a synchronous user (cron, webhook, scheduled batch). Opt-in graduation path — agents are validated interactively first. Requires an `alert_channel` (BD-QC-007). |
-| `subtree` | Refers to `temp/` — a `git subtree` of `andrej-karpathy-skills` for reference. Updates can be pulled in or pushed back per `git subtree pull` / `git subtree push`. |
+| clone+gitignore | The canonical vendored-upstream consumption pattern in this repo (per the 2026-05-13 cross-project rule). Vendored repos are cloned at the host root and listed in `.gitignore`, so the host's tracked tree stays clean and refreshes are just `cd <clone> && git pull`. Currently in use: `temp/` (andrej-karpathy-skills), `gh_issues_agent/`. NOT used: `git subtree` — migrated away 2026-05-13 because subtree mechanics noise up the host's `git pull` and `git log`. |
 | `NGAI` | "Non-General AI" — the project's framing for what this repo produces: purpose-built specialist agents (and Gems) rather than general-purpose chatbots. Each agent built from `make_agent.md` is an NGAI specialist with a specific mission, contract, and behavioral discipline. The term appears in README and historical context (e.g., `README_Disclosure.md`); use it when discussing the project's design philosophy with stakeholders. |
 
 ---
