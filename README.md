@@ -102,22 +102,24 @@ The AI has now generated both files. Your final step is to review them for accur
 
 ## Keeping Templates Current
 
-The `make_agent` and `make_gem_qc` templates are kept up to date with evolving AI platform best practices using a two-agent documentation update system:
+All `make_*` templates are kept up to date with evolving AI platform best practices using a two-agent documentation update system plus a raw-HTTP fetch utility:
 
-| Agent | Files | What it does |
+| Component | Files | What it does |
 |-------|-------|-------------|
-| **Doc Refresh Agent** | `update_agents/doc_refresh_agent.md` / `update_agents/doc_refresh_agent.json` | Fetches live documentation from Anthropic, Google, OpenAI, and xAI and writes results to `source_docs/` cache files |
+| **Doc Refresh Agent** | `update_agents/doc_refresh_agent.md` / `update_agents/doc_refresh_agent.json` | Spec for the refresh workflow (staleness → fetch → validate → write → report). Uses `fetch_doc.py` as its fetcher. |
 | **Doc Analysis Agent** | `update_agents/doc_analysis_agent.md` / `update_agents/doc_analysis_agent.json` | Reads cached docs, diffs against templates using an intent-first reading protocol, and proposes minimal additive improvements — always updating both the `.json` and companion `.md` together |
+| **fetch_doc.py** | `update_agents/fetch_doc.py` | Raw-HTTP fetcher with 5 modes (default fetch, `--list-links`, `--batch`, `--from-html`, `--check`). Replaces the prior WebFetch+manual-save flow; validated as a byte-identical drop-in across 5 platforms (2026-05-13). Run via `uv run update_agents/fetch_doc.py <url>`. |
 
 **Typical cadence**: Run `doc_refresh_agent` monthly (or after a major platform release), then run `doc_analysis_agent` to surface any proposals worth adding to the templates.
 
 ```
-doc_refresh_agent  →  updates source_docs/ cache
+fetch_doc.py       →  raw-HTTP fetcher (or --from-html for JS-rendered sources)
+doc_refresh_agent  →  orchestrates fetch_doc.py calls; updates source_docs/ cache
 doc_analysis_agent →  proposes scored changes; each JSON change paired with companion MD update
-make_agent_qc      →  validates templates (10 dimensions, including MD/JSON companion sync)
+make_agent_qc      →  validates templates (20 rules, 17 dimensions, including MD/JSON companion sync and ORCH-QC + KNW-QC families)
 ```
 
-Cached source documentation lives in `source_docs/` (one `.md` file per platform source). See `update_agents/update_agent.md` for a quick navigation guide to both agents.
+Cached source documentation lives in `source_docs/` (34 files as of 2026-05-13, across Anthropic, Google ADK/Gemini, OpenAI, and xAI). See `update_agents/update_agent.md` for a quick navigation guide to both agents and the fetch tool.
 
 ---
 
@@ -143,19 +145,25 @@ project/
 ## This repo's structure
 ```
 Make-AI-Agents/
-├── AGENTS.md                     # project context for any agentic dev tool (canonical; supersedes CLAUDE.md)
-├── make_agent.md / .json         # Agent spec template (the meta-skill)
-├── make_agent_qc.md / .json      # Agent spec QC template
-├── make_AGENTS.md / .json        # AGENTS.md generation template
-├── make_AGENTS_qc.md / .json     # AGENTS.md QC template
-├── make_gems/                    # Gemini Gem templates (sibling to make_agent)
+├── AGENTS.md                          # project context for any agentic dev tool (canonical)
+├── make_agent.md / .json              # Agent spec template (the meta-skill)
+├── make_agent_qc.md / .json           # Agent spec QC template (20 rules, 17 dimensions)
+├── make_AGENTS.md / .json             # AGENTS.md generation template
+├── make_AGENTS_qc.md / .json          # AGENTS.md QC template
+├── make_orchestrator_agent.md / .json # Multi-agent orchestrator template (2026-05-13)
+├── make_agent_knowledge.md / .json    # Runtime knowledge file template (2026-05-13)
+├── make_gems/                         # Gemini Gem templates (sibling to make_agent)
 │   ├── make_gem.md / .json
 │   └── make_gem_qc.md / .json
-├── knowledge/                    # Source-of-truth knowledge files
-│   ├── behavioral_discipline.md  # Toyota Way + Karpathy framework — narrative
-│   └── behavioral_discipline.json# Same — structured rules for skill consumption
-├── update_agents/                # Doc refresh + analysis agents
-└── source_docs/                  # Cached platform docs (Anthropic/Google/OpenAI/xAI)
+├── knowledge/                         # Source-of-truth knowledge files
+│   ├── behavioral_discipline.md       # Toyota Way + Karpathy framework — narrative
+│   └── behavioral_discipline.json     # Same — structured rules for skill consumption
+├── update_agents/                     # Doc refresh + analysis agents + fetch utility
+│   ├── update_agent.md / .json
+│   ├── doc_refresh_agent.md / .json
+│   ├── doc_analysis_agent.md / .json
+│   └── fetch_doc.py                   # Raw-HTTP doc fetcher (5 modes, 2026-05-13)
+└── source_docs/                       # 34 cached platform docs (Anthropic/Google ADK/OpenAI/xAI)
 ```
 
 ## Tier System (choose based on your needs)

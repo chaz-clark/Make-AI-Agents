@@ -120,7 +120,8 @@ For full principle definitions, examples, and override rationale, see `../knowle
 ### Prerequisites
 - `doc_refresh_agent.json` present with source list
 - `source_docs/` folder exists (will be written to)
-- WebFetch or HTTP access to fetch source URLs
+- `update_agents/fetch_doc.py` available (the canonical fetcher); `uv` installed for PEP 723 inline-deps execution
+- Optional: a browser, for the `--from-html` fallback on JS-rendered sources
 - No special API keys required (all sources are public documentation)
 
 ### Basic Usage
@@ -145,19 +146,41 @@ for source in cfg["sources"]:
         print(f"[OK]    {source['label']} ({header['last_fetched']})")
 ```
 
-**Step 2: Fetch and write**
-```python
-for source in stale_sources:
-    try:
-        content = web_fetch(source["url"], headers={"Cache-Control": "no-cache"})
-        write_cache_file(source, content, fetch_status="success")
-        print(f"[REFRESHED] {source['cache_file']}")
-    except Exception as e:
-        write_cache_file(source, content=None, fetch_status="failed", error=str(e))
-        print(f"[FAILED]    {source['label']}: {e}")
+**Step 2: Fetch via `fetch_doc.py` (preferred) or `--from-html` fallback**
+
+Preferred path — raw HTTP (Tier 1) handles all 5 platforms currently in the cache:
+```bash
+# Single source
+uv run update_agents/fetch_doc.py <url> --out source_docs/dropbox/<short_name>.md
+
+# Batch (one URL per line)
+uv run update_agents/fetch_doc.py --batch /tmp/urls.txt --sleep 1.0
+
+# Drift audit before overwriting (no-op, reports % delta)
+uv run update_agents/fetch_doc.py <url> --check source_docs/<short_name>.md
 ```
 
-**Step 3: Verify outputs**
+Fallback for sources marked `fetch_method: manual` (currently `support.google.com` Gems pages; any future Cloudflare-gated or JS-rendered docs):
+```bash
+# 1. Open the URL in a browser, "Save Page As" → HTML, drop file into source_docs/dropbox/
+# 2. Convert without re-fetching:
+uv run update_agents/fetch_doc.py --from-html source_docs/dropbox/saved.html --out source_docs/dropbox/<short_name>.md
+```
+
+**Step 3: Merge staged content into source_docs/ preserving metadata header**
+
+Pseudocode of the merge step (no canonical Python yet — see `/tmp` scratch scripts from prior refreshes for reference):
+```python
+for source in fetched_sources:
+    staged_body = Path(f"source_docs/dropbox/{source['short_name']}.md").read_text()
+    target = Path(source["cache_file"])
+    front_matter = extract_yaml_front_matter(target.read_text())
+    update_header(front_matter, last_fetched=today, fetch_status="success", size_bytes=len(staged_body))
+    target.write_text(front_matter + staged_body)
+    Path(f"source_docs/dropbox/{source['short_name']}.md").unlink()  # clear staging
+```
+
+**Step 4: Verify outputs**
 ```python
 for source in stale_sources:
     content = Path(source["cache_file"]).read_text()
@@ -175,18 +198,29 @@ for source in stale_sources:
 
 **Problem**: Some documentation sites render content via JavaScript. The fetched HTML contains only a shell — no actual documentation text.
 
-**Why it happens**: The fetch tool retrieves the raw HTTP response, not the browser-rendered DOM. Pages that load content dynamically via JS will appear empty.
+**Why it happens**: `fetch_doc.py` Tier 1 retrieves the raw HTTP response, not the browser-rendered DOM. Pages that load content dynamically via JS will appear empty (a `<div id="root"></div>` shell).
 
-**Solution**: Check the `notes` field in `doc_refresh_agent.json` for each source. Sources flagged as "JS-rendered" require a browser-based fetch or a manual copy-paste workflow. Mark these as `fetch_method: manual` in the source entry.
+**Solution**: Use `fetch_doc.py --from-html` with a browser-saved HTML file. Steps:
+1. Open the URL in a browser
+2. File → "Save Page As" → "Web Page, HTML Only" → save to `source_docs/dropbox/`
+3. Run `uv run update_agents/fetch_doc.py --from-html source_docs/dropbox/saved.html --out source_docs/dropbox/<short_name>.md`
+4. Mark `fetch_method: manual` for that source entry in `doc_refresh_agent.json` so future refresh runs skip the Tier 1 attempt
+
+**Known JS-rendered domains** (empirically validated 2026-05-13): `support.google.com` (Google Gems pages). The set is small; `adk.dev`, `openai.github.io`, `ai.google.dev/gemini-api/docs/*`, `developers.openai.com`, `docs.x.ai`, `platform.claude.com`, `code.claude.com` all work via Tier 1.
 
 **Example**:
 ```
-// ❌ Result of fetching a JS-rendered page
-File size: 2KB — only a <div id="root"></div> shell
+# ❌ Result of fetching a JS-rendered page via Tier 1
+$ uv run update_agents/fetch_doc.py https://support.google.com/...
+  HTTP 200  18402 bytes HTML
+  → markdown 312 bytes   ← shell, not real content
 
-// ✅ What to do
-# Open the URL in a browser, copy all text, paste into the cache file
-# Set fetch_status: manual in the header
+# ✅ Fallback
+$ # Save page in browser to source_docs/dropbox/gems.html
+$ uv run update_agents/fetch_doc.py --from-html source_docs/dropbox/gems.html
+  → /tmp/.../gems.html (18402 bytes HTML)
+    → markdown 14823 bytes
+    ✓ source_docs/dropbox/gems.md
 ```
 
 ### 2. Overwriting a Good Cache with a Failed Response
@@ -229,7 +263,7 @@ File size: 2KB — only a <div id="root"></div> shell
 
 **Scenario**: 30 days have passed since the last refresh. Running the agent to update all stale sources before a new analysis cycle.
 
-**Input**: All 7 sources in `doc_refresh_agent.json`, `staleness_threshold_days: 30`
+**Input**: All 34 sources in `doc_refresh_agent.json`, `staleness_threshold_days: 30`
 
 **Approach**: Agent checks each `cache_file` header. Finds 5 sources older than 30 days. Fetches each in sequence. Writes updated files.
 
@@ -309,4 +343,4 @@ For detailed validation rules, see `doc_refresh_agent.json` → `validation` sec
 | **Key Files** | `doc_refresh_agent.json`, `source_docs/` |
 | **Quickstart** | Check staleness → fetch stale sources → write cache files → verify |
 | **Common Pitfall** | Overwriting good cache with a bad fetch response |
-| **Dependencies** | WebFetch (HTTP GET), `source_docs/` folder |
+| **Dependencies** | `update_agents/fetch_doc.py` (raw HTTP + bs4 + html2text via `uv run`), `source_docs/` folder |

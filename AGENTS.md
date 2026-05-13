@@ -26,25 +26,29 @@ Tracked content only (gitignored files like `GEMINI.md`, `gpt.qmd`, and `qc_repo
 Make-AI-Agents/
 ├── AGENTS.md                       # this file — project context for any agentic dev tool
 ├── README.md / README_QC.md / README_Disclosure.md
-├── make_agent.md / .json           # agent spec template (the meta-skill)
-├── make_agent_qc.md / .json        # agent spec QC template
-├── make_AGENTS.md / .json          # AGENTS.md generation template (sibling)
-├── make_gems/                      # Gemini Gem templates and example Gems
+├── make_agent.md / .json                  # agent spec template (the meta-skill)
+├── make_agent_qc.md / .json               # agent spec QC template (20 rules, 17 dimensions)
+├── make_AGENTS.md / .json                 # AGENTS.md generation template (sibling)
+├── make_orchestrator_agent.md / .json     # multi-agent orchestrator template (sibling, 2026-05-13)
+├── make_agent_knowledge.md / .json        # runtime knowledge file template (sibling, 2026-05-13)
+├── make_gems/                             # Gemini Gem templates and example Gems
 │   ├── make_gem.md / .json
 │   ├── make_gem_qc.md / .json
 │   ├── README_GEM.md
-│   ├── course_info_bot.json        # example Gem (Engineering Statistics course bot)
-│   ├── implement_gem.md / .json    # implementation guide for compiled Gems
-│   └── gem_instructions/           # compiled .txt outputs (gitignored)
-├── knowledge/                      # source-of-truth knowledge files
+│   ├── course_info_bot.json               # example Gem (Engineering Statistics course bot)
+│   ├── implement_gem.md / .json           # implementation guide for compiled Gems
+│   └── gem_instructions/                  # compiled .txt outputs (gitignored)
+├── knowledge/                             # source-of-truth knowledge files
 │   └── behavioral_discipline.md / .json   # 10 principles, 5 interaction patterns
-├── update_agents/                  # doc refresh + analysis agents
-│   ├── update_agent.md / .json     # entry-point / orchestration
-│   ├── doc_refresh_agent.md / .json
-│   └── doc_analysis_agent.md / .json
-├── source_docs/                    # cached platform docs (Anthropic / Google / OpenAI / xAI)
-├── handoffs/                       # cross-repo handoff documents (currently empty)
-└── temp/                           # subtree: andrej-karpathy-skills (reference, optional pull-back)
+├── update_agents/                         # doc refresh + analysis agents + utilities
+│   ├── update_agent.md / .json            # entry-point / orchestration
+│   ├── doc_refresh_agent.md / .json       # spec for the refresh workflow (uses fetch_doc.py)
+│   ├── doc_analysis_agent.md / .json      # spec for the analysis workflow
+│   └── fetch_doc.py                       # raw-HTTP doc fetcher (5 modes, 2026-05-13)
+├── source_docs/                           # 34 cached platform docs (Anthropic / Google ADK / OpenAI / xAI)
+│   └── dropbox/                           # staging folder for manual fetches (gitignored)
+├── handoffs/                              # cross-repo handoff documents (currently empty)
+└── temp/                                  # subtree: andrej-karpathy-skills (reference, optional pull-back)
 ```
 
 ## Working Style
@@ -71,39 +75,26 @@ The four no-override principles — **P-001 Read Before Claiming, P-003 Stop on 
 
 ## Active Context
 
-_Last updated: 2026-04-29_
+_Last updated: 2026-05-13_
 
-**Recent shipped**:
-- **v3.0** (commit `ebb5ae0`) — behavioral discipline baked into `make_agent` + `make_agent_qc`. 10 principles with stable IDs, 5 interaction patterns, 18 QC rules across 15 quality dimensions, non-interactive mode graduation pattern.
-- **Checkpoint** (commit `aaeddc8`) — `knowledge/behavioral_discipline.md/.json` and README updates.
+**Recent shipped (2026-05-12 → 2026-05-13)**:
+- **`make_orchestrator_agent`** (commit `e539532`) — new sibling skill that generates multi-agent orchestrator specs. Specialists declared by `spec_path`; LLM-routed via auto-generated `delegate_to_<specialist>` tools. Platform coverage: Anthropic subagents / OpenAI Handoffs / Google ADK `sub_agents` as direct targets; xAI documented as exception (anonymous server-side workers).
+- **`make_agent_knowledge`** (commit `e539532`) — new sibling skill that generates runtime knowledge files (`knowledge/*.md` + `.json` pairs). Three shapes: reference, identity, procedural. Authoring scaffold only. `_metadata.runtime_strategy` declares embed vs read-at-runtime per body-size thresholds.
+- **`make_agent_qc`** rules 19 (`ORCH-QC-001..005`) + 20 (`KNW-QC-001..006`) — extends QC to cover the new artifact types. Total: 20 rules, 17 quality dimensions.
+- **`make_agent.json` v3.4–v3.6** — applied 6 doc-analysis proposals (strict tool use, reasoning effort, MCP preference, server/client tool pitfall, memory/state strategy, Gemini-3 temperature exception). `cross_references.knowledge_files[]` field added.
+- **`update_agents/fetch_doc.py`** (commit `a38de4e`, `49f1374`) — raw-HTTP doc fetcher with 5 modes (default, `--list-links`, `--batch`, `--from-html`, `--check`). Replaces the WebFetch+manual-save workflow that was producing small-model summaries. Validated 2026-05-13: byte-identical to manual saves on 11 of 11 sources from 5 platforms.
+- **`source_docs/` 9 → 34 sources** — wave-2 added 17 sources to ground the 2 new skills; the new tool then snagged 8 ADK A2A child pages and refreshed `google_adk_multi_agents` (+20% from upstream language tabs).
+- **`doc_refresh_agent.json` v1.3** — Step 2 (Fetch) rewritten to recommend `fetch_doc.py`; `--from-html` documented as the manual fallback.
 
-**In flight**:
-- `make_AGENTS.md/.json` — bare-bones template just drafted (today). This `AGENTS.md` is its first output.
-- `CLAUDE.md` → `AGENTS.md` migration — see Migration Notes below.
+**In flight**: nothing — all queued work in this wave landed.
 
-**Open issues** (8 total — see GitHub):
-- v3.1 polish: #3-#8 (decision flow evaluation order, validation wiring, NI mode mid-spec, legacy migration, etc.)
-- #2 — Toyota Way skill in `temp/` subtree (companion to karpathy-guidelines)
-- #1 — explicit `.gitignore` for local scratch files (subtree consumer hygiene)
+**Open issues** (check GitHub for current state — `gh issue list`): the v3.0–v3.6 polish series (issues #1–#9) is closed. New work would open new issues.
 
 **Next likely**:
-- Iterate on `AGENTS.md` (this file) via sub-agent reviews
-- Build `make_AGENTS_qc.md/.json` as a sibling QC for AGENTS.md generation
-- Discipline integration into `make_gem.md` + `make_gem_qc.md`
-- Pop `temp/` subtree updates back upstream when ready
-
-## Migration Notes
-
-**CLAUDE.md → AGENTS.md** (in progress, 2026-04-29):
-
-`AGENTS.md` is the tool-agnostic standard readable by Claude Code, Cursor, Aider, Antigravity, and other agentic dev tools. `CLAUDE.md` is Claude-specific naming. Once `AGENTS.md` is validated and stable, the next step is:
-
-1. `git rm CLAUDE.md`
-2. Apply the deferred `.gitignore` line that adds `CLAUDE.md` to ignore (already in working tree, not committed)
-3. Verify no references to `CLAUDE.md` remain in repo content (READMEs, etc.)
-4. Commit + push as a follow-up minor revision
-
-Until that step lands, both `AGENTS.md` and `CLAUDE.md` exist; `AGENTS.md` is canonical (per the user's global instruction: "If both exist, treat `AGENTS.md` as canonical and the `CLAUDE.md` as a stale shim").
+- Dogfood the new skills: generate one real orchestrator + one real knowledge file end-to-end (catches bugs QC can't).
+- Wave 3 doc-analysis cycle against the 34-source corpus (find new convergence-bonus candidates).
+- Operationalize `doc_refresh_agent` as a runner (Python) on top of `fetch_doc.py`, enabling scheduled refreshes.
+- Pop `temp/` subtree updates back upstream when ready.
 
 ## Existing Tooling
 
@@ -111,14 +102,17 @@ Before generating new tools or scripts in this repo, reuse what already exists.
 
 | Tool / File | Purpose | When to use |
 |---|---|---|
-| `make_agent.md` / `.json` | Generate agent specs (the meta-skill) | Building any new agent |
-| `make_agent_qc.md` / `.json` | Validate agent specs (18 rules, 15 dimensions) | After generating any new agent |
+| `make_agent.md` / `.json` | Generate agent specs (the meta-skill) | Building any new single agent |
+| `make_agent_qc.md` / `.json` | Validate agent specs (20 rules, 17 dimensions; covers BD-QC, ORCH-QC, KNW-QC families) | After generating any new agent |
 | `make_AGENTS.md` / `.json` | Generate `AGENTS.md` for a project | Setting up a new project, migrating from `CLAUDE.md` |
+| `make_orchestrator_agent.md` / `.json` | Generate multi-agent orchestrator specs (`agent_type.type: 'multi_agent'`) that delegate to specialist subagents | When a single agent has > 20 tools or spans multiple domains — split into specialists + orchestrator |
+| `make_agent_knowledge.md` / `.json` | Generate runtime knowledge files (MD+JSON pair in `knowledge/`) in three shapes (reference / identity / procedural) | When an agent needs lookup-shaped, principle-shaped, or playbook-shaped knowledge at runtime |
 | `make_gems/make_gem.md` / `.json` | Generate Gemini Gem instructions | Building any new Gem |
 | `make_gems/make_gem_qc.md` / `.json` | Validate Gem instructions | After generating any new Gem |
 | `knowledge/behavioral_discipline.md` / `.json` | Source of truth for the discipline embedded in every generated artifact | Read once for context; reference by path in generated specs |
-| `update_agents/doc_refresh_agent.*` | Fetch latest platform docs (Anthropic/Google/OpenAI/xAI) | Monthly or after major platform releases |
-| `update_agents/doc_analysis_agent.*` | Diff cached docs against templates and propose updates | After running `doc_refresh_agent` |
+| `update_agents/doc_refresh_agent.*` | Spec for the refresh workflow (staleness → fetch → validate → write → report) | Monthly or after major platform releases. Step 2 (Fetch) uses `fetch_doc.py` |
+| `update_agents/doc_analysis_agent.*` | Diff cached docs against templates and propose updates | After running a refresh — finds convergence-bonus candidates across platforms |
+| `update_agents/fetch_doc.py` | Raw-HTTP doc fetcher; 5 modes: default fetch, `--list-links` (discover child URLs), `--batch`, `--from-html` (convert browser-saved HTML), `--check` (drift detection vs an existing source_docs file) | Whenever a `source_docs/` file is stale or new. Run via `uv run update_agents/fetch_doc.py <url>` — PEP 723 inline metadata handles deps |
 
 **Reuse-first rule**: if a template, validation, or knowledge file already covers a needed operation, use it rather than generating new code or new templates.
 
@@ -145,7 +139,9 @@ The LLM reads the QC meta-skill, reads the target spec, runs the rule set, and r
 | `agent_type.type` | The **implementation** pattern of an agent (`class_based`, `llm_agent`, `api_agent`, `data_processor`, `multi_agent`, `workflow`, `rule_based`, `other`). Orthogonal to `interaction_pattern`. |
 | `P-001` … `P-010` | Stable IDs for the ten behavioral discipline principles. P-001 = Read Before Claiming, P-003 = Stop on Defect, P-007 = Pull Don't Push, P-010 = Respect Intent — these four are no-override. See `knowledge/behavioral_discipline.md` → "The Ten Principles". |
 | `BD-QC-001` … `BD-QC-007` | Stable IDs for behavioral discipline QC checks. Defined in `knowledge/behavioral_discipline.json` → `qc_checks`; referenced by `make_agent_qc.json` rule_ids 17 and 18. |
-| `make_*` | Naming convention for **meta-skills** (templates that generate other things). `make_agent` generates agent specs, `make_gem` generates Gem instructions, `make_AGENTS` generates `AGENTS.md` files. |
+| `ORCH-QC-001` … `ORCH-QC-005` | Stable IDs for orchestrator-spec QC checks. Defined in `make_orchestrator_agent.json` → `qc_checks`; referenced by `make_agent_qc.json` rule_id 19. Applies only when `agent_type.type: 'multi_agent'`. |
+| `KNW-QC-001` … `KNW-QC-006` | Stable IDs for knowledge-file QC checks. Defined in `make_agent_knowledge.json` → `qc_checks`; referenced by `make_agent_qc.json` rule_id 20. Applies only when an agent has non-empty `cross_references.knowledge_files[]`. |
+| `make_*` | Naming convention for **meta-skills** (templates that generate other things). `make_agent` generates single agents, `make_orchestrator_agent` generates multi-agent orchestrators, `make_agent_knowledge` generates runtime knowledge files, `make_gem` generates Gem instructions, `make_AGENTS` generates `AGENTS.md` files. |
 | `compact_boilerplate` | Template strings (in the `*.json` of a meta-skill) that get substituted into generated outputs. The discipline propagates through these. |
 | `non_interactive_mode` (NI mode) | An agent runs without a synchronous user (cron, webhook, scheduled batch). Opt-in graduation path — agents are validated interactively first. Requires an `alert_channel` (BD-QC-007). |
 | `subtree` | Refers to `temp/` — a `git subtree` of `andrej-karpathy-skills` for reference. Updates can be pulled in or pushed back per `git subtree pull` / `git subtree push`. |
@@ -153,4 +149,4 @@ The LLM reads the QC meta-skill, reads the target spec, runs the rule set, and r
 
 ---
 
-_AGENTS.md generated 2026-04-29 using `make_AGENTS.md` v1.0. Maintenance: update Active Context after major shipped work; refresh other sections only when the underlying truth changes._
+_AGENTS.md last revised 2026-05-13. Generated 2026-04-29 using `make_AGENTS.md` v1.0; revised in-place for the wave-2 additions (make_orchestrator_agent, make_agent_knowledge, fetch_doc.py, source_docs 9 → 34). Maintenance: update Active Context after major shipped work; refresh other sections only when the underlying truth changes._

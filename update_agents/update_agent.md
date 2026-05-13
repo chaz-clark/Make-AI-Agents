@@ -4,34 +4,38 @@
 
 ---
 
-## Two-Agent Architecture
+## Two-Agent Architecture + Fetch Tool
 
-The documentation update system uses two separate agents with distinct responsibilities:
+The documentation update system uses two separate agents plus one utility:
 
-| Agent | Files | What it does |
+| Component | Files | What it does |
 |-------|-------|-------------|
-| **Doc Refresh Agent** | `doc_refresh_agent.md` / `doc_refresh_agent.json` | Fetches live AI platform documentation and writes results to `source_docs/` cache files |
+| **Doc Refresh Agent** | `doc_refresh_agent.md` / `doc_refresh_agent.json` | Spec for the refresh workflow: staleness check → fetch → validate → write → report. Step 2 (Fetch) uses `fetch_doc.py`. |
 | **Doc Analysis Agent** | `doc_analysis_agent.md` / `doc_analysis_agent.json` | Reads cached docs, diffs against templates, scores candidates, proposes additive improvements |
+| **fetch_doc.py** | `fetch_doc.py` | Raw-HTTP doc fetcher used by the refresh workflow. 5 modes: default fetch, `--list-links` (discover child URLs), `--batch`, `--from-html` (convert browser-saved HTML for JS-rendered sites), `--check` (drift detection). Added 2026-05-13; validated as drop-in replacement for the prior WebFetch+manual-save flow. |
 
 ---
 
 ## Workflow
 
 ```
-1. Run doc_refresh_agent   →   updates source_docs/ cache files (9 sources: agent/API + Gems)
-2. Run doc_analysis_agent  →   presents scored proposals for approval
-3. Approve proposals       →   agent applies changes to make_agent.*, make_gems/make_gem.*, and make_gems/make_gem_qc.*
-4. Run make_agent_qc       →   validates updated templates
+1. Run doc_refresh_agent          →   uses fetch_doc.py to refresh source_docs/
+                                       (34 sources: agent/API + Gems + ADK A2A child pages)
+2. Run doc_analysis_agent         →   presents scored proposals for approval
+3. Approve proposals              →   agent applies changes to make_agent.*, make_orchestrator_agent.*,
+                                       make_agent_knowledge.*, make_gems/make_gem.*, make_gems/make_gem_qc.*
+4. Run make_agent_qc              →   validates updated templates (20 rules, 17 dimensions)
 ```
 
-Each agent runs independently. Refresh only when sources are stale (default threshold: 30 days). Analysis can run offline on the existing cache.
+Each agent runs independently. Refresh only when sources are stale (default threshold: 30 days). Analysis can run offline on the existing cache. `fetch_doc.py` can also be invoked standalone for ad-hoc fetches.
 
 ---
 
 ## Why Split?
 
 - **Fetching** and **analyzing** are unrelated responsibilities with different failure modes
-- The refresh agent needs WebFetch access; the analysis agent needs only local file reads
+- The refresh agent needs HTTP access (now via `fetch_doc.py`); the analysis agent needs only local file reads
+- The fetch logic lives in `fetch_doc.py` as a reusable utility so each step has one obvious tool
 - Separating them makes each agent simpler, more testable, and easier to audit
 
 ---
@@ -59,7 +63,8 @@ For full principle definitions, examples, and override rationale, see `../knowle
 
 ## Quick Links
 
+- **Ad-hoc fetch**: `uv run update_agents/fetch_doc.py <url>` — see `fetch_doc.py` docstring for all 5 modes
 - **Start a refresh run**: See `doc_refresh_agent.md` → Agent Quickstart
 - **Start an analysis run**: See `doc_analysis_agent.md` → Agent Quickstart
-- **Source cache files**: `source_docs/` folder (9 files: 7 agent/API sources + 2 Google Gems sources)
-- **Update targets**: `make_agent.md`, `make_agent.json`, `make_gems/make_gem.md`, `make_gems/make_gem.json`, `make_gems/make_gem_qc.md`, `make_gems/make_gem_qc.json`
+- **Source cache files**: `source_docs/` folder (34 files: 9 original + 17 wave-2 + 8 ADK A2A child pages)
+- **Update targets**: `make_agent.md`, `make_agent.json`, `make_orchestrator_agent.md`, `make_orchestrator_agent.json`, `make_agent_knowledge.md`, `make_agent_knowledge.json`, `make_gems/make_gem.md`, `make_gems/make_gem.json`, `make_gems/make_gem_qc.md`, `make_gems/make_gem_qc.json`

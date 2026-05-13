@@ -11,7 +11,7 @@
 
 Identifies documentation patterns from cached AI platform docs that are missing from the repo's templates and surfaces them as scored, source-cited proposals for human approval.
 
-**What it does**: Reads cached source docs from `source_docs/`, diffs their content against `make_agent.md`, `make_agent.json`, `make_gems/make_gem.md`, `make_gems/make_gem.json`, `make_gems/make_gem_qc.md`, `make_gems/make_gem_qc.json`, and `README.md`, scores each candidate addition, and presents a numbered proposal list. It halts before applying any change — no file is modified without explicit per-proposal approval. When approved proposals change the make_agent.* or make_gem_qc.* templates, it also checks whether `README.md` needs updating to stay accurate.
+**What it does**: Reads cached source docs from `source_docs/` (34 files as of 2026-05-13), diffs their content against `make_agent.md`/`.json`, `make_orchestrator_agent.md`/`.json`, `make_agent_knowledge.md`/`.json`, `make_AGENTS.md`/`.json`, `make_gems/make_gem.md`/`.json`, `make_gems/make_gem_qc.md`/`.json`, and `README.md`, scores each candidate addition, and presents a numbered proposal list. It halts before applying any change — no file is modified without explicit per-proposal approval. When approved proposals change a meta-skill template, it also checks whether `README.md` and `AGENTS.md` need updating to stay accurate.
 
 **Why it exists**: AI platform documentation evolves continuously. Without a systematic process to detect and adopt new patterns, the repo's templates silently become outdated. This agent closes that gap by treating template improvement as a reviewable, traceable workflow.
 
@@ -291,7 +291,7 @@ apply_approved(
 
 **Scenario**: 30 days have passed since the last refresh. All `source_docs/` files are fresh. Running the analysis agent to check for new proposals.
 
-**Input**: 7 source files in `source_docs/`, all `fetch_status: success` or `partial`, all within 30 days. 4 target files.
+**Input**: 34 source files in `source_docs/`, all `fetch_status: success` or `partial`, all within 30 days. 7+ target files (make_agent, make_orchestrator_agent, make_agent_knowledge, make_AGENTS, make_gem, make_gem_qc, README).
 
 **Approach**: Agent reads all sources, diffs against templates, generates scored candidates. Applies convergence bonus where applicable. Presents 4 proposals above threshold.
 
