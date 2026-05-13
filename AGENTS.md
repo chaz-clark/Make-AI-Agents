@@ -48,7 +48,7 @@ Make-AI-Agents/
 ├── source_docs/                           # 34 cached platform docs (Anthropic / Google ADK / OpenAI / xAI)
 │   └── dropbox/                           # staging folder for manual fetches (gitignored)
 ├── handoffs/                              # cross-repo handoff documents (currently empty)
-└── temp/                                  # subtree: andrej-karpathy-skills (reference, optional pull-back)
+└── temp/                                  # clone+gitignored: andrej-karpathy-skills (reference; refresh via `cd temp && git pull`; migrated from subtree 2026-05-13)
 ```
 
 ## Working Style
