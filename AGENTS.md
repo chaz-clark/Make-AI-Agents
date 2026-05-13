@@ -92,13 +92,32 @@ _Last updated: 2026-05-13_
 **Open issues** (check GitHub for current state — `gh issue list`): the v3.0–v3.6 polish series (issues #1–#9) is closed. New work would open new issues.
 
 **Next likely**:
-- **🔝 NEXT QUEUED — Cross-repo AGENTS.md audit + regenerate-and-deliver workstream** (queued 2026-05-13 after commit `63bd64e` raised the make_AGENTS bar): every public repo Chaz maintains likely has an AGENTS.md that predates the current standards (especially AGENTS-QC-006 — discipline files co-located, not just pointed at). Workstream:
-  1. Enumerate Chaz's public repos that have an `AGENTS.md` (start: canvas-toolbox already audited / passing via condition b; handoff at seed-stage; AgentJ; course repos; check via `gh repo list chaz-clark`).
-  2. For each, audit the existing `AGENTS.md` against current AGENTS-QC-001..006 + the full required-sections contract.
-  3. For each behind-the-curve repo, run the current make_AGENTS on it to generate an `AGENTS_updated.md` (suffixed to avoid overwriting; preserves the consumer's OG Active Context / Domain Terms / Existing Tooling / project-specific rules — the project-state content stays, only the structure + discipline-file packaging updates).
-  4. Package `behavioral_discipline.{md,json}` into each target's `knowledge/` folder per the AGENTS-QC-006 requirement (with snapshot headers).
-  5. Use the **handoff convention** (per `~/Documents/GitHub/handoff/` issue #6 — producer-delivers direction) to deliver to each target: a handoff doc explaining the upgrade + the `AGENTS_updated.md` + the packaged discipline files. Recommend the consumer adopt by reviewing-and-renaming `AGENTS_updated.md` → `AGENTS.md` once they've confirmed the OG context survived the merge.
-  6. Track per-repo state via the handoff convention's Status: enum (proposed in handoff issue #3).
+- **🔝 NEXT QUEUED — Cross-repo AGENTS.md audit + regenerate-and-deliver workstream** (queued 2026-05-13 after commit `63bd64e` raised the make_AGENTS bar): every consumer repo (public + local masters) likely has an AGENTS.md that predates the current standards (especially AGENTS-QC-006 — discipline files co-located, not just pointed at), OR is still on CLAUDE.md. Step 1 (enumeration) completed 2026-05-13.
+
+  **Current-sprint scope (5 targets — audit/migrate existing context):**
+  - `handoff` (GitHub) — has AGENTS.md (9 KB, seed stage); audit against AGENTS-QC-001..006; deliver via handoff convention
+  - `ds460-master` (local) — has AGENTS.md (9.9 KB); audit + package discipline locally (no push)
+  - `ds250-onln-master` (local) — CLAUDE.md (21.9 KB) → AGENTS.md migration; canvas_toolbox/ clone present; local only
+  - `itm327-master` (local) — CLAUDE.md (11.7 KB) → AGENTS.md migration; gh_issues_agent/ clone present; local only
+  - `m119-master` (local) — CLAUDE.md (2.7 KB, sparse) → AGENTS.md migration; canvas_toolbox/ clone present; local only
+
+  **Next-sprint scope (3 targets — optional creates, no existing context to preserve):**
+  - `agentj` (GitHub) — no AGENTS.md, no CLAUDE.md; AI agent runtime, peer repo mentioned in handoff/canvas-toolbox docs as a subtree consumer
+  - `m119-site` (GitHub) — no AGENTS.md, no CLAUDE.md; BYU-Idaho course site, recent activity
+  - `DS250-Course-Polars` (GitHub) — no AGENTS.md, no CLAUDE.md; DS250 course; agents likely work on it without project context today
+
+  **Skipped (out of scope):**
+  - `Make-AI-Agents` — source of truth, passes AGENTS-QC-006 by construction
+  - `canvas-toolbox` — already audited 2026-05-13, passes via condition (b)
+  - Tutorial repos / forks / legacy single-purpose repos / `andrej-karpathy-skills` (upstream CLAUDE.md intentional)
+
+  **6-step workstream applied per target:**
+  1. ✅ Enumerate Chaz's repos (public + local masters) — done 2026-05-13.
+  2. Audit each current-sprint target against AGENTS-QC-001..006 + the full required-sections contract.
+  3. For each behind-the-curve target, run current make_AGENTS to generate `AGENTS_updated.md` (suffixed to avoid overwriting; preserves OG Active Context / Domain Terms / Existing Tooling / project-specific rules).
+  4. Package `behavioral_discipline.{md,json}` into each target's `knowledge/` folder per AGENTS-QC-006 (snapshot header for traceability).
+  5. **Public targets:** deliver via handoff convention (per `chaz-clark/handoff` issue #6 — producer-delivers direction) — handoff doc + `AGENTS_updated.md` + discipline files. **Local-only targets** (ds*-master, itm327-master, m119-master): apply directly in the local working tree; do NOT push.
+  6. Track per-repo state via the handoff convention's Status enum (proposed in handoff issue #3) for the public targets; local targets just need a commit in their own repo.
 - Genchi Genbutsu (GG) the new skills further as they're used in canvas-toolbox / AgentJ — any GG findings fold back here.
 - Wave 4 doc-analysis cycle when source_docs next refreshes.
 - Operationalize `doc_refresh_agent` as a runner (Python) on top of `fetch_doc.py`, enabling scheduled refreshes.
