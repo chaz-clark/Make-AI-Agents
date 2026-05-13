@@ -41,7 +41,7 @@ YOU: "I've finished `writer.json`. Please validate it."
  │
  ▼
 AI (QC): Loads `make_agent_qc.json` rules.
-       Checks `writer.json` against 8 dimensions.
+       Checks `writer.json` against 17 dimensions (8 core + 9 conditional).
        "Found 2 issues:
         1. Missing 'io_contract' examples.
         2. Generic description in 'mission'."
@@ -82,7 +82,7 @@ The `make_agent_qc` files define a **standardized validator** for the NGAI ecosy
 *   **`make_agent_qc.json`**: Contains the *rules*, *scoring weights*, and *logic*. (e.g., "If 'mission' is missing, deduct 20 points.")
 *   **`make_agent_qc.md`**: Contains the *philosophy* and *explanations*. (e.g., "Why we value specificity over generic templates.")
 
-## The 15 Quality Dimensions
+## The 17 Quality Dimensions
 
 The QC agent evaluates your work across these key areas (defined in `make_agent_qc.json`):
 
@@ -106,8 +106,10 @@ The QC agent evaluates your work across these key areas (defined in `make_agent_
 13. **Autonomy Guidance** *(agents with write operations)*: Do write-capable agents document when they propose vs. execute?
 14. **I/O Contract Consistency**: When the input type is `file` or `folder`, does the system prompt match — single-file invocation or per-file independence language?
 15. **Behavioral Discipline Integration**: Agent embeds the discipline correctly per BD-QC-001 through BD-QC-007 in `knowledge/behavioral_discipline.json`. Critical: P-001/P-003/P-007/P-010 always present; non-interactive agents declare an alert_channel.
+16. **Orchestrator Topology Compliance** *(multi_agent type only)*: For agents with `agent_type.type: 'multi_agent'`, all ORCH-QC-001..005 rules pass (defined in `make_orchestrator_agent.json` → `qc_checks`). Critical: specialist `spec_path` files exist; ≥ 2 specialists; `delegate_to_*` tools match the roster; termination criteria present in system prompt; no specialist underlying tools leaked.
+17. **Knowledge File Reference Compliance** *(agents with `cross_references.knowledge_files[]`)*: All referenced knowledge files exist and pass KNW-QC-001..007 (defined in `make_agent_knowledge.json` → `qc_checks`). KNW-QC-007 catches the Anthropic Citations + Structured Outputs runtime incompatibility at validation time.
 
-For the canonical rule definitions, scoring weights, and severity levels, see `make_agent_qc.json` → `implementation.rule_based.rules` (rule_ids 1–18) and `validation_rules_detailed.dimensions`.
+For the canonical rule definitions, scoring weights, and severity levels, see `make_agent_qc.json` → `implementation.rule_based.rules` (rule_ids 1–20) and `validation_rules_detailed.dimensions`. Rules 19 and 20 delegate to the ORCH-QC and KNW-QC families in their originating skill JSONs — same pattern as rule 17 (Behavioral Discipline) delegating to BD-QC in `knowledge/behavioral_discipline.json`.
 
 ## Why this design?
 

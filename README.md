@@ -119,7 +119,7 @@ doc_analysis_agent →  proposes scored changes; each JSON change paired with co
 make_agent_qc      →  validates templates (20 rules, 17 dimensions, including MD/JSON companion sync and ORCH-QC + KNW-QC families)
 ```
 
-Cached source documentation lives in `source_docs/` (34 files as of 2026-05-13, across Anthropic, Google ADK/Gemini, OpenAI, and xAI). See `update_agents/update_agent.md` for a quick navigation guide to both agents and the fetch tool.
+Cached source documentation lives in `source_docs/` (35 files as of 2026-05-13, across Anthropic, Google ADK/Gemini, OpenAI, and xAI). See `update_agents/update_agent.md` for a quick navigation guide to both agents and the fetch tool.
 
 ---
 
@@ -155,15 +155,18 @@ Make-AI-Agents/
 ├── make_gems/                         # Gemini Gem templates (sibling to make_agent)
 │   ├── make_gem.md / .json
 │   └── make_gem_qc.md / .json
-├── knowledge/                         # Source-of-truth knowledge files
+├── knowledge/                         # Source-of-truth + generated knowledge files
 │   ├── behavioral_discipline.md       # Toyota Way + Karpathy framework — narrative
-│   └── behavioral_discipline.json     # Same — structured rules for skill consumption
+│   ├── behavioral_discipline.json     # Same — structured rules for skill consumption
+│   └── source_docs_index.{md,json}    # Reference-shape catalog of the 35 cached platform docs
 ├── update_agents/                     # Doc refresh + analysis agents + fetch utility
 │   ├── update_agent.md / .json
 │   ├── doc_refresh_agent.md / .json
 │   ├── doc_analysis_agent.md / .json
+│   ├── doc_refresh_workflow.md / .json   # Orchestrator (multi_agent) coordinating the refresh
+│   ├── merge_agent.md / .json            # Single agent: merges dropbox stagings → source_docs
 │   └── fetch_doc.py                   # Raw-HTTP doc fetcher (5 modes, 2026-05-13)
-└── source_docs/                       # 34 cached platform docs (Anthropic/Google ADK/OpenAI/xAI)
+└── source_docs/                       # 35 cached platform docs (Anthropic/Google ADK/OpenAI/xAI)
 ```
 
 ## Tier System (choose based on your needs)
