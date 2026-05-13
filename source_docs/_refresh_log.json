@@ -108,11 +108,11 @@
     },
     "google_adk_multi_agents": {
       "last_attempted": "2026-05-13",
-      "action": "added",
+      "action": "updated",
       "size_before": 0,
-      "size_after": 69271,
+      "size_after": 82878,
       "fetch_status": "success",
-      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (69KB). Full ADK multi-agents doc body now cached. || PRIOR: WAVE-2 ADD for Skill A (orchestrator). WebFetch returned small-model summary (~1.5KB raw, expanded to 2.9KB with metadata+checklist). Placeholder preserves key concepts (SequentialAgent/ParallelAgent/LoopAgent, sub_agents tree, transfer_to_agent, AgentTool, 7 patterns). Material-for-MkDocs site likely triggering summarization. Manual fetch needed via dropbox/."
+      "notes": "Re-fetched 2026-05-13 via fetch_doc.py (Tier 1) — body grew from 69KB to 83KB (+20%) due to ADK adding multi-language (Java/Go/TypeScript) code-sample variants upstream. || PRIOR: Manual dropbox/ fetch on 2026-05-13 merged in (69KB). Full ADK multi-agents doc body now cached. || PRIOR: WAVE-2 ADD for Skill A (orchestrator). WebFetch returned small-model summary (~1.5KB raw, expanded to 2.9KB with metadata+checklist). Placeholder preserves key concepts (SequentialAgent/ParallelAgent/LoopAgent, sub_agents tree, transfer_to_agent, AgentTool, 7 patterns). Material-for-MkDocs site likely triggering summarization. Manual fetch needed via dropbox/."
     },
     "google_adk_a2a": {
       "last_attempted": "2026-05-13",

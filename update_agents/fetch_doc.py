@@ -35,16 +35,29 @@ Usage:
   # Batch fetch from a list (one URL per line, # comments allowed)
   uv run update_agents/fetch_doc.py --batch urls.txt --sleep 1.0
 
-Limitations (Tier 1 — server-rendered HTML only):
-  * JS-rendered SPAs (ai.google.dev support pages, parts of platform.openai.com)
-    return shells without content. Use the Playwright tier (not yet built)
-    or a browser manual save for those.
-  * Sites with Cloudflare anti-bot challenges may return 403 or 503; the
-    User-Agent below mimics Chrome but is not enough for strict WAFs.
+  # Convert an already-saved HTML file to markdown (no fetch)
+  uv run update_agents/fetch_doc.py --from-html path/to/saved.html [--out foo.md]
 
-If --batch returns small files (< 2KB) repeatedly, the site is likely
-JS-rendered and Tier 1 isn't enough. Fall back to manual save for that
-domain and note it in source_docs/_refresh_log.json.
+  # Drift check: fetch URL, compare against an existing source_docs file, report only
+  uv run update_agents/fetch_doc.py <url> --check source_docs/<name>.md
+
+Coverage (validated 2026-05-13 against 11 sources from 5 platforms):
+  * adk.dev, code.claude.com, platform.claude.com, openai.github.io,
+    docs.x.ai, ai.google.dev/gemini-api/docs/*, developers.openai.com —
+    all return full server-rendered bodies via raw HTTP. Tier 1 is a
+    byte-identical drop-in replacement for "WebFetch + manual save".
+
+Known exceptions (use --from-html with a browser save instead):
+  * support.google.com/* — JS-rendered SPA (the Google Gems pages)
+  * platform.openai.com/* — 403-gated by Cloudflare; deprecated anyway
+  * Sites with strict Cloudflare/WAF anti-bot — User-Agent mimics Chrome
+    but won't pass JS challenges
+
+If --batch returns small files (< 2KB) repeatedly, fall back to
+--from-html with a browser-saved HTML file and note the domain in
+source_docs/_refresh_log.json. A Tier-2 (Playwright) path is not built
+because empirical evidence (Phase A validation 2026-05-13) shows Tier 1
+covers all current docs sources; --from-html handles the rare exception.
 """
 import argparse
 import re
@@ -187,16 +200,101 @@ def fetch_one(url, out_path=None, quiet=False):
     return out_path
 
 
+def convert_html_file(html_path, out_path=None):
+    """Convert a local HTML file to markdown. Same chrome-stripping +
+    content-selector logic as fetch_one, no network."""
+    html_path = Path(html_path)
+    if not html_path.exists():
+        raise FileNotFoundError(f"HTML file not found: {html_path}")
+    html = html_path.read_text(encoding="utf-8", errors="replace")
+    print(f"→ {html_path} ({len(html)} bytes HTML)")
+    md = html_to_md(html)
+    print(f"  → markdown {len(md)} bytes")
+    if out_path is None:
+        # Default: same directory as input, .md extension
+        out_path = html_path.with_suffix(".md")
+        if out_path == html_path:
+            out_path = html_path.parent / (html_path.stem + ".converted.md")
+    write_md(md, out_path)
+    print(f"  ✓ {out_path}")
+    return out_path
+
+
+def strip_front_matter(text):
+    """Return body without leading YAML front matter."""
+    m = re.match(r"^---\s*\n.*?\n---\s*\n(.*)$", text, re.DOTALL)
+    return m.group(1).strip() if m else text.strip()
+
+
+def check_drift(url, target_path):
+    """Fetch URL, compare against target file body, report drift only — no write."""
+    target = Path(target_path)
+    if not target.exists():
+        print(f"DRIFT CHECK ERROR: target file not found: {target}")
+        return 1
+    print(f"→ fetching {url}")
+    r = fetch_url(url)
+    new_md = html_to_md(r.text)
+    new_size = len(new_md.encode("utf-8"))
+    existing_body = strip_front_matter(target.read_text(encoding="utf-8"))
+    old_size = len(existing_body.encode("utf-8"))
+
+    ratio = new_size / max(old_size, 1)
+    delta_pct = (ratio - 1.0) * 100
+
+    print(f"\nDrift report:")
+    print(f"  target file:  {target}")
+    print(f"  current body: {old_size:,} bytes")
+    print(f"  fetched body: {new_size:,} bytes")
+    print(f"  delta:        {new_size - old_size:+,} bytes ({delta_pct:+.1f}%)")
+    # Cheap structural diff: line count, code-block count
+    new_lines = new_md.count("\n")
+    old_lines = existing_body.count("\n")
+    new_codeblocks = new_md.count("\n    ") + new_md.count("\n```")
+    old_codeblocks = existing_body.count("\n    ") + existing_body.count("\n```")
+    print(f"  lines:        {old_lines:,} → {new_lines:,} ({new_lines - old_lines:+,})")
+    print(f"  code blocks:  {old_codeblocks} → {new_codeblocks} ({new_codeblocks - old_codeblocks:+})")
+
+    # Verdict heuristic
+    if abs(delta_pct) < 5:
+        print(f"  verdict:      NO_DRIFT (≤ 5% delta)")
+        return 0
+    if new_size < old_size * 0.8:
+        print(f"  verdict:      SUSPECT_REGRESSION (new < 80% of current — possible JS-shell or partial fetch)")
+        return 2
+    if new_size > old_size * 1.1:
+        print(f"  verdict:      MATERIAL_GROWTH (new > 110% — content was added upstream or current cache is partial)")
+        return 1
+    print(f"  verdict:      MINOR_DRIFT (5–10%; likely cosmetic)")
+    return 1
+
+
 def main():
     p = argparse.ArgumentParser(description="Tier-1 raw HTTP fetcher for docs → source_docs/dropbox/")
-    p.add_argument("url", nargs="?", help="URL to fetch (or omit when using --batch)")
+    p.add_argument("url", nargs="?", help="URL to fetch (or omit when using --batch / --from-html)")
     p.add_argument("--out", help="Output path (default: source_docs/dropbox/<auto-name>.md)")
     p.add_argument("--list-links", action="store_true", help="Print discovered links from the URL instead of fetching")
     p.add_argument("--link-prefix", help="Filter --list-links output to URLs containing this substring (e.g. /a2a/)")
     p.add_argument("--batch", help="Read URLs from this file (one per line, '#' comments allowed)")
     p.add_argument("--sleep", type=float, default=1.0, help="Sleep between batch fetches (default 1s)")
+    p.add_argument("--from-html", dest="from_html", help="Convert a local HTML file to markdown (no fetch). Use for browser-saved HTML.")
+    p.add_argument("--check", dest="check_target", help="Drift check: fetch URL, compare body against this target file, report only (no write).")
     args = p.parse_args()
 
+    # --from-html: convert local file, no network
+    if args.from_html:
+        out_path = Path(args.out) if args.out else None
+        convert_html_file(args.from_html, out_path)
+        return
+
+    # --check: fetch URL, compare against target, no write
+    if args.check_target:
+        if not args.url:
+            p.error("--check requires a URL")
+        rc = check_drift(args.url, args.check_target)
+        sys.exit(rc)
+
+    # --batch: many URLs into dropbox/
     if args.batch:
         urls = []
         for line in Path(args.batch).read_text().splitlines():
@@ -210,7 +308,7 @@ def main():
         return
 
     if not args.url:
-        p.error("URL required (or use --batch)")
+        p.error("URL required (or use --batch / --from-html)")
 
     if args.list_links:
         r = fetch_url(args.url)
