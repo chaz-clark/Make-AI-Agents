@@ -144,6 +144,13 @@
         "heading": "## Existing Tooling",
         "include_when": "The project has scripts or utilities the LLM should reuse before generating new code.",
         "format": "Tool / Purpose / When to use table"
+      },
+      {
+        "id": "knowledge_index",
+        "heading": "## Knowledge Index",
+        "include_when": "The project has a folder of topic-specific knowledge files (e.g., `knowledge/`, `.claude/knowledge/`, `lib/agents/knowledge/`) that the LLM loads on demand per task focus, rather than as a stable embedded prefix on every call. The index is anti-bloat — it lets the AGENTS.md stay lean while pointing agents at the relevant deep context per-task.",
+        "format": "Topic | File path | When to load — table. One row per knowledge file. The 'When to load' column is the trigger that tells the LLM which file is relevant to a given task; without explicit triggers the LLM either loads everything (bloat) or nothing (incomplete). Added as an optional section 2026-05-13 after the m119-master GG case showed this anti-bloat pattern in active use without a canonical home in make_AGENTS.",
+        "example": "| Topic | File | When to load |\n|---|---|---|\n| Converter behavior | `.claude/knowledge/converter.md` | When working on RMarkdown→Quarto conversion |\n| Canvas URL handling | `.claude/knowledge/urls-canvas.md` | When debugging Canvas URL/redirect logic |"
       }
     ]
   },
@@ -239,7 +246,7 @@
       {
         "check_id": "AGENTS-QC-006",
         "name": "Discipline files co-located with AGENTS.md",
-        "rule": "The Working Style section's discipline pointer must resolve to a file that actually exists in the target repo. PASS conditions (any one): (a) `<target_repo>/knowledge/behavioral_discipline.md` and `behavioral_discipline.json` both exist at the canonical path; (b) the AGENTS.md pointer references a cloned-subdirectory path (e.g., `make_ai_agents/knowledge/behavioral_discipline.md`) AND that path resolves to a file; (c) the host tool's skill system loads the equivalent discipline at runtime (declare this explicitly in Working Style if relying on this path). FAIL: the pointer references a path that doesn't resolve. Without local discipline files, the pointer is a broken reference and the discipline does not propagate to agents working in this repo. Severity critical because the entire purpose of make_AGENTS is to propagate the discipline — a broken pointer defeats the skill.",
+        "rule": "The Working Style section's discipline pointer must resolve to a file that actually exists in the target repo. PASS conditions (any one): (a) `<target_repo>/knowledge/behavioral_discipline.md` and `behavioral_discipline.json` both exist at the canonical path; (b) the AGENTS.md pointer references a cloned-subdirectory path (e.g., `make_ai_agents/knowledge/behavioral_discipline.md`) AND that path resolves to a file — NOTE: only a FULL Make-AI-Agents clone (or another repo explicitly carrying `knowledge/behavioral_discipline.md` at a known relative path) satisfies this; single-skill clones (gh_issues_agent/, canvas-toolbox/, etc.) do NOT carry the discipline by default — verify the file actually resolves at the path before claiming condition (b); (c) the host tool's skill system loads the equivalent discipline at runtime (declare this explicitly in Working Style if relying on this path). FAIL: the pointer references a path that doesn't resolve. Without local discipline files, the pointer is a broken reference and the discipline does not propagate to agents working in this repo. Severity critical because the entire purpose of make_AGENTS is to propagate the discipline — a broken pointer defeats the skill.",
         "severity": "critical"
       }
     ]
