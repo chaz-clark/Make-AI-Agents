@@ -142,7 +142,7 @@ For detailed validation rules and scoring criteria, see `make_agent_qc.json`.
 
 **How**:
 - **Rule 19 (Orchestrator Topology Compliance)** delegates to ORCH-QC-001 through ORCH-QC-005 in `make_orchestrator_agent.json` → `qc_checks`. Applies only when `agent_type.type: 'multi_agent'`. Non-orchestrators are exempt.
-- **Rule 20 (Knowledge File Reference Compliance)** delegates to KNW-QC-001 through KNW-QC-006 in `make_agent_knowledge.json` → `qc_checks`. Applies only when `cross_references.knowledge_files[]` is non-empty. Agents with no knowledge files are exempt.
+- **Rule 20 (Knowledge File Reference Compliance)** delegates to KNW-QC-001 through KNW-QC-007 in `make_agent_knowledge.json` → `qc_checks`. Applies only when `cross_references.knowledge_files[]` is non-empty. Agents with no knowledge files are exempt. KNW-QC-007 catches the Anthropic Citations + Structured Outputs runtime incompatibility at validation time.
 
 **Critical failure modes**:
 - **ORCH-QC-001** — a specialist `spec_path` does not resolve. The orchestrator references an agent that doesn't exist.

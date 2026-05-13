@@ -242,6 +242,14 @@ This skill does NOT perform that edit — that would couple authoring of the kno
 
 **Solution**: Principle 5 (Knowledge is per-agent unless cross-cutting). When in doubt, duplicate. Promote to shared only after multiple agents have proven they consume the file *unchanged* for a meaningful period.
 
+### 7. Reference-Shape Knowledge File Consumed Under Structured Output (Anthropic)
+
+**Problem**: A `reference`-shape knowledge file is loaded into an Anthropic agent that also sets `output_config.format` (or the legacy `response_format`) for structured output. At runtime the API returns 400 — citations and structured outputs are not compatible.
+
+**Why it happens**: The reference shape's whole point is citation traceback (Principle 4). Authors then also want a structured JSON final answer from the consuming agent. Both features look orthogonal; in fact they're mutually exclusive on Anthropic because citations interleave citation blocks with text output and structured outputs require strict JSON conformance — the two modes can't share a response body.
+
+**Solution**: Pick one per agent. If citation traceback is required (reference shape with non-empty `provenance.sources[]`), the consuming agent must NOT declare structured output — it returns prose with citation blocks. If structured output is required, drop `citations.enabled` from the document and have the agent restate sources in the prose fields of the structured response (or split into two calls: one citation pass, one extraction pass). Document the choice in the consuming agent's spec so a future maintainer doesn't reintroduce the incompatibility. KNW-QC-007 enforces this at validation time. See `source_docs/anthropic_citations.md`.
+
 ---
 
 ## Examples (core)

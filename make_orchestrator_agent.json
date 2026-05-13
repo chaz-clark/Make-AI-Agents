@@ -243,7 +243,7 @@
         "required": ["carry", "format"],
         "properties": {
           "carry": { "type": "array", "items": { "type": "string", "enum": ["user_request", "prior_findings", "session_id", "knowledge_file_refs"] }, "description": "What context flows orchestrator → specialist with each delegation" },
-          "format": { "type": "string", "enum": ["tool_call_args", "inline_message", "structured_handoff_object"], "default": "tool_call_args" }
+          "format": { "type": "string", "enum": ["tool_call_args", "inline_message", "structured_handoff_object", "shared_state"], "default": "tool_call_args", "_shared_state_note": "Use 'shared_state' only when targeting Google ADK with SequentialAgent/ParallelAgent/LoopAgent topology — specialists exchange data via session.state (with output_key on the producer and {key} template substitution on the consumer) rather than via the delegate_to_* task argument. Not supported on Anthropic Agent SDK or OpenAI Agents SDK. See make_orchestrator_agent.md → ## Cross-Agent State." }
         }
       },
       "return_protocol": {
@@ -319,6 +319,7 @@
       "implementation": {
         "llm_agent": {
           "system_prompt": "{{system_prompt_from_compact_boilerplate}}",
+          "_openai_handoff_prompt_note": "If the deployment target is OpenAI Agents SDK with Handoff primitives, prepend agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX (or wrap via prompt_with_handoff_instructions) to system_prompt at runtime. Not applicable for Anthropic/Google or for OpenAI manager-as-tool (Agent.as_tool) deployments. See make_orchestrator_agent.md → ## Routing Design.",
           "tools": "{{delegate_to_tools_array}}",
           "mcp_servers": [],
           "parameters": {
@@ -340,7 +341,9 @@
       },
       "error_handling": {
         "known_failures": [
-          { "error": "Specialist unavailable", "cause": "spec_path resolved at generation time but specialist failed at runtime", "action": "Halt and surface per P-003; do not fabricate specialist output." }
+          { "error": "Specialist unavailable", "cause": "spec_path resolved at generation time but specialist failed at runtime", "action": "Halt and surface per P-003; do not fabricate specialist output." },
+          { "error": "max_turns_exceeded", "cause": "Orchestrator hit the max_turns backstop without satisfying termination_criteria — model kept delegating or kept asking sub-questions", "action": "Register a max_turns error handler (OpenAI: Runner(..., error_handlers={'max_turns': ...}); other platforms: equivalent runner hook) that returns a final_output explaining the truncation. Do not raise into the user — that surfaces as 'agent crashed' when the real signal is 'agent ran out of budget'. Log the partial state for P-009 retrospective." },
+          { "error": "specialist_refusal_or_invalid_output", "cause": "Specialist returned a refusal, malformed JSON for a structured handoff, or output that does not satisfy the orchestrator's expected_output contract", "action": "Register a model_refusal / output-validation handler that produces a typed fallback (e.g., return a structured object marking refusal_reason). Per P-003, halt the orchestrator's delegation loop and surface — do not silently substitute another specialist's output." }
         ],
         "fallbacks": []
       },

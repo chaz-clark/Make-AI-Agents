@@ -337,7 +337,7 @@
     ],
     "success_criteria": [
       "Generated knowledge file pair is shape-conformant per knowledge_shapes",
-      "KNW-QC-001 through KNW-QC-006 pass",
+      "KNW-QC-001 through KNW-QC-007 pass",
       "BD-QC-001 through BD-QC-007 pass for this skill's own behavior"
     ],
     "test_cases": [
@@ -417,6 +417,12 @@
         "check_id": "KNW-QC-006",
         "name": "consumed_by is non-empty",
         "rule": "knowledge_json.consumed_by[] has at least one entry. A knowledge file that no agent consumes is dead code. Each entry should be a path to an agent spec (.json) that references this knowledge file via cross_references.knowledge_files[] — the cross-link itself is a downstream step, but the consumer must be named here.",
+        "severity": "high"
+      },
+      {
+        "check_id": "KNW-QC-007",
+        "name": "Reference shape + Anthropic structured output incompatibility",
+        "rule": "When knowledge_json.shape == 'reference' AND any agent in consumed_by[] declares an Anthropic model AND that agent's implementation.llm_agent.parameters.response_format (or output_config.format) is non-null, fail this check. Anthropic Citations and Structured Outputs cannot be combined (the API returns 400). Resolution options: (a) drop citations from the reference document, (b) drop structured output from the consuming agent, (c) split into two calls (citation pass + extraction pass). Severity high because this surfaces only at runtime, not at validation. Source: source_docs/anthropic_citations.md (incompatibility documented in the Warning callout).",
         "severity": "high"
       }
     ]

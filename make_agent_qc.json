@@ -191,7 +191,7 @@
         {
           "rule_id": 20,
           "name": "Knowledge File Reference Compliance",
-          "condition": "If the agent's cross_references has a non-empty `knowledge_files` array, each entry must point to a file that exists, is in `knowledge/`, has its own .md+.json pair, and declares the consuming agent in its `consumed_by` field. Delegates to KNW-QC-001 through KNW-QC-006 defined in make_agent_knowledge.json → qc_checks.",
+          "condition": "If the agent's cross_references has a non-empty `knowledge_files` array, each entry must point to a file that exists, is in `knowledge/`, has its own .md+.json pair, and declares the consuming agent in its `consumed_by` field. Delegates to KNW-QC-001 through KNW-QC-007 defined in make_agent_knowledge.json → qc_checks.",
           "action": "Run KNW-QC checks against each referenced knowledge file. Critical failures (missing knowledge file, malformed shape, body < 100 bytes) fail the agent. The canonical rule definitions live in make_agent_knowledge.json — do not duplicate them here. Agents with no knowledge_files references are exempt.",
           "priority": "high",
           "weight": 0.05

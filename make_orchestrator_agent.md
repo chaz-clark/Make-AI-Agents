@@ -167,6 +167,8 @@ The `topology` object in the generated orchestrator JSON. Required fields:
 - No duplicate specialist names within a single orchestrator
 - Specialist `spec_path` must resolve at generation time (P-001)
 
+**Local vs Remote specialists**: this skill assumes specialists run **in-process** with the orchestrator (Anthropic `AgentDefinition`, OpenAI `Agent.as_tool`, Google ADK `sub_agents`). When a specialist is a **separate network service** — different team, different language, different deployment lifecycle — use Google ADK's Agent2Agent (A2A) protocol instead: expose the remote specialist via `to_a2a(root_agent)` and consume it from the orchestrator via `RemoteA2aAgent(name=..., agent_card=...{AGENT_CARD_WELL_KNOWN_PATH})`. The orchestrator spec this skill emits still applies — the specialist's `spec_path` is replaced by an `agent_card` URL — but the runner maps `delegate_to_<specialist>` to a network call rather than an in-process invocation. Do not mix the two casually: A2A adds network overhead, serialization, and an extra failure mode (specialist host unreachable) that local sub-agents do not have. See `source_docs/google_adk_a2a_intro.md` and `source_docs/google_adk_a2a_quickstart_consuming.md` for the protocol details.
+
 ---
 
 ## Routing Design
@@ -190,6 +192,8 @@ The orchestrator does NOT route via prompt heuristics. It routes via tool select
 
 **Tool description quality is critical** — see Pitfall #7 in [make_agent.md](make_agent.md). The description must answer: what the specialist does, when to use it vs. other specialists in this orchestrator, and what each parameter expects. Thin descriptions produce wrong routing.
 
+**Prompt prefix for handoff-style routing (OpenAI target)**: when the orchestrator will run on the OpenAI Agents SDK with `Handoff` primitives (rather than `Agent.as_tool()`), prepend the SDK's `agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX` (or call `prompt_with_handoff_instructions(your_prompt)`) to the orchestrator's `system_prompt`. The prefix teaches the model the handoff semantics — when to transfer, that the receiving agent will see the conversation history, that `transfer_to_<agent>` is a tool, not a method name. Without the prefix, models routinely narrate the handoff in prose ("I'll connect you to billing") instead of emitting the `transfer_to_billing` tool call. This addition is OpenAI-specific; on Anthropic and Google, the equivalent guidance lives in each specialist's `description` field and is read automatically by the runtime. See `source_docs/openai_handoffs.md` (RECOMMENDED_PROMPT_PREFIX section).
+
 **Parallel vs. sequential delegation**: When specialists are independent (e.g., researcher and graph-builder operating on the same input), set `disable_parallel_tool_use: false` so the model can fan out. When specialists depend on each other's output (writer needs researcher's findings), set `disable_parallel_tool_use: true` per Pitfall #8 in [make_agent.md](make_agent.md).
 
 ---
@@ -206,6 +210,12 @@ What the orchestrator carries vs. what each specialist sees:
 | Domain knowledge files | If listed in its `cross_references.knowledge_files` | Same — per specialist |
 
 **Default**: specialists are stateless w.r.t. each other. The orchestrator is the only place where cross-specialist state accumulates. If a specialist needs prior findings from another specialist, the orchestrator MUST pass them in the `task` argument explicitly.
+
+**Two state-transfer modes — pick one per orchestrator**:
+- **Explicit-task** (this skill's default): the orchestrator copies specialist-A's output into the `task` argument of `delegate_to_specialist_b`. Stateless, auditable, portable across all platforms. Use this unless the host platform supports the alternative.
+- **Shared-state** (Google ADK only): when running on ADK, specialists in the same `SequentialAgent` / `ParallelAgent` tree share `session.state`. An `LlmAgent` can declare `output_key="capital_city"` to auto-write its final response, and a downstream agent's `instruction` can read it via `{capital_city}` template substitution. This is faster (no copy) and survives mid-pipeline restarts (state is persisted), but it is platform-specific and obscures the data flow in the trace. When generating an ADK-targeted orchestrator using shared-state, declare it explicitly in `topology.handoff_protocol.format: "shared_state"`. Keep `tool_call_args` for explicit-task.
+
+OpenAI handoffs (`HandoffInputData.input_filter`) and Anthropic subagents (`AgentDefinition.prompt`) both require explicit-task — they do not share state. See `source_docs/google_adk_multi_agents.md`, `source_docs/openai_running_agents.md`, `source_docs/anthropic_subagents.md`.
 
 **Memory strategy**: choose `parameters.memory` per the principle "Choose a Memory/State Strategy Before Building" in [make_agent.md](make_agent.md). Orchestrators with long-running sessions typically use `platform_session`; one-shot orchestrators use `stateless`.
 
