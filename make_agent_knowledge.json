@@ -1,0 +1,456 @@
+{
+  "_metadata": {
+    "template_version": "1.0",
+    "last_updated": "2026-05-13",
+    "description": "make_agent_knowledge skill — generates knowledge file pairs (.md + .json) that agents reference at runtime via cross_references.knowledge_files[]. Three shapes: reference, identity, procedural. Authoring scaffold only — no ingestion pipeline.",
+    "instructions": "MD = the why (mission, shape decisions, runtime philosophy). JSON = the what (per-shape required sections, JSON skeleton, runtime_strategy rules, KNW-QC family). Update both files together.",
+    "companion_files": {
+      "conceptual_guide": "make_agent_knowledge.md",
+      "sibling_skills": ["make_agent.md", "make_AGENTS.md", "make_orchestrator_agent.md"],
+      "discipline_source": "knowledge/behavioral_discipline.md",
+      "discipline_rules": "knowledge/behavioral_discipline.json",
+      "exemplar": "knowledge/behavioral_discipline.{md,json} — proven identity-shape example this skill formalizes",
+      "qc_skill": "make_agent_qc.md (KNW-QC family is embedded inline below; merge into make_agent_qc.json is a downstream task)"
+    },
+    "skill_details": {
+      "skill_name": "make_agent_knowledge",
+      "version": "1.0",
+      "last_updated": "2026-05-13",
+      "description": "Generates knowledge file pairs (.md + .json) used by agents as runtime artifacts. Authoring scaffold only — emits empty-but-structured templates.",
+      "owner": "Project: Make-AI-Agents",
+      "complexity": "simple-to-standard"
+    },
+    "platform_grounding": {
+      "_description": "Source docs that ground the cross-platform runtime-loading section. See source_docs/ for cached copies.",
+      "primary": [
+        "source_docs/anthropic_files.md",
+        "source_docs/anthropic_prompt_caching.md",
+        "source_docs/anthropic_citations.md",
+        "source_docs/openai_file_search.md",
+        "source_docs/google_files.md",
+        "source_docs/google_caching.md",
+        "source_docs/xai_collections.md"
+      ],
+      "supporting": []
+    }
+  },
+
+  "agent_type": {
+    "_tier": "tier_1_core",
+    "type": "workflow",
+    "description": "Workflow-based skill: pick shape → gather inputs → propose MD+JSON drafts → wait for confirmation → write both files into knowledge/. Cross-link to consuming agent's cross_references.knowledge_files[] is a downstream step (not performed by this skill)."
+  },
+
+  "behavioral_discipline": {
+    "_tier": "tier_1_core",
+    "_required": true,
+    "_description": "make_agent_knowledge itself operates under the behavioral discipline. Source: knowledge/behavioral_discipline.md/.json. Note: the GENERATED knowledge file does NOT carry a behavioral_discipline block — knowledge files are not agents; they are read by agents that carry the discipline.",
+    "interaction_pattern": "single_write_workflow",
+    "applicable_principles": ["P-001", "P-002", "P-003", "P-004", "P-006", "P-007", "P-008", "P-009", "P-010"],
+    "_skipped_principles_rationale": {
+      "P-005": "Single-step workflow (one knowledge file pair per invocation). Decomposition does not apply."
+    },
+    "override_decisions": []
+  },
+
+  "io_contract": {
+    "_tier": "tier_1_core",
+    "inputs": [
+      {
+        "name": "shape",
+        "type": "string",
+        "format": "One of: reference | identity | procedural",
+        "example": "identity",
+        "enum": ["reference", "identity", "procedural"],
+        "required": true
+      },
+      {
+        "name": "knowledge_name",
+        "type": "string",
+        "format": "snake_case identifier; becomes the basename of the generated file pair",
+        "example": "loan_underwriting_glossary",
+        "required": true
+      },
+      {
+        "name": "scope",
+        "type": "string",
+        "format": "One-line description of what this knowledge covers and bounds (≥ 20 chars).",
+        "example": "Lender-specific definitions of risk and underwriting terms used by loan_classifier_agent",
+        "required": true
+      },
+      {
+        "name": "consumed_by",
+        "type": "array",
+        "format": "Array of agent spec paths (.json) that will reference this knowledge file. Minimum 1 entry — orphan knowledge files (consumed_by=[]) are rejected by KNW-QC-006.",
+        "example": ["loan_classifier_agent.json"],
+        "required": true
+      },
+      {
+        "name": "owner",
+        "type": "string",
+        "format": "Optional. Person or team that owns the content of the knowledge file.",
+        "example": "Risk team",
+        "required": false
+      },
+      {
+        "name": "provenance_sources",
+        "type": "array",
+        "format": "Optional. List of source identifiers (policy version, runbook ID, doc URL). REQUIRED at validation time when shape=reference (KNW-QC-005).",
+        "example": ["Lender Risk Policy v4.2 (2026-Q1)"],
+        "required": false
+      }
+    ],
+    "outputs": [
+      {
+        "name": "knowledge_md",
+        "type": "file",
+        "format": "Generated knowledge/<knowledge_name>.md",
+        "example": "knowledge/loan_underwriting_glossary.md",
+        "conditions": "Created if absent. If a file at the target path exists, the skill proposes a diff and waits for confirmation (P-002). Never silently overwrites."
+      },
+      {
+        "name": "knowledge_json",
+        "type": "file",
+        "format": "Generated knowledge/<knowledge_name>.json companion. Carries the shape, structured arrays, provenance, _metadata.runtime_strategy, and consumed_by.",
+        "example": "knowledge/loan_underwriting_glossary.json",
+        "conditions": "Same overwrite rules as knowledge_md."
+      }
+    ],
+    "side_effects": "Creates two files in knowledge/ after user confirmation. Does NOT modify the consuming agent's spec — the cross_references.knowledge_files[] update is a downstream step. Does NOT ingest, fetch, or auto-populate body content from external systems.",
+    "non_interactive_mode": false,
+    "alert_channel": ""
+  },
+
+  "knowledge_shapes": {
+    "_tier": "tier_1_core",
+    "_description": "Per-shape required MD sections (in addition to knowledge_md_required_sections) and required JSON fields. KNW-QC-002 and KNW-QC-003 validate against these.",
+    "reference": {
+      "purpose": "Lookup file — glossary, API reference, policy table, term-to-definition map.",
+      "use_when": "Content is a set of discrete, indexable items the agent looks up by key. Order of items does not change meaning.",
+      "md_extra_sections": [
+        { "id": "terms_or_entries", "heading": "## Terms (or ## Entries / ## API Reference)", "description": "Either a Term | Definition table or one section per entry. Author fills in." }
+      ],
+      "json_required_fields": ["facts"],
+      "json_field_shapes": {
+        "facts": {
+          "type": "array",
+          "item_shape": { "id": "snake_case", "term": "string", "definition": "string", "citations": "array (optional)" },
+          "minItems": 0
+        }
+      },
+      "provenance_requirement": "REQUIRED — KNW-QC-005 fails if provenance.sources[] is empty."
+    },
+    "identity": {
+      "purpose": "Principles / values / charter file. Describes WHO the agent is and how it behaves at the system level.",
+      "use_when": "Content is a small set (5-15) of named principles, each with description, rationale, trigger, trust marker. Order matters.",
+      "md_extra_sections": [
+        { "id": "principles_body", "heading": "## The Principles (or ## Charter)", "description": "One subsection per principle. Author fills in." }
+      ],
+      "json_required_fields": ["principles"],
+      "json_field_shapes": {
+        "principles": {
+          "type": "array",
+          "item_shape": { "id": "snake_case_or_dashed", "name": "string", "compact_statement": "string", "trigger": "string", "trust_marker": "string", "override": "object (optional)" },
+          "minItems": 0
+        }
+      },
+      "provenance_requirement": "Optional — the agent IS the source for identity content.",
+      "exemplar": "knowledge/behavioral_discipline.{md,json} is the proven production example of this shape."
+    },
+    "procedural": {
+      "purpose": "Playbook file. Describes WHAT the agent does in scenario X — trigger-keyed step-by-step procedures.",
+      "use_when": "Content is a set of named playbooks (typically 3-12), each with trigger, prerequisites, steps, success condition. Step order within a playbook matters; playbook order does not.",
+      "md_extra_sections": [
+        { "id": "playbooks_body", "heading": "## Playbooks", "description": "One subsection per playbook. Author fills in." }
+      ],
+      "json_required_fields": ["playbooks"],
+      "json_field_shapes": {
+        "playbooks": {
+          "type": "array",
+          "item_shape": { "id": "snake_case", "name": "string", "trigger": "string", "prerequisites": "array", "steps": "array", "success_condition": "string" },
+          "minItems": 0
+        }
+      },
+      "provenance_requirement": "Recommended when the playbook references external policy; not required."
+    }
+  },
+
+  "knowledge_md_required_sections": {
+    "_tier": "tier_1_core",
+    "_description": "Sections that EVERY generated knowledge MD must contain regardless of shape, in this order. Shape-specific extensions are appended (see knowledge_shapes.<shape>.md_extra_sections).",
+    "sections": [
+      {
+        "id": "title",
+        "heading": "# <Knowledge Name>",
+        "description": "H1 with knowledge file name + one-line description tagging the shape (e.g., '> Reference. ...').",
+        "required": true
+      },
+      {
+        "id": "scope",
+        "heading": "**Scope**:",
+        "description": "Inline bolded scope statement near the top — what this knowledge covers and what it bounds out. Must mirror the JSON scope field.",
+        "required": true
+      },
+      {
+        "id": "body",
+        "heading": "(shape-specific)",
+        "description": "The shape's body section — terms/entries (reference), principles (identity), or playbooks (procedural). Skill generates the heading; body is filled by the author.",
+        "required": true,
+        "min_body_size_bytes": 100,
+        "_note": "KNW-QC-001 enforces non-empty body — a file with less than 100 bytes of body content past the headers is rejected (placeholder-only files are dead code)."
+      },
+      {
+        "id": "provenance",
+        "heading": "**Provenance**:",
+        "description": "Inline bolded provenance pointer naming the source(s). Required text for reference shape; recommended for procedural; optional for identity.",
+        "required": true
+      },
+      {
+        "id": "last_updated",
+        "heading": "_Last updated: YYYY-MM-DD_",
+        "description": "Date stamp signaling freshness.",
+        "required": true
+      }
+    ]
+  },
+
+  "knowledge_md_optional_sections": {
+    "_tier": "tier_2_recommended",
+    "_description": "Sections to include only when criteria apply. None are required by KNW-QC; the skill emits them when authoring conditions match.",
+    "sections": [
+      {
+        "id": "audience",
+        "heading": "## Audience",
+        "include_when": "The knowledge file is read by multiple distinct agents with different consumption patterns. Naming the audience disambiguates what each consumer should extract.",
+        "format": "Per-consumer bullet list"
+      },
+      {
+        "id": "out_of_scope",
+        "heading": "## Out of Scope",
+        "include_when": "Adjacent topics that authors might mistakenly add. Naming them explicitly prevents scope creep.",
+        "format": "Bullet list"
+      },
+      {
+        "id": "related_knowledge",
+        "heading": "## Related Knowledge",
+        "include_when": "Other knowledge files in knowledge/ that overlap or pair with this one. Avoids duplication and signals where to look for adjacent content.",
+        "format": "Per-file bullet list with one-line description"
+      }
+    ]
+  },
+
+  "knowledge_json_skeleton": {
+    "_tier": "tier_1_core",
+    "_description": "The top-level structure the skill writes to knowledge/<knowledge_name>.json. Shape-specific arrays (facts/principles/playbooks) are populated per knowledge_shapes.<shape>.json_required_fields. Placeholders use {{double_braces}}.",
+    "skeleton": {
+      "_metadata": {
+        "template_version": "1.0",
+        "generated_by": "make_agent_knowledge v1.0",
+        "last_updated": "{{iso_date}}",
+        "description": "{{scope}}",
+        "owner": "{{owner_or_blank}}",
+        "runtime_strategy": "{{embed_or_read_at_runtime_or_either — see runtime_strategy_rules}}",
+        "runtime_strategy_rationale": "{{auto_per_token_count_or_authored}}"
+      },
+      "shape": "{{reference|identity|procedural}}",
+      "scope": "{{scope}}",
+      "consumed_by": "{{array_of_agent_spec_paths}}",
+      "facts": "{{ONLY when shape=reference — array per knowledge_shapes.reference.json_field_shapes.facts}}",
+      "principles": "{{ONLY when shape=identity — array per knowledge_shapes.identity.json_field_shapes.principles}}",
+      "playbooks": "{{ONLY when shape=procedural — array per knowledge_shapes.procedural.json_field_shapes.playbooks}}",
+      "provenance": {
+        "sources": "{{array of source identifiers — non-empty when shape=reference}}",
+        "last_reviewed": "{{iso_date_or_blank}}"
+      },
+      "validation": {
+        "pre_run_checklist": [
+          "knowledge/ folder exists",
+          "Each entry in consumed_by[] resolves to an existing agent spec OR is being generated in the same session"
+        ],
+        "post_run_checklist": [
+          "knowledge/<knowledge_name>.md exists with all knowledge_md_required_sections present in order",
+          "knowledge/<knowledge_name>.json exists with shape set and the shape-specific required array present",
+          "_metadata.runtime_strategy is set",
+          "consumed_by[] is non-empty",
+          "If shape=reference, provenance.sources[] is non-empty"
+        ],
+        "test_cases": []
+      },
+      "changelog": {
+        "versions": [
+          { "version": "1.0", "date": "{{iso_date}}", "changes": ["Initial knowledge file generated by make_agent_knowledge v1.0 (scaffold; body filled by author)."] }
+        ]
+      }
+    }
+  },
+
+  "compact_boilerplate": {
+    "_tier": "tier_1_core",
+    "_description": "Body skeletons per shape substituted into the generated knowledge MD. Each skeleton produces an empty-but-structured file — author fills the body in a follow-up edit. The runtime_strategy declaration is added to the JSON _metadata, not the MD.",
+    "reference_md_template": "# {{knowledge_name_title}}\n\n> Reference. {{one_line_scope}}\n\n**Scope**: {{scope}}\n\n**Provenance**: {{provenance_summary}} (see `provenance.sources` in the JSON).\n\n_Last updated: {{iso_date}}_\n\n## Terms\n\n<!-- Fill in: Term | Definition table, or one subsection per term. Each term should map to one entry in `facts[]` in the JSON companion. -->\n",
+    "identity_md_template": "# {{knowledge_name_title}}\n\n> Identity. {{one_line_scope}}\n\n**Scope**: {{scope}}\n\n**Provenance**: {{provenance_summary_or_self}}.\n\n_Last updated: {{iso_date}}_\n\n## The Principles\n\n<!-- Fill in: one subsection per principle. Each subsection should map to one entry in `principles[]` in the JSON companion. The exemplar to mirror is `knowledge/behavioral_discipline.md`. -->\n",
+    "procedural_md_template": "# {{knowledge_name_title}}\n\n> Procedural. {{one_line_scope}}\n\n**Scope**: {{scope}}\n\n**Provenance**: {{provenance_summary_or_blank}}.\n\n_Last updated: {{iso_date}}_\n\n## Playbooks\n\n<!-- Fill in: one subsection per playbook. Each subsection should map to one entry in `playbooks[]` in the JSON companion with trigger, prerequisites, steps, and success_condition. -->\n",
+    "runtime_strategy_declaration_template": "Set _metadata.runtime_strategy per runtime_strategy_rules below based on estimated token count of the filled-in body. Default for a freshly generated empty scaffold: 'embed' (will revisit when body is filled)."
+  },
+
+  "runtime_strategy_rules": {
+    "_tier": "tier_1_core",
+    "_description": "Declarative thresholds for choosing _metadata.runtime_strategy. Token counts are estimated against the filled body, not the empty scaffold. The runner uses runtime_strategy to pick the host-platform primitive (see Cross-Platform Runtime Loading section in make_agent_knowledge.md).",
+    "rules": [
+      {
+        "condition": "token_count < 2000",
+        "runtime_strategy": "embed",
+        "rationale": "Below 2000 tokens, retrieval round-trip overhead exceeds the cost of inlining. Embed in the system message (or first user turn) and let prompt caching cover the repeated cost."
+      },
+      {
+        "condition": "2000 <= token_count <= 8000",
+        "runtime_strategy": "either",
+        "default": "embed",
+        "rationale": "In the middle band, embed is preferred when the content is a stable cache-friendly prefix (set cache_control on Anthropic, rely on implicit caching on OpenAI/Google). Switch to read_at_runtime if the content changes frequently or if the runner needs first-class citation blocks (Anthropic Citations requires the document to be a content block; OpenAI file_search and xAI collections_search emit citations only via retrieval)."
+      },
+      {
+        "condition": "token_count > 8000",
+        "runtime_strategy": "read_at_runtime",
+        "rationale": "Past 8000 tokens, inlining burns too much context per call. Use the host platform's retrieval primitive: Anthropic Files API (file_id in document/image blocks, anthropic-beta: files-api-2025-04-14), OpenAI Responses API file_search over a vector store, Google Files API (files.upload, 48h retention) optionally combined with cachedContent, xAI collections_search."
+      }
+    ],
+    "override_policy": "Authors can override the auto-selected strategy by setting _metadata.runtime_strategy explicitly and adding a non-empty _metadata.runtime_strategy_rationale. KNW-QC-004 still enforces consistency between declared strategy and body size; a manual override must explain the deviation."
+  },
+
+  "validation": {
+    "_tier": "tier_1_core",
+    "pre_run_checklist": [
+      "knowledge/ folder exists at project root",
+      "shape input is one of reference | identity | procedural",
+      "knowledge_name is snake_case and has no existing .md or .json at knowledge/<knowledge_name>.{md,json} (or user has confirmed overwrite per P-002)",
+      "scope is non-empty and at least 20 characters",
+      "consumed_by[] has at least one entry",
+      "If shape=reference, provenance_sources is provided and non-empty"
+    ],
+    "post_run_checklist": [
+      "knowledge/<knowledge_name>.md exists with all knowledge_md_required_sections in order (title, scope, body, provenance, last_updated)",
+      "knowledge/<knowledge_name>.json exists with shape field set and the shape-specific required array key present (facts/principles/playbooks)",
+      "_metadata.runtime_strategy is set to one of embed | read_at_runtime | either, consistent with body size per runtime_strategy_rules",
+      "consumed_by[] is non-empty",
+      "If shape=reference, provenance.sources[] is non-empty",
+      "MD body has at least 100 bytes of content past the section headers (placeholder-only files rejected)"
+    ],
+    "success_criteria": [
+      "Generated knowledge file pair is shape-conformant per knowledge_shapes",
+      "KNW-QC-001 through KNW-QC-006 pass",
+      "BD-QC-001 through BD-QC-007 pass for this skill's own behavior"
+    ],
+    "test_cases": [
+      {
+        "name": "Generate a reference-shape glossary",
+        "input": "shape=reference; knowledge_name=loan_underwriting_glossary; scope='Lender-specific underwriting term definitions'; consumed_by=['loan_classifier_agent.json']; provenance_sources=['Lender Risk Policy v4.2']",
+        "expected_output": "knowledge/loan_underwriting_glossary.md + .json created. JSON has shape=reference, facts=[], provenance.sources=['Lender Risk Policy v4.2'], _metadata.runtime_strategy set per runtime_strategy_rules. MD has title, scope, ## Terms heading, provenance, last_updated.",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Generate an identity-shape charter",
+        "input": "shape=identity; knowledge_name=loan_classifier_principles; scope='Working-style principles specific to loan_classifier_agent'; consumed_by=['loan_classifier_agent.json']",
+        "expected_output": "knowledge/loan_classifier_principles.md + .json created. JSON has shape=identity, principles=[], provenance.sources=[] permitted. MD has title, scope, ## The Principles heading, provenance (or self-source), last_updated.",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Generate a procedural-shape playbook set",
+        "input": "shape=procedural; knowledge_name=incident_response_playbooks; scope='Incident-response playbooks for on_call_agent'; consumed_by=['on_call_agent.json']",
+        "expected_output": "knowledge/incident_response_playbooks.md + .json created. JSON has shape=procedural, playbooks=[]. MD has title, scope, ## Playbooks heading, provenance, last_updated.",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Reject invalid shape value",
+        "input": "shape=glossary (not one of reference|identity|procedural)",
+        "expected_output": "Pre-run checklist fails on shape validation. P-001 — skill does not silently coerce. No files written.",
+        "validation_method": "behavioral"
+      },
+      {
+        "name": "Reject knowledge file with empty body",
+        "input": "shape=identity; knowledge_name=empty_test; ... and the author submits a draft with body < 100 bytes",
+        "expected_output": "KNW-QC-001 fails — body content is below the 100-byte minimum. Skill explains: placeholder-only knowledge files are dead code. No files written.",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Reject silent overwrite of existing knowledge file",
+        "input": "knowledge_name=existing_name (with knowledge/existing_name.md already present)",
+        "expected_output": "Per P-002, skill proposes diff against existing file, waits for confirmation. Does NOT silently overwrite.",
+        "validation_method": "behavioral"
+      }
+    ]
+  },
+
+  "qc_checks": {
+    "_description": "Knowledge-file-specific QC checks. These are designed to merge into make_agent_qc.json as the KNW-QC family in a downstream task; they are NOT merged by this skill. Listed inline here for skill-internal reference and for the downstream merge.",
+    "checks": [
+      {
+        "check_id": "KNW-QC-001",
+        "name": "All required sections present in the generated MD",
+        "rule": "Generated knowledge MD contains all five sections from knowledge_md_required_sections in order: title, scope, body, provenance, last_updated. Plus the shape-specific extension section from knowledge_shapes.<shape>.md_extra_sections. The body must have at least 100 bytes of content past the section headers — placeholder-only files are rejected.",
+        "severity": "critical"
+      },
+      {
+        "check_id": "KNW-QC-002",
+        "name": "shape field is a valid value",
+        "rule": "knowledge_json.shape is exactly one of 'reference', 'identity', or 'procedural'. No other values, no nulls. Invalid shapes break consumer parsing.",
+        "severity": "critical"
+      },
+      {
+        "check_id": "KNW-QC-003",
+        "name": "Shape-specific required fields are populated",
+        "rule": "The shape-specific required JSON array key is present and the correct type: facts[] for shape=reference, principles[] for shape=identity, playbooks[] for shape=procedural. The array may be empty (placeholder), but the key MUST exist. Wrong-shape arrays (e.g., principles[] present when shape=reference) fail this check.",
+        "severity": "critical"
+      },
+      {
+        "check_id": "KNW-QC-004",
+        "name": "runtime_strategy is set and consistent with body size",
+        "rule": "_metadata.runtime_strategy is one of 'embed' | 'read_at_runtime' | 'either'. The selected value is consistent with body token count per runtime_strategy_rules (< 2000 → embed, 2000-8000 → either, > 8000 → read_at_runtime), OR _metadata.runtime_strategy_rationale is non-empty and explains a deliberate override.",
+        "severity": "high"
+      },
+      {
+        "check_id": "KNW-QC-005",
+        "name": "provenance.sources is non-empty when shape=reference",
+        "rule": "When knowledge_json.shape == 'reference', provenance.sources[] MUST be non-empty. A reference file without sources cannot support citation traceback. Identity and procedural shapes are exempt (identity is self-sourcing; procedural may or may not reference external policy).",
+        "severity": "high"
+      },
+      {
+        "check_id": "KNW-QC-006",
+        "name": "consumed_by is non-empty",
+        "rule": "knowledge_json.consumed_by[] has at least one entry. A knowledge file that no agent consumes is dead code. Each entry should be a path to an agent spec (.json) that references this knowledge file via cross_references.knowledge_files[] — the cross-link itself is a downstream step, but the consumer must be named here.",
+        "severity": "high"
+      }
+    ]
+  },
+
+  "resolved_decisions": {
+    "_tier": "tier_3_optional",
+    "_description": "Decisions resolved during the 2026-05-13 drafting cycle. Captured here so future readers know why these defaults are in place.",
+    "items": [
+      "KNW-QC placement: rule_id 20 in make_agent_qc.json delegates to KNW-QC-001..006 here (same pattern as rule 17 delegating to BD-QC and rule 19 delegating to ORCH-QC). Single source of truth, not duplicated. Resolved 2026-05-13.",
+      "consumed_by[] validation: forward references are accepted at generation time. Rationale: a session may generate the knowledge file before the agent that will consume it, and tight validation would force unnatural ordering. KNW-QC-006 still fails on a file with NO consumers (knowledge with no consumer is dead code). Resolved 2026-05-13.",
+      "Token count estimation: rough chars/4 heuristic is the default for runtime_strategy_rules thresholds. Platforms differ in tokenization (BPE variants), so any threshold is approximate. A platform-specific tokenizer can be wired in at QC time per host if precision matters. Resolved 2026-05-13."
+    ]
+  },
+
+  "changelog": {
+    "_tier": "tier_3_optional",
+    "versions": [
+      {
+        "version": "1.0",
+        "date": "2026-05-13",
+        "changes": [
+          "Initial make_agent_knowledge skill — sibling to make_agent, make_AGENTS, and make_orchestrator_agent.",
+          "Three shapes supported: reference, identity, procedural — each with its own MD spine extension and required JSON array (facts/principles/playbooks).",
+          "Authoring scaffold only — emits empty-but-structured templates; no ingestion pipeline (per scoping decision 2026-05-12).",
+          "Always emits MD + JSON pair (per scoping decision 2026-05-12).",
+          "_metadata.runtime_strategy declared in the JSON per runtime_strategy_rules thresholds (< 2000 → embed / 2000-8000 → either / > 8000 → read_at_runtime).",
+          "6 knowledge-file QC checks (KNW-QC-001 through KNW-QC-006) embedded inline for downstream merge into make_agent_qc.json.",
+          "Cross-platform runtime loading documented for Anthropic (Files API + cache_control + Citations), OpenAI (Responses API file_search + vector stores), Google (Files API + cachedContent), xAI (collections_search). Grounded in source_docs/ refreshed 2026-05-12/13.",
+          "Frames identity-shape as the existing pattern this skill formalizes — exemplar is knowledge/behavioral_discipline.{md,json}."
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      }
+    ]
+  }
+}

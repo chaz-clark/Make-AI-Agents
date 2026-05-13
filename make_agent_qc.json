@@ -179,6 +179,22 @@
           "action": "Flag missing alert_channel on a non-interactive agent as a critical failure. Without it, P-003 (Stop on Defect) has nowhere to surface to. The agent is unsafe to deploy unattended. Interactive-mode agents are exempt.",
           "priority": "critical",
           "weight": 0.05
+        },
+        {
+          "rule_id": 19,
+          "name": "Orchestrator Topology Compliance",
+          "condition": "If the agent has `agent_type.type: 'multi_agent'`, it is treated as an orchestrator and the ORCH-QC family applies. Delegates to ORCH-QC-001 through ORCH-QC-005 defined in make_orchestrator_agent.json → qc_checks: (1) all topology.specialists[].spec_path files exist and are readable; (2) topology.specialists has ≥ 2 entries; (3) implementation.llm_agent.tools contains exactly one delegate_to_<specialist_name> entry per specialist, no extras, no duplicates; (4) topology.termination_criteria is non-empty (≥ 20 chars) and its text appears verbatim in the system_prompt AND max_turns backstop is set; (5) no specialist's underlying tools are exposed directly in the orchestrator's tools array — only delegate_to_* wrappers (plus any orchestrator-native tools that no specialist owns).",
+          "action": "Run ORCH-QC-001 through ORCH-QC-005. Critical failures (ORCH-QC-001 missing specialist, ORCH-QC-002 < 2 specialists, ORCH-QC-003 tool/specialist mismatch) fail the orchestrator regardless of other scores. The canonical rule definitions live in make_orchestrator_agent.json — do not duplicate them here. Non-orchestrator agents (agent_type.type != 'multi_agent') are exempt.",
+          "priority": "critical",
+          "weight": 0.05
+        },
+        {
+          "rule_id": 20,
+          "name": "Knowledge File Reference Compliance",
+          "condition": "If the agent's cross_references has a non-empty `knowledge_files` array, each entry must point to a file that exists, is in `knowledge/`, has its own .md+.json pair, and declares the consuming agent in its `consumed_by` field. Delegates to KNW-QC-001 through KNW-QC-006 defined in make_agent_knowledge.json → qc_checks.",
+          "action": "Run KNW-QC checks against each referenced knowledge file. Critical failures (missing knowledge file, malformed shape, body < 100 bytes) fail the agent. The canonical rule definitions live in make_agent_knowledge.json — do not duplicate them here. Agents with no knowledge_files references are exempt.",
+          "priority": "high",
+          "weight": 0.05
         }
       ],
       "evaluation_order": "priority",

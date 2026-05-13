@@ -134,6 +134,22 @@ For detailed validation rules and scoring criteria, see `make_agent_qc.json`.
 - **BD-QC-006** — any of P-001, P-003, P-007, P-010 missing from `applicable_principles`. Fails the agent regardless of other scores.
 - **BD-QC-007** — `non_interactive_mode: true` without `alert_channel`. The agent has no way to surface stop-on-defect to a human; unsafe to deploy unattended.
 
+### 10. Orchestrator and Knowledge-File Compliance
+
+**Description**: Multi-agent orchestrators (`agent_type.type: 'multi_agent'`) and any agent that references knowledge files (`cross_references.knowledge_files[]` non-empty) are subject to dedicated QC rule families layered on top of the standard 18 rules.
+
+**Why**: Orchestrators add new failure modes that don't exist in single-agent specs — specialist references can dangle, delegate tools can drift from the specialist roster, termination can be undefined, and specialist tools can leak into the orchestrator's surface. Knowledge file references add their own failure modes: dead links, malformed shapes, knowledge-without-consumers. Both families' canonical rule definitions live in the originating skill's JSON (not duplicated here), and `make_agent_qc` delegates by ID for the same reason it delegates BD-QC to the discipline JSON: a single source of truth.
+
+**How**:
+- **Rule 19 (Orchestrator Topology Compliance)** delegates to ORCH-QC-001 through ORCH-QC-005 in `make_orchestrator_agent.json` → `qc_checks`. Applies only when `agent_type.type: 'multi_agent'`. Non-orchestrators are exempt.
+- **Rule 20 (Knowledge File Reference Compliance)** delegates to KNW-QC-001 through KNW-QC-006 in `make_agent_knowledge.json` → `qc_checks`. Applies only when `cross_references.knowledge_files[]` is non-empty. Agents with no knowledge files are exempt.
+
+**Critical failure modes**:
+- **ORCH-QC-001** — a specialist `spec_path` does not resolve. The orchestrator references an agent that doesn't exist.
+- **ORCH-QC-002** — fewer than 2 specialists. A single-specialist orchestrator is a layer of indirection with no routing decision.
+- **ORCH-QC-003** — `delegate_to_*` tools drift from the specialist roster (extras, duplicates, or missing). The routing surface no longer matches the declared topology.
+- **KNW-QC-001** — a referenced knowledge file does not exist or is malformed. Same class of failure as ORCH-QC-001 — a dangling reference.
+
 ---
 
 ## How to Use This Agent (core)
@@ -454,7 +470,7 @@ The validation section includes:
 
 ### Quality Dimensions Explained
 
-**15 Quality Dimensions** (see JSON for scoring rubrics):
+**17 Quality Dimensions** (see JSON for scoring rubrics):
 
 1. **Completeness**: All tier_1_core sections present and filled
 2. **Specificity**: Content is agent-specific, not generic templates — includes optional sections when present
@@ -471,6 +487,8 @@ The validation section includes:
 13. **Autonomy Guidance**: Workflow agents (those with multi-step loops or API writes) document propose-vs-execute behavior in system prompt or constraints
 14. **I/O Contract Consistency**: Declared input type (string/file/folder) matches the system-prompt boilerplate; folder mode declares a file_filter; no hardcoded paths in the spec
 15. **Behavioral Discipline Integration**: Agent embeds the discipline correctly per BD-QC-001 through BD-QC-007 in `knowledge/behavioral_discipline.json`. Critical: P-001/P-003/P-007/P-010 always present; non-interactive agents declare an alert_channel.
+16. **Orchestrator Topology Compliance** (conditional): For `agent_type.type: 'multi_agent'`, all topology rules pass per ORCH-QC-001 through ORCH-QC-005 in `make_orchestrator_agent.json`. Critical: specialist spec_paths resolve; ≥ 2 specialists; delegate_to_* tools match roster; termination criteria present; no specialist tools leaked.
+17. **Knowledge File Reference Compliance** (conditional): For agents with non-empty `cross_references.knowledge_files[]`, all references resolve and the referenced knowledge files pass KNW-QC-001 through KNW-QC-006 in `make_agent_knowledge.json`.
 
 ### Automated Testing
 ```bash
