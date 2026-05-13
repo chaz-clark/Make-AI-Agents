@@ -319,9 +319,9 @@
       "canvas_toolbox_form": {
         "scope_marker": "Source: <link>  (at top, H2-level or line-3 plain-text)",
         "provenance_marker": "(equivalent to `Source:` — also maps to JSON `provenance.sources`)",
-        "consumer_marker": "Used by: <agent_name>, <agent_name>  (at top, H2-level)",
+        "consumer_marker": "Used by: <agent_name>, <agent_name>  (at top, H2-level). ALSO accepts `Applied to:` as an alias (e.g., toyota_gap_analysis_knowledge.md uses `Applied to: Canvas course design audits by canvas_course_expert.md.`). Both `Used by:` and `Applied to:` map to JSON `consumed_by[]`.",
         "companions_marker": "Companions: <bulleted list>  (at top, H2-level cross-references to sibling knowledge files)",
-        "rationale": "Surface consumer/source info to the human reader of the MD, not just to the parser of the JSON. Originated in canvas-toolbox (lib/agents/knowledge/) and adopted as an accepted variant 2026-05-13."
+        "rationale": "Surface consumer/source info to the human reader of the MD, not just to the parser of the JSON. Originated in canvas-toolbox (lib/agents/knowledge/) and adopted as an accepted variant 2026-05-13. The `Applied to:` alias added 2026-05-13 after third-pass GG surfaced it during the 10-file retrofit."
       },
       "retrofit_guidance": "When retrofitting a legacy MD that already uses the canvas-toolbox form, KEEP that form. Don't rewrite to canonical-skill form for cosmetic reasons (P-007 Pull Don't Push). The JSON companion populates `consumed_by[]` and `provenance.sources[]` from whichever form is present."
     }
