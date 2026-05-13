@@ -101,10 +101,11 @@ _Last updated: 2026-05-13_
   - `itm327-master` (local) — CLAUDE.md (11.7 KB) → AGENTS.md migration; gh_issues_agent/ clone present; local only
   - `m119-master` (local) — CLAUDE.md (2.7 KB, sparse) → AGENTS.md migration; canvas_toolbox/ clone present; local only
 
-  **Next-sprint scope (3 targets — optional creates, no existing context to preserve):**
+  **Next-sprint scope (4 targets — optional creates, no existing context to preserve):**
   - `agentj` (GitHub) — no AGENTS.md, no CLAUDE.md; AI agent runtime, peer repo mentioned in handoff/canvas-toolbox docs as a subtree consumer
   - `m119-site` (GitHub) — no AGENTS.md, no CLAUDE.md; BYU-Idaho course site, recent activity
   - `DS250-Course-Polars` (GitHub) — no AGENTS.md, no CLAUDE.md; DS250 course; agents likely work on it without project context today
+  - `gh-issues-agent` (GitHub) — no AGENTS.md, no CLAUDE.md, BUT already carries a `knowledge/` folder with 6 topic files (agile_sprint, canvas_api_gotchas, gh_issues_agent_mission, github_issues_reference, semantic_versioning, sprint_qc). Adding AGENTS.md would (a) give agents working on the tool itself project context, (b) make it a model "agent skill" repo with the discipline embedded, and (c) document it as a consumable-by-other-repos skill for cross-clone reuse. Should also package behavioral_discipline.{md,json} into its existing knowledge/ folder per AGENTS-QC-006 condition (a). Sprint-1 step-2 audit added it post-hoc after the maintainer flagged the omission 2026-05-13.
 
   **Skipped (out of scope):**
   - `Make-AI-Agents` — source of truth, passes AGENTS-QC-006 by construction
