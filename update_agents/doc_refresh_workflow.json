@@ -1,0 +1,247 @@
+{
+  "_metadata": {
+    "template_version": "1.0",
+    "generated_by": "make_orchestrator_agent v1.0 (dogfood pass 2026-05-13)",
+    "last_updated": "2026-05-13",
+    "description": "Orchestrator coordinating doc_refresh_agent + merge_agent + doc_analysis_agent for the refresh → promote → analyze cycle over source_docs/.",
+    "owner": "Project: Make-AI-Agents"
+  },
+
+  "agent_type": {
+    "type": "multi_agent",
+    "description": "Orchestrator that delegates to 3 specialists via delegate_to_<name> tools. Specialists: doc_refresh_agent, merge_agent, doc_analysis_agent."
+  },
+
+  "behavioral_discipline": {
+    "_description": "Cross-cutting behavioral discipline. Source: knowledge/behavioral_discipline.md/.json. interaction_pattern derived via the standard decision flow — multi_step_batch (multi-resource workflow with writes spanning multiple delegations).",
+    "interaction_pattern": "multi_step_batch",
+    "applicable_principles": ["P-001", "P-002", "P-003", "P-004", "P-005", "P-006", "P-007", "P-008", "P-009", "P-010"],
+    "override_decisions": []
+  },
+
+  "io_contract": {
+    "inputs": [
+      {
+        "name": "user_request",
+        "type": "string",
+        "format": "Conversational user request: refresh and/or analyze instruction, optionally with a platform/short_name filter.",
+        "example": "Refresh all stale docs and tell me what's new worth incorporating into the templates.",
+        "required": true,
+        "file_filter": ""
+      }
+    ],
+    "outputs": [
+      {
+        "name": "synthesized_response",
+        "type": "string",
+        "format": "Free-text synthesis combining: refresh summary (sources refreshed / dropbox-staged / failed), merge summary (files promoted / halted on suspect-overwrite), and proposal list (if analysis phase ran).",
+        "example": "Refreshed 4 sources, promoted 2 from dropbox (1 halted on suspect-overwrite), 7 proposals follow..."
+      }
+    ],
+    "side_effects": "Indirect via specialists: doc_refresh_agent writes source_docs/ + source_docs/dropbox/ + _refresh_log.json; merge_agent writes source_docs/ + _refresh_log.json and deletes dropbox files; doc_analysis_agent reads source_docs/ + writes proposals (and applies approved proposals to template files only after explicit per-proposal approval). The orchestrator itself does no direct filesystem writes.",
+    "non_interactive_mode": false,
+    "alert_channel": ""
+  },
+
+  "topology": {
+    "specialists": [
+      {
+        "name": "doc_refresh_agent",
+        "spec_path": "update_agents/doc_refresh_agent.json",
+        "purpose": "Detect stale sources by last_fetched + staleness_threshold_days, fetch the URLs, write into source_docs/ (clean fetches) or source_docs/dropbox/ (manual cases). Returns refresh summary including which short_names were staged in dropbox.",
+        "input_contract": { "task": "string" },
+        "expected_output": "Refresh summary with: refreshed_short_names[], dropbox_staged_short_names[], failed_short_names[], notes_per_source{}"
+      },
+      {
+        "name": "merge_agent",
+        "spec_path": "update_agents/merge_agent.json",
+        "purpose": "Promote ONE staged file from source_docs/dropbox/ into source_docs/<short_name>.md with front-matter preservation, _refresh_log.json update, and dropbox cleanup. Single_write_workflow: call once per dropbox file.",
+        "input_contract": { "task": "string" },
+        "expected_output": "A3 change report per merge: current/target/countermeasure/verification. Halted state surfaced explicitly if suspect-overwrite fires."
+      },
+      {
+        "name": "doc_analysis_agent",
+        "spec_path": "update_agents/doc_analysis_agent.json",
+        "purpose": "Diff current source_docs/ against project templates (make_agent.*, make_orchestrator_agent.*, make_agent_knowledge.*, etc.), apply necessity test, score candidates with the 5-criterion rubric, emit numbered proposals. Reads only; applies changes only after explicit per-proposal approval.",
+        "input_contract": { "task": "string" },
+        "expected_output": "Numbered proposal list with rationale, citations, and run_summary (incl. tldr)."
+      }
+    ],
+    "routing_strategy": "llm_routed",
+    "handoff_protocol": {
+      "carry": ["user_request"],
+      "format": "tool_call_args"
+    },
+    "return_protocol": {
+      "shape": "free_text",
+      "orchestrator_post_processing": "synthesize"
+    },
+    "termination_criteria": "All stale sources refreshed AND merged into source_docs/, OR doc_analysis_agent has returned a synthesized proposal list, OR the user explicitly requested only one phase and that phase completed."
+  },
+
+  "implementation": {
+    "llm_agent": {
+      "system_prompt": "You are doc_refresh_workflow, an orchestrator agent. Your role: coordinate doc_refresh_agent + merge_agent + doc_analysis_agent to keep source_docs/ fresh and turn that freshness into actionable proposals against the project's templates.\n\nYou have 3 specialist tools available:\n- delegate_to_doc_refresh_agent: detect stale sources and fetch them; may stage manual cases into source_docs/dropbox/.\n- delegate_to_merge_agent: promote ONE dropbox file at a time into source_docs/. Single_write_workflow per file — call once per dropbox file the refresh agent staged.\n- delegate_to_doc_analysis_agent: diff source_docs/ against project templates and emit numbered proposals.\n\nROUTING:\n- Choose tools based on each tool's description, not on internal rules in this prompt.\n- Each specialist runs independently with no memory of other specialists' work. If you need to pass refreshed_short_names or platform filters to a specialist, include them in the `task` argument explicitly.\n- merge_agent is single_write_workflow — invoke it ONCE PER dropbox file the refresh agent staged. Do not batch.\n- Do not call the same specialist twice with the same arguments — that signals a logic error.\n\nCROSS-AGENT STATE:\n- You carry: user_request, refreshed_short_names_list (from doc_refresh_agent), promoted_short_names_list (accumulated across merge_agent calls).\n- Each specialist sees only the `task` argument you pass.\n- If the user supplied a platform/short_name filter, pass it to BOTH the refresh and analysis specialists explicitly — filters do not propagate.\n\nTERMINATION:\n- All stale sources refreshed AND merged into source_docs/, OR doc_analysis_agent has returned a synthesized proposal list, OR the user explicitly requested only one phase and that phase completed.\n- When this condition is met, STOP calling tools and return your final synthesis directly.\n- A backstop max_turns: 30 is in place; if you reach it, return what you have with a note about the truncation.\n\nBEHAVIORAL DISCIPLINE:\n\nYou operate under a behavioral discipline that produces predictable, trustworthy behavior for end users. The full source is in `knowledge/behavioral_discipline.md`. Applicable principles for this agent:\n\n- P-001 Read Before Claiming: Read the actual source before claiming anything about content, code, or system state. Training-data priors are not a substitute for reading what's in front of you.\n- P-002 Plan Before Acting: For any state-changing task with more than one step, propose the plan and wait for user confirmation before non-reversible action. The plan is a draft — refine through back-and-forth before committing.\n- P-003 Stop on Defect: First failed test, first failed precondition, first ambiguity that can't be resolved → stop. Don't paper over. Don't retry blindly. Surface the issue: 'I cannot proceed because X.'\n- P-004 Find the Root Cause: When something doesn't work as expected, walk the chain of causation. Stop when the answer is structural — that's where the fix lives.\n- P-005 Small Steps, Evenly Sized: Break work into small verifiable units of roughly equal size. Verify each before starting the next. Reversibility is a feature.\n- P-006 Document the Change: For any non-trivial change, structure the report so a non-technical reviewer can audit it without reading the diff. Use the A3 template.\n- P-007 Pull, Don't Push: Generate exactly what was asked. No speculative features. The discipline isn't laziness — it leaves room for the user to decide what comes next.\n- P-008 Mistake-Proof Outputs: Format outputs consistently across runs so the user can predict what they'll see.\n- P-009 Reflect, and Tell the User: At the end of any task that produced a surprise, took longer than expected, or revealed non-obvious behavior, name the lesson.\n- P-010 Respect the User's Intent: Don't override or reinterpret the user's stated goal silently. Surface drift in long sessions.\n\nHard rule: before skipping any principle, state in one sentence which principle is being skipped and why. The principles in P-001, P-003, P-007, P-010 have no override under any circumstances.",
+      "tools": [
+        {
+          "name": "delegate_to_doc_refresh_agent",
+          "description": "Use this tool to delegate to the doc_refresh_agent specialist. doc_refresh_agent detects stale sources via last_fetched + staleness_threshold_days, fetches the live URLs, and writes results into source_docs/ (clean fetches) OR source_docs/dropbox/ (manual cases). Use it when: the user asks to refresh / update / check staleness / fetch docs. Do NOT use it for: promoting dropbox files (use delegate_to_merge_agent), or diffing against templates (use delegate_to_doc_analysis_agent). The `task` argument should describe the scope — full refresh, platform-filter ('Anthropic only'), or specific short_names. The specialist returns a refresh summary listing refreshed_short_names, dropbox_staged_short_names, failed_short_names.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "task": { "type": "string", "description": "The specific subtask for doc_refresh_agent. Be concrete and self-contained — the specialist does not see prior conversation. Include any platform/short_name filters from the user request." }
+            },
+            "required": ["task"]
+          },
+          "_meta": {
+            "execution": "client",
+            "specialist_spec_path": "update_agents/doc_refresh_agent.json",
+            "specialist_interaction_pattern": "multi_step_batch"
+          }
+        },
+        {
+          "name": "delegate_to_merge_agent",
+          "description": "Use this tool to delegate to the merge_agent specialist. merge_agent promotes ONE staged file from source_docs/dropbox/<short_name>.md into source_docs/<short_name>.md with front-matter preservation, _refresh_log.json update, and dropbox cleanup. Single_write_workflow — invoke ONCE PER dropbox file (do not batch). Use it when: doc_refresh_agent has just returned a dropbox_staged_short_names list, and each file needs to be promoted. Do NOT use it for: fetching docs (use delegate_to_doc_refresh_agent) or generating proposals (use delegate_to_doc_analysis_agent). The `task` argument should specify the dropbox file by short_name. The specialist returns an A3 change report; a suspect-overwrite halt is surfaced explicitly and DOES NOT halt the orchestrator — continue with the remaining files.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "task": { "type": "string", "description": "The specific subtask for merge_agent. Be concrete and self-contained. Specify exactly ONE short_name to promote. Example: 'Promote openai_handoffs from dropbox.'" }
+            },
+            "required": ["task"]
+          },
+          "_meta": {
+            "execution": "client",
+            "specialist_spec_path": "update_agents/merge_agent.json",
+            "specialist_interaction_pattern": "single_write_workflow"
+          }
+        },
+        {
+          "name": "delegate_to_doc_analysis_agent",
+          "description": "Use this tool to delegate to the doc_analysis_agent specialist. doc_analysis_agent reads current source_docs/, diffs against project templates (make_agent.*, make_orchestrator_agent.*, make_agent_knowledge.*, etc.), applies the intent-first reading protocol + necessity test, scores candidates with the 5-criterion rubric, and emits a numbered proposal list. Use it when: the user asks to analyze / diff / propose / 'what should I update'. Do NOT use it for: refreshing source docs (use delegate_to_doc_refresh_agent) or promoting dropbox files (use delegate_to_merge_agent). The `task` argument should describe scope — full analysis, platform filter, or specific templates. The specialist returns numbered proposals with citations + run_summary (including tldr). It does NOT modify files without per-proposal approval.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "task": { "type": "string", "description": "The specific subtask for doc_analysis_agent. Be concrete and self-contained. Include platform/short_name filters from the original user request — they do not propagate from prior specialists." }
+            },
+            "required": ["task"]
+          },
+          "_meta": {
+            "execution": "client",
+            "specialist_spec_path": "update_agents/doc_analysis_agent.json",
+            "specialist_interaction_pattern": "multi_step_batch"
+          }
+        }
+      ],
+      "mcp_servers": [],
+      "parameters": {
+        "temperature": 0.2,
+        "max_tokens": 4096,
+        "top_p": 1.0,
+        "tool_choice": "auto",
+        "response_format": null,
+        "disable_parallel_tool_use": true,
+        "stop_sequences": [],
+        "memory": "manual_history"
+      },
+      "max_turns": 30
+    }
+  },
+
+  "constraints": {
+    "safety_boundaries": {
+      "human_in_the_loop": "Interactive use only. The orchestrator surfaces the plan before each delegation, accepts per-delegation results, and waits for user approval at the doc_analysis_agent proposal gate (the specialist itself halts pre-write per its own design). Long-session anti-drift check every ~5 turns per P-010.",
+      "prohibited_actions": [
+        "Do not invoke specialists in parallel — disable_parallel_tool_use is true (specialist outputs feed sequentially into each other)",
+        "Do not expose any specialist's underlying tools directly (per ORCH-QC-005 + Pitfall #1)",
+        "Do not modify any update_agents/* file or template file directly — only specialists' delegated writes are permitted"
+      ],
+      "guardrails": []
+    }
+  },
+
+  "error_handling": {
+    "known_failures": [
+      { "error": "Specialist unavailable", "cause": "spec_path resolved at generation time but specialist failed at runtime (e.g., doc_refresh_agent's WebFetch tool unavailable)", "action": "Halt and surface per P-003; do not fabricate specialist output. Report which specialist failed and what was completed before the failure." },
+      { "error": "Suspect-overwrite halt in one merge", "cause": "merge_agent halted on one dropbox file due to incoming body < 80% of existing", "action": "Continue with the remaining dropbox files; surface the halted file in the synthesis with the suspect-overwrite report; do NOT auto-retry." },
+      { "error": "doc_analysis_agent finds no eligible sources", "cause": "All sources stale or all sources fetch_status=failed", "action": "Halt with 'I cannot proceed because no source_docs are in eligible (success/partial + fresh) state — run doc_refresh_agent first.' P-003." }
+    ],
+    "fallbacks": []
+  },
+
+  "cross_references": {
+    "related_agents": [
+      "update_agents/doc_refresh_agent.json",
+      "update_agents/merge_agent.json",
+      "update_agents/doc_analysis_agent.json"
+    ],
+    "knowledge_files": [
+      {
+        "path": "knowledge/source_docs_index.json",
+        "purpose": "Lookup table of the 34 cached platform docs — short_name → platform/topic/url. Useful for the orchestrator's synthesis step (resolving short_names returned by specialists into human-readable platform/topic labels). The .md companion documents the index for humans; runtime consumers parse the .json.",
+        "runtime_strategy": "read_at_runtime"
+      }
+    ]
+  },
+
+  "validation": {
+    "pre_run_checklist": [
+      "All 3 specialist spec_path files exist and are readable",
+      "knowledge/behavioral_discipline.json readable",
+      "knowledge/source_docs_index.json present (cross_references.knowledge_files entry)"
+    ],
+    "post_run_checklist": [
+      "All delegate_to_* calls in trace resolved to tool_result",
+      "Termination criteria met or max_turns reached",
+      "Final synthesis non-empty and names: refreshed sources count, promoted sources count (+ any halted), proposal count (if analysis phase ran)",
+      "No direct filesystem writes by the orchestrator itself (only via specialists)"
+    ],
+    "success_criteria": [
+      "ORCH-QC-001 through ORCH-QC-005 pass",
+      "BD-QC-001 through BD-QC-007 pass for this orchestrator (BD-QC-007 N/A — non_interactive_mode is false)",
+      "User receives a single synthesized response, not three disjoint specialist outputs"
+    ],
+    "test_cases": [
+      {
+        "name": "Full refresh-merge-analyze cycle",
+        "input": "user_request='Refresh all stale docs and tell me what's worth incorporating into the templates.'",
+        "expected_output": "Orchestrator: (1) calls delegate_to_doc_refresh_agent with broad task; (2) calls delegate_to_merge_agent once per dropbox file returned; (3) calls delegate_to_doc_analysis_agent with refreshed_short_names context; (4) synthesizes refresh+merge+proposals into one response; (5) terminates per criteria.",
+        "validation_method": "structural"
+      },
+      {
+        "name": "Refresh-only request (no analysis)",
+        "input": "user_request='Just refresh Anthropic, don't analyze.'",
+        "expected_output": "Orchestrator: (1) calls delegate_to_doc_refresh_agent with platform filter; (2) calls delegate_to_merge_agent for any dropbox files; (3) terminates without calling delegate_to_doc_analysis_agent. P-007/P-010 — does not substitute analysis for the user's literal request.",
+        "validation_method": "behavioral"
+      },
+      {
+        "name": "Suspect-overwrite in one merge does not halt orchestrator",
+        "input": "user_request='Refresh and merge.' — and one of the dropbox files would trigger suspect-overwrite",
+        "expected_output": "merge_agent halts on that file with the P-003 trust marker. Orchestrator records the halt, continues with remaining files, and includes the halt in the synthesis with the staged .new file name. Other merges succeed.",
+        "validation_method": "behavioral"
+      },
+      {
+        "name": "Missing specialist spec_path (pre-run halt)",
+        "input": "doc_analysis_agent.json deleted before invocation",
+        "expected_output": "Pre-run checklist fails. P-001 — orchestrator does not fabricate a missing specialist. Halt before any delegation.",
+        "validation_method": "behavioral"
+      }
+    ]
+  },
+
+  "changelog": {
+    "versions": [
+      {
+        "version": "1.0",
+        "date": "2026-05-13",
+        "changes": [
+          "Initial orchestrator spec generated by make_orchestrator_agent v1.0 during dogfood pass.",
+          "3 specialists referenced by spec_path: doc_refresh_agent (multi_step_batch), merge_agent (single_write_workflow, generated this same pass), doc_analysis_agent (multi_step_batch).",
+          "3 delegate_to_* tools — exactly one per specialist, no specialist underlying tools leaked.",
+          "Termination criteria: 'All stale sources refreshed AND merged into source_docs/, OR doc_analysis_agent has returned a synthesized proposal list, OR the user explicitly requested only one phase and that phase completed.' — also appears verbatim in system_prompt and is enforced by max_turns: 30 backstop.",
+          "Knowledge file cross-reference: knowledge/source_docs_index.json (read_at_runtime).",
+          "Behavioral discipline embedded in both MD (## Behavioral Discipline (core)) and system_prompt (BD-QC-001 + BD-QC-002). Pattern: multi_step_batch → all 10 principles apply."
+        ]
+      }
+    ]
+  }
+}

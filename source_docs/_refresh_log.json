@@ -273,6 +273,14 @@
       "size_after": 3667,
       "fetch_status": "success",
       "notes": "WAVE-2 a2a deep-fetch 2026-05-13. ADK-specific extension to the A2A protocol: state propagation, artifact transfer, ADK metadata in AgentCard. Source: https://adk.dev/a2a/a2a-extension/. Fetched via fetch_doc.py (Tier 1 raw HTTP)."
+    },
+    "xai_files": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 8352,
+      "fetch_status": "success",
+      "notes": "Added 2026-05-13 via update_agents/fetch_doc.py (Tier 1 raw HTTP). Sibling of xai_collections. Documents the xAI Files API used by attachment_search server-side tool. 48MB/file limit; agentic-models-only; benefits from prompt caching when reused. Identified in 2026-05-12 research as a gap (xai_collections was prioritized for the knowledge skill grounding). Now cached for completeness of the xAI surface."
     }
   }
 }

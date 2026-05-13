@@ -293,7 +293,8 @@
         "check_id": "BD-QC-002",
         "name": "System prompt includes discipline boilerplate",
         "rule": "Agent's `implementation.llm_agent.system_prompt` contains the discipline boilerplate or equivalent language referencing the principles.",
-        "severity": "high"
+        "severity": "high",
+        "_applicability": "Applies ONLY when the agent's `implementation` carries the `llm_agent` branch. For agents with `agent_type.type` of `workflow`, `api_agent`, `data_processor`, `class_based`, or `rule_based` (where `implementation.llm_agent.system_prompt` does not exist), BD-QC-002 is N/A. In those cases the discipline still applies via the MD `## Behavioral Discipline (core)` section (BD-QC-001) and any per-step prompts the runner injects. Surface this in the agent's `validation.discipline_validation` as a documented skip with reason: 'BD-QC-002 N/A — no llm_agent branch'. Originally documented in make_agent.md retrofit step 5; clarified inline 2026-05-13 after the merge_agent dogfood surfaced the gap for greenfield generation."
       },
       {
         "check_id": "BD-QC-003",

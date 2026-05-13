@@ -122,6 +122,16 @@ Four platforms support multi-agent topology, but the shape differs. The orchestr
 
 ---
 
+## A note on the generated MD's structure
+
+The MD this skill emits **does NOT inherit `make_agent.md`'s full "core" section list** (Mission / Quickstart / Key Principles / How to Use / Pitfalls / Examples / etc.). An orchestrator's MD uses the 7 sections defined in `make_orchestrator_agent.json` → `orchestrator_md_required_sections` only: Title, Mission, Topology, Routing Decisions, Cross-Agent State, Termination, Behavioral Discipline. Optional sections (Platform Notes, Failure Routing, Examples) are added per the `include_when` criteria in `orchestrator_md_optional_sections`.
+
+**Why the divergence**: the orchestrator's "principles" are the discipline (embedded in the Behavioral Discipline section) — there's no separate Key Principles content. Pitfalls live in this skill file (`make_orchestrator_agent.md` → Common Pitfalls), not in each generated orchestrator. Quickstart and How-to-Use are about the skill that *generates* orchestrators, not the orchestrators themselves; the runtime entry point for an orchestrator is its JSON system_prompt, not a humans-only quickstart.
+
+If you find yourself wanting to add a Quickstart or Key Principles section to a generated orchestrator, that probably means you should split it into specialists (each of which gets its own full `make_agent.md` treatment) and shrink the orchestrator's scope to pure routing.
+
+---
+
 ## Topology Declaration
 
 The `topology` object in the generated orchestrator JSON. Required fields:

@@ -510,6 +510,17 @@
         "last_refresh_status": "success",
         "last_refresh_date": "2026-05-13",
         "notes": "Added 2026-05-13 via fetch_doc.py. Extension spec (~4KB) — defines what ADK adds on top of the open A2A protocol."
+      },
+      {
+        "platform": "xAI",
+        "label": "Grok Files API",
+        "url": "https://docs.x.ai/developers/files",
+        "cache_file": "source_docs/xai_files.md",
+        "section_focus": "Files API for xAI: 48MB/file limit, agentic-models-only, attachment_search server-side tool auto-activation when files attached, prompt caching benefit on file reuse",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-13",
+        "notes": "Added 2026-05-13 via fetch_doc.py (Tier 1 raw HTTP). Sibling of xai_collections. Identified in 2026-05-12 research as a gap (xai_collections was prioritized for the knowledge skill grounding); cached now for completeness of the xAI surface."
       }
     ]
   },
@@ -549,7 +560,7 @@
     ],
     "models": [],
     "apis": ["WebFetch (HTTP GET with Cache-Control: no-cache)"],
-    "data_sources": ["34 public AI platform documentation URLs — see sources array (9 original + 17 added 2026-05-12 wave-2 + 8 ADK A2A child pages added 2026-05-13 via fetch_doc.py)"],
+    "data_sources": ["35 public AI platform documentation URLs — see sources array (9 original + 17 added 2026-05-12 wave-2 + 8 ADK A2A child pages added 2026-05-13 + 1 xAI Files API added 2026-05-13 — all via fetch_doc.py)"],
     "environment_variables": [],
     "optional_dependencies": {
       "description": "No LLM required. Pure fetch + write workflow.",

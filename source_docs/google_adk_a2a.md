@@ -4,7 +4,7 @@ label: Google ADK with Agent2Agent (A2A) Protocol
 source_url: https://adk.dev/a2a/
 last_fetched: 2026-05-13
 fetch_status: success
-notes: WAVE-2 ADD (2026-05-12). Skill A (orchestrator) grounding. The /a2a/ page is a hub. The substantive pages are linked from it — capture the hub structure here and pull child pages in a follow-up. Key concepts identified from the partial fetch are preserved below as a placeholder.
+notes: WAVE-2 ADD (2026-05-12); re-verified 2026-05-13 via fetch_doc.py. The /a2a/ page is a small navigation hub by design (~1.7KB live) — substantive content lives in 8 child pages cached separately as google_adk_a2a_intro / _quickstart_exposing[_go|_java] / _quickstart_consuming[_go|_java] / _extension. This file mirrors the live hub state; not a placeholder.
 size_bytes: 1753
 ---
 

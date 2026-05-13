@@ -346,8 +346,9 @@
       },
       "cross_references": {
         "related_agents": "{{specialist_paths_array}}",
-        "knowledge_files": "{{knowledge_files_array_if_any}}"
+        "knowledge_files": "{{knowledge_files_array_if_any — per-entry shape: { path: <.json path, NOT .md>, purpose: <one-line>, runtime_strategy: 'embed'|'read_at_runtime'|'platform_cached' }; see make_agent.json → cross_references._knowledge_files_format for the canonical doc-string}}"
       },
+      "_dependencies_note": "Orchestrators do NOT carry a top-level `dependencies` block (unlike make_agent's tier_1_core dependencies). The orchestrator's runtime dependencies are: (1) the specialist spec files listed in topology.specialists[].spec_path, and (2) any knowledge files in cross_references.knowledge_files[]. Both are already enumerated elsewhere — duplicating into a `dependencies` block would create drift. If an orchestrator has non-specialist non-knowledge dependencies (e.g., a python package the runner needs), add them inline in implementation.llm_agent or note them in operational_guidance instead.",
       "validation": {
         "pre_run_checklist": [
           "All specialist spec_path files exist and are readable",
