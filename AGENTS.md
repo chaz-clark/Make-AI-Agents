@@ -72,6 +72,7 @@ The four no-override principles — **P-001 Read Before Claiming, P-003 Stop on 
 - **Gems compile** to a `.txt` file in `make_gems/gem_instructions/` and a `.json` alongside `make_gem.md`.
 - **Templates evolve in pairs** — `make_*.md` (narrative) and `make_*.json` (structured rules) are updated together. Same applies to `knowledge/behavioral_discipline.md/.json`.
 - **Updates to `make_agent.md` cascade** — every agent spec generated from it after the change should be regenerated or audited against the new template via `make_agent_qc`.
+- **Make-AI-Agents is the leverage point; consumer repos are the field for Genchi Genbutsu (P-001).** This repo holds the meta-skills (`make_agent`, `make_orchestrator_agent`, `make_agent_knowledge`, etc.) and the discipline. Consumer repos (canvas-toolbox, AgentJ, course repos) USE the skills to generate real artifacts. When an agent in this repo is invoked to "test the skill on" a consumer repo, the goal is **skill improvement here**, NOT to finish the consumer repo's work. Capture what surfaces, fix the skill, commit the skill fix here, hand the field state back to the consumer repo's own agents/maintainers to commit there. Don't cross the boundary: this repo's commits update meta-skills; consumer-repo commits update generated artifacts.
 
 ## Active Context
 
