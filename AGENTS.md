@@ -113,7 +113,7 @@ _Last updated: 2026-05-13_
   - Tutorial repos / forks / legacy single-purpose repos / `andrej-karpathy-skills` (upstream CLAUDE.md intentional)
 
   **6-step workstream applied per target:**
-  1. ✅ Enumerate Chaz's repos (public + local masters) — done 2026-05-13.
+  1. ✅ Enumerate Chaz's repos (public + local masters) — done 2026-05-13. **GG learning from sprint 2 (added 2026-05-13)**: step 1 must check BOTH the local working tree AND GitHub-side state. The initial enumeration used `gh api repos/<owner>/<repo>/contents/AGENTS.md` which only sees PUSHED state. 2 of 4 sprint-2 targets (`agentj`, `gh-issues-agent`) had local-but-not-pushed `AGENTS.md` files that triggered P-003 halts mid-sprint. Future cross-repo audits should run `ls <local-path>/AGENTS.md` in addition to `gh api`, then reconcile (a missing GitHub-side AGENTS.md does NOT imply a missing local one). The P-003 halts caught the discrepancy cleanly — subagents were re-launched with the correct refresh framing — but pre-enumeration verification would have avoided the halt-and-relaunch cycle.
   2. Audit each current-sprint target against AGENTS-QC-001..006 + the full required-sections contract.
   3. For each behind-the-curve target, run current make_AGENTS to generate `AGENTS_updated.md` (suffixed to avoid overwriting; preserves OG Active Context / Domain Terms / Existing Tooling / project-specific rules).
   4. Package `behavioral_discipline.{md,json}` into each target's `knowledge/` folder per AGENTS-QC-006 (snapshot header for traceability).
