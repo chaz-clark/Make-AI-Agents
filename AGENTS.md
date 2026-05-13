@@ -92,10 +92,17 @@ _Last updated: 2026-05-13_
 **Open issues** (check GitHub for current state — `gh issue list`): the v3.0–v3.6 polish series (issues #1–#9) is closed. New work would open new issues.
 
 **Next likely**:
-- Dogfood the new skills: generate one real orchestrator + one real knowledge file end-to-end (catches bugs QC can't).
-- Wave 3 doc-analysis cycle against the 34-source corpus (find new convergence-bonus candidates).
+- **🔝 NEXT QUEUED — Cross-repo AGENTS.md audit + regenerate-and-deliver workstream** (queued 2026-05-13 after commit `63bd64e` raised the make_AGENTS bar): every public repo Chaz maintains likely has an AGENTS.md that predates the current standards (especially AGENTS-QC-006 — discipline files co-located, not just pointed at). Workstream:
+  1. Enumerate Chaz's public repos that have an `AGENTS.md` (start: canvas-toolbox already audited / passing via condition b; handoff at seed-stage; AgentJ; course repos; check via `gh repo list chaz-clark`).
+  2. For each, audit the existing `AGENTS.md` against current AGENTS-QC-001..006 + the full required-sections contract.
+  3. For each behind-the-curve repo, run the current make_AGENTS on it to generate an `AGENTS_updated.md` (suffixed to avoid overwriting; preserves the consumer's OG Active Context / Domain Terms / Existing Tooling / project-specific rules — the project-state content stays, only the structure + discipline-file packaging updates).
+  4. Package `behavioral_discipline.{md,json}` into each target's `knowledge/` folder per the AGENTS-QC-006 requirement (with snapshot headers).
+  5. Use the **handoff convention** (per `~/Documents/GitHub/handoff/` issue #6 — producer-delivers direction) to deliver to each target: a handoff doc explaining the upgrade + the `AGENTS_updated.md` + the packaged discipline files. Recommend the consumer adopt by reviewing-and-renaming `AGENTS_updated.md` → `AGENTS.md` once they've confirmed the OG context survived the merge.
+  6. Track per-repo state via the handoff convention's Status: enum (proposed in handoff issue #3).
+- Genchi Genbutsu (GG) the new skills further as they're used in canvas-toolbox / AgentJ — any GG findings fold back here.
+- Wave 4 doc-analysis cycle when source_docs next refreshes.
 - Operationalize `doc_refresh_agent` as a runner (Python) on top of `fetch_doc.py`, enabling scheduled refreshes.
-- Pop `temp/` subtree updates back upstream when ready.
+- Pop `temp/` subtree updates back upstream when ready (or migrate `temp/` from subtree → clone+gitignore per the 2026-05-13 cross-project rule).
 
 ## Existing Tooling
 
