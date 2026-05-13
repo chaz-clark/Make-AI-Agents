@@ -81,7 +81,7 @@
       {
         "name": "consumed_by",
         "type": "array",
-        "format": "Array of agent spec paths (.json) that will reference this knowledge file. Minimum 1 entry — orphan knowledge files (consumed_by=[]) are rejected by KNW-QC-006.",
+        "format": "Array of agent spec paths (.json OR .md — both accepted) that will reference this knowledge file. Minimum 1 entry — orphan knowledge files (consumed_by=[]) are rejected by KNW-QC-006. .md is accepted because some agents in real-world repos remain MD-only (no .json companion); KNW-QC-006 verifies non-emptiness, not file-extension purity.",
         "example": ["loan_classifier_agent.json"],
         "required": true
       },
@@ -124,6 +124,23 @@
   "knowledge_shapes": {
     "_tier": "tier_1_core",
     "_description": "Per-shape required MD sections (in addition to knowledge_md_required_sections) and required JSON fields. KNW-QC-002 and KNW-QC-003 validate against these.",
+    "_classification_guidance": {
+      "_description": "Edge-case classification rules for files that don't cleanly fit reference / identity / procedural. Added 2026-05-13 after the canvas-toolbox QC audit surfaced framework-charter files (toyota_gap_analysis, designer_thinking) that read as neither pure lookup nor named-principles charter.",
+      "framework_or_method_charter": {
+        "examples": ["toyota_gap_analysis_knowledge", "designer_thinking_knowledge", "ubd_framework"],
+        "characteristics": "Describes a frame/method (the 5-Whys, A3 thinking, UbD backwards design) with illustrative examples rather than (a) a lookup table of discrete terms or (b) a numbered list of standalone principles.",
+        "classify_as": "identity",
+        "how_to_structure": "Treat the FRAME ITSELF as a single named principle in `principles[]` (e.g., id: 'a3_thinking', name: 'A3 Thinking', compact_statement: '...'). Illustrative examples become `trust_marker` entries or are documented in the MD body as worked examples rather than as separate `principles[]` array items. Don't artificially split the frame into N principles when it's really one frame with N illustrations.",
+        "exemplar": "knowledge/behavioral_discipline already uses this pattern — Toyota Genchi Genbutsu IS the single principle P-001; the worked examples in the MD ('go to the floor', 'read the actual source') illustrate the principle, they aren't separate principles."
+      },
+      "decision_flow": [
+        "1. Is the content a lookup-by-key (terms, definitions, API entries, policy rows)? → reference",
+        "2. Is the content a small set (3-15) of NAMED principles, each with its own trigger and trust marker? → identity",
+        "3. Is the content a set of trigger-keyed step-by-step procedures with prerequisites and success conditions? → procedural",
+        "4. Is the content a SINGLE frame/method with illustrative examples? → identity (frame = 1 principle; examples = trust_markers or MD worked examples). Do NOT invent a 4th shape — collapse to identity-with-one-principle.",
+        "5. If none of the above fit, the content is probably mixed-shape and should be SPLIT into multiple knowledge files (one per shape)."
+      ]
+    },
     "reference": {
       "purpose": "Lookup file — glossary, API reference, policy table, term-to-definition map.",
       "use_when": "Content is a set of discrete, indexable items the agent looks up by key. Order of items does not change meaning.",
@@ -290,7 +307,24 @@
     "reference_md_template": "# {{knowledge_name_title}}\n\n> Reference. {{one_line_scope}}\n\n**Scope**: {{scope}}\n\n**Provenance**: {{provenance_summary}} (see `provenance.sources` in the JSON).\n\n_Last updated: {{iso_date}}_\n\n## Terms\n\n<!-- Fill in: Term | Definition table, or one subsection per term. Each term should map to one entry in `facts[]` in the JSON companion. -->\n",
     "identity_md_template": "# {{knowledge_name_title}}\n\n> Identity. {{one_line_scope}}\n\n**Scope**: {{scope}}\n\n**Provenance**: {{provenance_summary_or_self}}.\n\n_Last updated: {{iso_date}}_\n\n## The Principles\n\n<!-- Fill in: one subsection per principle. Each subsection should map to one entry in `principles[]` in the JSON companion. The exemplar to mirror is `knowledge/behavioral_discipline.md`. -->\n",
     "procedural_md_template": "# {{knowledge_name_title}}\n\n> Procedural. {{one_line_scope}}\n\n**Scope**: {{scope}}\n\n**Provenance**: {{provenance_summary_or_blank}}.\n\n_Last updated: {{iso_date}}_\n\n## Playbooks\n\n<!-- Fill in: one subsection per playbook. Each subsection should map to one entry in `playbooks[]` in the JSON companion with trigger, prerequisites, steps, and success_condition. -->\n",
-    "runtime_strategy_declaration_template": "Set _metadata.runtime_strategy per runtime_strategy_rules below based on estimated token count of the filled-in body. Default for a freshly generated empty scaffold: 'embed' (will revisit when body is filled)."
+    "runtime_strategy_declaration_template": "Set _metadata.runtime_strategy per runtime_strategy_rules below based on estimated token count of the filled-in body. Default for a freshly generated empty scaffold: 'embed' (will revisit when body is filled).",
+    "header_convention_variants": {
+      "_description": "ACCEPTED variants for header metadata at the top of the MD. The canonical-skill form uses `**Scope**:` / `**Provenance**:` (per the templates above). The canvas-toolbox-style three-line form (Source: / Used by: / Companions:) is also ACCEPTED — it is equivalence-mapped to the canonical fields. Either is valid; do not churn an existing convention on retrofit.",
+      "canonical_skill_form": {
+        "scope_marker": "**Scope**: ...",
+        "provenance_marker": "**Provenance**: ... (see `provenance.sources` in JSON)",
+        "consumer_marker": "(omitted in MD; lives in JSON `consumed_by[]`)",
+        "companions_marker": "(omitted by default; optional `## Related Knowledge` body-bottom section)"
+      },
+      "canvas_toolbox_form": {
+        "scope_marker": "Source: <link>  (at top, H2-level or line-3 plain-text)",
+        "provenance_marker": "(equivalent to `Source:` — also maps to JSON `provenance.sources`)",
+        "consumer_marker": "Used by: <agent_name>, <agent_name>  (at top, H2-level)",
+        "companions_marker": "Companions: <bulleted list>  (at top, H2-level cross-references to sibling knowledge files)",
+        "rationale": "Surface consumer/source info to the human reader of the MD, not just to the parser of the JSON. Originated in canvas-toolbox (lib/agents/knowledge/) and adopted as an accepted variant 2026-05-13."
+      },
+      "retrofit_guidance": "When retrofitting a legacy MD that already uses the canvas-toolbox form, KEEP that form. Don't rewrite to canonical-skill form for cosmetic reasons (P-007 Pull Don't Push). The JSON companion populates `consumed_by[]` and `provenance.sources[]` from whichever form is present."
+    }
   },
 
   "runtime_strategy_rules": {
@@ -314,7 +348,25 @@
         "rationale": "Past 8000 tokens, inlining burns too much context per call. Use the host platform's retrieval primitive: Anthropic Files API (file_id in document/image blocks, anthropic-beta: files-api-2025-04-14), OpenAI Responses API file_search over a vector store, Google Files API (files.upload, 48h retention) optionally combined with cachedContent, xAI collections_search."
       }
     ],
-    "override_policy": "Authors can override the auto-selected strategy by setting _metadata.runtime_strategy explicitly and adding a non-empty _metadata.runtime_strategy_rationale. KNW-QC-004 still enforces consistency between declared strategy and body size; a manual override must explain the deviation."
+    "override_policy": "Authors can override the auto-selected strategy by setting _metadata.runtime_strategy explicitly and adding a non-empty _metadata.runtime_strategy_rationale. KNW-QC-004 still enforces consistency between declared strategy and body size; a manual override must explain the deviation.",
+    "named_override_patterns": [
+      {
+        "pattern": "selective_load",
+        "when": "Consumer agents load knowledge files selectively per task focus (e.g., one audit run reads 3 of 11 knowledge files, not all 11), rather than loading every file as a stable shared prefix on every call.",
+        "preferred_runtime_strategy": "read_at_runtime",
+        "applies_to_band": "either (2000-8000)",
+        "rationale": "Selective-load consumers don't benefit from prompt caching of a stable embedded prefix because the prefix changes per call. Retrieval is the better fit even in the middle band. Example: canvas-toolbox's course-design agents that pick 2-3 knowledge files per audit from a folder of 12.",
+        "rationale_template": "Override to read_at_runtime — selective-load consumer pattern: <consuming_agent> loads <N> knowledge files per task from a pool of <M>, not all <M>. Stable-prefix embed would defeat the per-call selection."
+      },
+      {
+        "pattern": "citation_required",
+        "when": "Reference-shape knowledge file where consumers need first-class citation blocks (Anthropic Citations API) or vector-store-issued citation refs (OpenAI file_search, xAI collections_search) even though body size is in the embed band.",
+        "preferred_runtime_strategy": "read_at_runtime",
+        "applies_to_band": "embed (< 2000) or either (2000-8000)",
+        "rationale": "Citation primitives only fire on retrieval/document-block paths, not on inlined system-prompt prefixes. If citations are non-negotiable, retrieve.",
+        "rationale_template": "Override to read_at_runtime — citation_required: consumer needs first-class citation blocks (cite_text on Anthropic / file_search_call.results on OpenAI / collections:// on xAI); embedding loses the citation surface."
+      }
+    ]
   },
 
   "validation": {
@@ -387,37 +439,43 @@
         "check_id": "KNW-QC-001",
         "name": "All required sections present in the generated MD",
         "rule": "Generated knowledge MD contains all five sections from knowledge_md_required_sections in order: title, scope, body, provenance, last_updated. Plus the shape-specific extension section from knowledge_shapes.<shape>.md_extra_sections. The body must have at least 100 bytes of content past the section headers — placeholder-only files are rejected.",
-        "severity": "critical"
+        "severity": "critical",
+        "_md_only_applicability": "FULLY assessable on MD-only files. The required surface forms (shape tagline, **Scope** label, _Last updated_ footer) may be missing in legacy files even when the underlying content is present — report PARTIAL in that case, not FAIL. A pre-skill MD whose spine concepts (title, scope, body, provenance) are conceptually present but use different surface markers should be a PARTIAL/retrofit candidate, not a critical failure."
       },
       {
         "check_id": "KNW-QC-002",
         "name": "shape field is a valid value",
         "rule": "knowledge_json.shape is exactly one of 'reference', 'identity', or 'procedural'. No other values, no nulls. Invalid shapes break consumer parsing.",
-        "severity": "critical"
+        "severity": "critical",
+        "_md_only_applicability": "N/A on MD-only files — shape lives in the JSON companion. If no JSON exists, this check is unevaluable; report N/A, not FAIL. The MD body shape can be INFERRED (table-heavy → reference; named-principle list → identity; trigger-keyed scenarios → procedural) to suggest a likely shape, but the check itself doesn't fire."
       },
       {
         "check_id": "KNW-QC-003",
         "name": "Shape-specific required fields are populated",
         "rule": "The shape-specific required JSON array key is present and the correct type: facts[] for shape=reference, principles[] for shape=identity, playbooks[] for shape=procedural. The array may be empty (placeholder), but the key MUST exist. Wrong-shape arrays (e.g., principles[] present when shape=reference) fail this check.",
-        "severity": "critical"
+        "severity": "critical",
+        "_md_only_applicability": "N/A on MD-only files — facts/principles/playbooks arrays live in the JSON companion. If no JSON exists, this check is unevaluable; report N/A."
       },
       {
         "check_id": "KNW-QC-004",
         "name": "runtime_strategy is set and consistent with body size",
         "rule": "_metadata.runtime_strategy is one of 'embed' | 'read_at_runtime' | 'either'. The selected value is consistent with body token count per runtime_strategy_rules (< 2000 → embed, 2000-8000 → either, > 8000 → read_at_runtime), OR _metadata.runtime_strategy_rationale is non-empty and explains a deliberate override.",
-        "severity": "high"
+        "severity": "high",
+        "_md_only_applicability": "N/A on MD-only files — runtime_strategy lives in JSON _metadata. If no JSON exists, the check is unevaluable; report N/A. Body size can still be measured from the MD (chars/4 heuristic) to suggest a likely runtime_strategy band for the future JSON companion."
       },
       {
         "check_id": "KNW-QC-005",
         "name": "provenance.sources is non-empty when shape=reference",
         "rule": "When knowledge_json.shape == 'reference', provenance.sources[] MUST be non-empty. A reference file without sources cannot support citation traceback. Identity and procedural shapes are exempt (identity is self-sourcing; procedural may or may not reference external policy).",
-        "severity": "high"
+        "severity": "high",
+        "_md_only_applicability": "PARTIALLY assessable on MD-only files. Look for a 'Source:' line, 'Provenance:' label, or equivalent at top of MD (the canvas-toolbox convention is `Source: <link>` on H2 / line 3). If present and non-empty, report PROBABLE-PASS (would populate provenance.sources on retrofit). If absent, report PROBABLE-FAIL only when the MD content reads as reference shape (lookup tables, definitions); identity/procedural shape MD-only files exempt themselves."
       },
       {
         "check_id": "KNW-QC-006",
         "name": "consumed_by is non-empty",
-        "rule": "knowledge_json.consumed_by[] has at least one entry. A knowledge file that no agent consumes is dead code. Each entry should be a path to an agent spec (.json) that references this knowledge file via cross_references.knowledge_files[] — the cross-link itself is a downstream step, but the consumer must be named here.",
-        "severity": "high"
+        "rule": "knowledge_json.consumed_by[] has at least one entry. A knowledge file that no agent consumes is dead code. Each entry is a path to an agent spec (.json OR .md) that references this knowledge file via cross_references.knowledge_files[] — the cross-link itself is a downstream step, but the consumer must be named here. Paths to .md-only agent specs (e.g., agents whose .json is being generated concurrently or remains MD-only by intent) are valid and accepted.",
+        "severity": "high",
+        "_md_only_applicability": "PARTIALLY assessable on MD-only files. Look for a 'Used by:' line at top of MD (canvas-toolbox convention) or analogous consumer-naming in the MD body. If present and non-empty, report PROBABLE-PASS. If absent, report PROBABLE-FAIL — but distinguish 'no consumer named anywhere' (real fail) from 'consumer named in body prose rather than a labeled line' (PARTIAL, retrofit-able)."
       },
       {
         "check_id": "KNW-QC-007",

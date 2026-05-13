@@ -97,6 +97,37 @@ The full integration flow is documented once, in [make_agent.md](make_agent.md) 
 
 ---
 
+## Retrofit Mode (core)
+
+When a knowledge file already exists as a hand-authored `.md` with no `.json` companion (the common case for repos like `canvas-toolbox/lib/agents/knowledge/`), the make_agent_knowledge skill MUST support retrofitting the file into the MD+JSON pair shape rather than requiring a full regenerate. The output is structurally indistinguishable from a greenfield-generated pair — only the entry point differs.
+
+Retrofit checklist (parallel to the greenfield Quickstart, but starting from an existing `.md`):
+
+1. **Read the existing MD fully** before making any claim about its shape, sections, or gaps. P-001 — don't infer from filename.
+
+2. **Classify the likely shape** using `_classification_guidance.decision_flow` in `make_agent_knowledge.json` → `knowledge_shapes`. Reference for lookup files, identity for principle/charter files (including framework charters — collapse the frame to a single named principle), procedural for trigger-keyed playbooks. **MUST confirm with the user** when ambiguous — don't silently pick.
+
+3. **Detect header convention** in the existing MD. If the file uses `Source:` / `Used by:` / `Companions:` lines at the top (canvas-toolbox form), KEEP that convention — do not rewrite to canonical `**Scope**:` / `**Provenance**:` form just for cosmetic uniformity. Both forms are listed as accepted variants in `make_agent_knowledge.json` → `compact_boilerplate.header_convention_variants` and map equivalently to the JSON companion's structured fields.
+
+4. **Author the `.json` companion** by extracting:
+   - `_metadata.knowledge_id` — slug-form of the filename
+   - `_metadata.runtime_strategy` — measured from MD body size per `runtime_strategy_rules`; apply a `named_override_patterns` override if applicable (e.g., `selective_load` if the consuming agents read knowledge selectively per task)
+   - `shape` — per step 2
+   - `scope` — copy from the MD's Scope / first paragraph
+   - `consumed_by[]` — extract from the existing `Used by:` line (canvas-toolbox form) or the body prose if named there. Per KNW-QC-006, an empty `consumed_by[]` is a critical fail; if no consumer is named anywhere, halt and ask the user.
+   - `provenance.sources[]` — extract from the existing `Source:` line or `**Provenance**:` paragraph. Required for `shape=reference` (KNW-QC-005).
+   - `facts[]` / `principles[]` / `playbooks[]` — populate the shape-specific array by parsing the MD body sections. Use stub entries with `id` + `name` + a one-line summary if the source content is dense; the author can expand later.
+
+5. **Do NOT rewrite the MD body** unless explicitly asked (P-007 Pull Don't Push). The retrofit ADDS the JSON companion; it does not refactor the existing MD. Exception: if the MD is missing a required spine section that KNW-QC-001 will fail (e.g., no `_Last updated_` footer), add the minimum needed — and surface the addition to the user.
+
+6. **Run KNW-QC-001..007** against the retrofitted pair. Use the `_md_only_applicability` clauses on each check to distinguish "fail" from "N/A on this legacy file" — the retrofitted file SHOULD pass most checks now that the JSON is present, but some checks may still need manual disambiguation (e.g., `consumed_by[]` populated but agent specs don't yet reference back via `cross_references.knowledge_files[]` — that's a downstream wiring step).
+
+7. **Report** what was added (the JSON file), what was preserved (the MD body and header convention), and what's queued for follow-up (downstream cross-references in consuming agents).
+
+The retrofit is also the migration path for any pre-`make_agent_knowledge` knowledge files that exist in older repos. Once retrofitted, those knowledge files pass KNW-QC alongside greenfield-generated pairs.
+
+---
+
 ## File I/O Mode (core)
 
 **This skill's input**: `string` (interactive — user supplies shape, knowledge_name, scope, owner_agents conversationally).
@@ -242,7 +273,15 @@ This skill does NOT perform that edit — that would couple authoring of the kno
 
 **Solution**: Principle 5 (Knowledge is per-agent unless cross-cutting). When in doubt, duplicate. Promote to shared only after multiple agents have proven they consume the file *unchanged* for a meaningful period.
 
-### 7. Reference-Shape Knowledge File Consumed Under Structured Output (Anthropic)
+### 7. Source Looks Unreadable Without Trying the Right Tool
+
+**Problem**: A source file in `pre_knowledge/` (or wherever raw materials live) appears empty or chrome-only when read directly. Author flags it as "ingestion not possible" and drafts the knowledge file with a gap. The content was actually available — just behind one extra step.
+
+**Why it happens**: Browser-saved HTML for JS-heavy sites (Substack, Medium, ai.google.dev support pages) APPEARS to be a shell when read as raw text — most of the structural HTML is nav/footer/JS-bundle chrome, and the article body is buried under a single deeply-nested content selector. A naive "open the .html and look for prose" pass misses it. Same for PDFs read with the wrong page range. Same for transcripts pasted into files with unusual encoding.
+
+**Solution**: Before declaring a source ingestible, run `uv run update_agents/fetch_doc.py --from-html <path>` (for HTML sources). The tool strips chrome, applies multi-selector content extraction, and produces clean markdown. If `--from-html` output is **> 5KB and looks like article prose**, the source was readable all along — re-ingest. If `--from-html` output is **< 2KB** AND mostly meta-prose (title, author, "JavaScript required" notices), the source is genuinely JS-rendered with no server-side body — fall back to reader-mode browser save or a manual paste. For PDFs, use the Read tool's `pages` parameter and scan the full document, not just early pages. **Empirical example**: in the 2026-05-13 canvas-toolbox dogfood, a saved Hardman Substack HTML was flagged as "chrome-only" by a generator subagent; running `fetch_doc.py --from-html` on the same file extracted 15KB of clean article body. The tool was right; the eyeball was wrong.
+
+### 8. Reference-Shape Knowledge File Consumed Under Structured Output (Anthropic)
 
 **Problem**: A `reference`-shape knowledge file is loaded into an Anthropic agent that also sets `output_config.format` (or the legacy `response_format`) for structured output. At runtime the API returns 400 — citations and structured outputs are not compatible.
 
