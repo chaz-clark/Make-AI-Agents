@@ -231,6 +231,196 @@
         "last_refresh_status": "partial",
         "last_refresh_date": "2026-03-27",
         "notes": "system-instructions page fetched but sparse (code examples only). Supplemented with https://ai.google.dev/gemini-api/docs/prompting-strategies which has full guidance on system instruction design, persona/task/context/format patterns, Gemini 3 system instruction template."
+      },
+      {
+        "platform": "Anthropic",
+        "label": "Claude Agent SDK Subagents",
+        "url": "https://code.claude.com/docs/en/agent-sdk/subagents",
+        "cache_file": "source_docs/anthropic_subagents.md",
+        "section_focus": "AgentDefinition (description, prompt, tools, model, skills, maxTurns, permissionMode, background), parent_tool_use_id tracking, subagent invocation, stateless-by-default context, subagent resumption",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_orchestrator_agent. Dedicated subagent reference distinct from anthropic_agent_sdk overview (which only has a stub). Full ≈22KB doc cached cleanly."
+      },
+      {
+        "platform": "Anthropic",
+        "label": "Prompt Caching",
+        "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching",
+        "cache_file": "source_docs/anthropic_prompt_caching.md",
+        "section_focus": "cache_control ephemeral type, 5m/1h TTLs, tools/system/messages prefix ordering, up to 4 breakpoints, 20-block lookback, pre-warming, large-context caching",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_agent_knowledge (large knowledge files benefit from caching). Full ≈100KB doc cached."
+      },
+      {
+        "platform": "Anthropic",
+        "label": "Citations",
+        "url": "https://platform.claude.com/docs/en/build-with-claude/citations",
+        "cache_file": "source_docs/anthropic_citations.md",
+        "section_focus": "document content block, citations.enabled=true, plain-text/PDF/custom-content variants, cited_text (no output-token cost), char/page/block indices, streaming citations_delta, incompatible with structured outputs",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_agent_knowledge citations from knowledge sources. Anthropic's citation primitive."
+      },
+      {
+        "platform": "Anthropic",
+        "label": "Files API",
+        "url": "https://platform.claude.com/docs/en/build-with-claude/files",
+        "cache_file": "source_docs/anthropic_files.md",
+        "section_focus": "Files API beta (anthropic-beta: files-api-2025-04-14), file_id references in document/image blocks, 500MB/file 500GB/org limits, persistence until deletion, supported MIME types",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_agent_knowledge. Beta status — requires anthropic-beta header. .csv/.docx/.md/.txt must be inlined as text, not document blocks."
+      },
+      {
+        "platform": "Google",
+        "label": "Google ADK — Multi-Agent Systems",
+        "url": "https://adk.dev/agents/multi-agents/",
+        "url_history": ["https://google.github.io/adk-docs/agents/multi-agents/ (until 2026-04 — 301 redirected to adk.dev)"],
+        "cache_file": "source_docs/google_adk_multi_agents.md",
+        "section_focus": "sub_agents list, parent_agent attribute, transfer_to_agent(agent_name=...), AgentTool wrapper, SequentialAgent/ParallelAgent/LoopAgent, shared session.state, output_key, coordinator/dispatcher pattern, escalate=True",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_orchestrator_agent. ADK is Google's multi-agent surface (distinct from Gemini API). Initial WebFetch returned a summary (≈3KB on a much larger doc) — placeholder created with key facts; full doc body needs manual fetch via source_docs/dropbox/."
+      },
+      {
+        "platform": "Google",
+        "label": "Google ADK — Agent2Agent (A2A) Protocol",
+        "url": "https://adk.dev/a2a/",
+        "url_history": ["https://google.github.io/adk-docs/a2a/ (until 2026-04 — 301 redirected to adk.dev)"],
+        "cache_file": "source_docs/google_adk_a2a.md",
+        "section_focus": "Agent2Agent protocol for cross-agent communication, 7 child pages (overview, intro, quickstart, etc.)",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 as supplementary ADK source for make_orchestrator_agent. Hub page only — 7 child pages not individually fetched. Manual deep-fetch recommended for the protocol spec if A2A becomes a first-class part of the orchestrator skill."
+      },
+      {
+        "platform": "Google",
+        "label": "Gemini API — Files",
+        "url": "https://ai.google.dev/gemini-api/docs/files",
+        "cache_file": "source_docs/google_files.md",
+        "section_focus": "client.files.upload(), file URI references in contents, 48hr persistence, 50MB PDF / 2GB other-types limits, 20GB/project storage, mandatory when request > 100MB",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_agent_knowledge. WebFetch summarized (≈3KB) — placeholder captures all key facts; manual fetch needed for full MIME table and code samples."
+      },
+      {
+        "platform": "Google",
+        "label": "Gemini API — Context Caching",
+        "url": "https://ai.google.dev/gemini-api/docs/caching",
+        "cache_file": "source_docs/google_caching.md",
+        "section_focus": "cachedContent parameter, implicit vs explicit caching, system-instruction caching, file caching, TTL/expire_time, min 1024 tokens (Flash) / 4096 (Pro)",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_agent_knowledge (explicit cache breakpoint primitive, peer to Anthropic cache_control). WebFetch summarized — manual fetch needed for code samples."
+      },
+      {
+        "platform": "OpenAI",
+        "label": "OpenAI Agents SDK — Multi-Agent Orchestration",
+        "url": "https://openai.github.io/openai-agents-python/multi_agent/",
+        "cache_file": "source_docs/openai_multi_agent.md",
+        "section_focus": "Agents-as-tools vs Handoffs decision matrix, LLM-orchestrated vs code-orchestrated patterns, manager-style orchestration",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_orchestrator_agent. WebFetch summarized on openai-agents-python pages (≈3-6KB returned vs ≥14KB expected) — same pattern as the existing openai_agents_sdk source. Manual fetch needed via dropbox/."
+      },
+      {
+        "platform": "OpenAI",
+        "label": "OpenAI Agents SDK — Handoffs",
+        "url": "https://openai.github.io/openai-agents-python/handoffs/",
+        "cache_file": "source_docs/openai_handoffs.md",
+        "section_focus": "Handoff object, tool_name_override (defaults to transfer_to_<agent_name>), tool_description_override, on_handoff callback, input_type, input_filter, HandoffInputData, nest_handoff_history, RECOMMENDED_PROMPT_PREFIX",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_orchestrator_agent. WebFetch summarized — placeholder captures all parameter names; manual fetch needed for full code samples."
+      },
+      {
+        "platform": "OpenAI",
+        "label": "OpenAI Agents SDK — Agent Class",
+        "url": "https://openai.github.io/openai-agents-python/agents/",
+        "cache_file": "source_docs/openai_agents_class.md",
+        "section_focus": "Agent class properties, Agent.as_tool() (canonical delegate_to_* wrapper pattern), tool_use_behavior (run_llm_again / stop_on_first_tool / StopAtTools), dynamic instructions, output_type",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_orchestrator_agent (Agent.as_tool() is the OpenAI peer of make_orchestrator's delegate_to_* tools). WebFetch summarized — manual fetch needed."
+      },
+      {
+        "platform": "OpenAI",
+        "label": "OpenAI Agents SDK — Running Agents",
+        "url": "https://openai.github.io/openai-agents-python/running_agents/",
+        "cache_file": "source_docs/openai_running_agents.md",
+        "section_focus": "Runner.run(), max_turns / MaxTurnsExceeded, termination conditions, RunConfig, nest_handoff_history, handoff_input_filter, 4 persistence strategies, exception hierarchy",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_orchestrator_agent termination_criteria + max_turns design. WebFetch summarized — manual fetch needed."
+      },
+      {
+        "platform": "OpenAI",
+        "label": "OpenAI Agents SDK — Tracing",
+        "url": "https://openai.github.io/openai-agents-python/tracing/",
+        "cache_file": "source_docs/openai_tracing.md",
+        "section_focus": "Trace/Span concepts, agent_span, handoff_span, parent_id (OpenAI peer of Anthropic parent_tool_use_id), nested span hierarchy, sensitive-data controls, processor APIs",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_orchestrator_agent parent/child trace pattern. WebFetch summarized — manual fetch needed."
+      },
+      {
+        "platform": "OpenAI",
+        "label": "OpenAI Responses API — File Search Tool",
+        "url": "https://developers.openai.com/api/docs/guides/tools-file-search",
+        "url_history": ["https://platform.openai.com/docs/assistants/tools/file-search (403-gated since 2026-04; Assistants API deprecated, sunset 2026-08-26 — migrate to Responses API file_search)"],
+        "cache_file": "source_docs/openai_file_search.md",
+        "section_focus": "file_search tool in Responses API, vector_store_ids, max_num_results, include=['file_search_call.results'], metadata filters, 22+ supported formats, vector stores up to 10K files (100M for stores created Nov 2025+)",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_agent_knowledge OpenAI retrieval. Note URL is hyphenated tools-file-search (not /tools/file-search which 404s). Cookbook canonical for code samples: https://cookbook.openai.com/examples/file_search_responses. WebFetch summarized — manual fetch needed."
+      },
+      {
+        "platform": "xAI",
+        "label": "Grok Multi-Agent (Beta)",
+        "url": "https://docs.x.ai/developers/model-capabilities/text/multi-agent",
+        "cache_file": "source_docs/xai_multi_agent.md",
+        "section_focus": "agent_count=4 or 16, reasoning.effort mapping, grok-4.20-multi-agent model identifier, leader-agent synthesis pattern, use_encrypted_content for sub-agent state, built-in-tools-only constraint, Chat Completions incompatibility, max_tokens unsupported",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_orchestrator_agent — but xAI multi-agent is server-side with anonymous workers (no named specialists, no delegate_to_* equivalent). Skill notes xAI as an exception to the standard pattern. WebFetch returned a usable summary (≈3KB on a dense ≈3KB page); content likely complete but verify on next manual pass."
+      },
+      {
+        "platform": "xAI",
+        "label": "Grok 4.20 Multi-Agent Model Card",
+        "url": "https://docs.x.ai/developers/models/grok-4.20-multi-agent-0309",
+        "cache_file": "source_docs/xai_grok_multi_agent_model_card.md",
+        "section_focus": "model card metadata: 2M context, pricing, rate limits, capabilities, aliases for the multi-agent model",
+        "fetch_method": "auto",
+        "last_refresh_status": "success",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 as model-card companion to xai_multi_agent. Sparse but complete (≈1.4KB)."
+      },
+      {
+        "platform": "xAI",
+        "label": "Grok Collections Search Tool",
+        "url": "https://docs.x.ai/docs/guides/tools/collections-search-tool",
+        "cache_file": "source_docs/xai_collections.md",
+        "section_focus": "collections_search tool (RAG over uploaded collections), citation URI format collections://collection_id/files/file_id, peer of OpenAI file_search",
+        "fetch_method": "auto",
+        "last_refresh_status": "partial",
+        "last_refresh_date": "2026-05-12",
+        "notes": "Added 2026-05-12 to ground make_agent_knowledge xAI retrieval. WebFetch summarized — manual fetch needed for full tool config schema. Companion source: xAI Files API (https://docs.x.ai/developers/files) not yet cached but noted in research report."
       }
     ]
   },
@@ -270,7 +460,7 @@
     ],
     "models": [],
     "apis": ["WebFetch (HTTP GET with Cache-Control: no-cache)"],
-    "data_sources": ["9 public AI platform documentation URLs — see sources array (7 agent/API sources + 2 Google Gems sources)"],
+    "data_sources": ["26 public AI platform documentation URLs — see sources array (9 original + 17 added 2026-05-12 wave-2 to ground make_orchestrator_agent and make_agent_knowledge)"],
     "environment_variables": [],
     "optional_dependencies": {
       "description": "No LLM required. Pure fetch + write workflow.",
@@ -319,7 +509,7 @@
       },
       {
         "name": "Template files untouched",
-        "input": "Full refresh run on all 7 sources",
+        "input": "Full refresh run on all 26 sources",
         "expected_output": "make_agent.md, make_agent.json, make_gems/make_gem_qc.md, make_gem_qc.json are byte-identical to pre-run state",
         "validation_method": "exact"
       }
@@ -375,6 +565,19 @@
     "_tier": "tier_3_optional",
     "optional": false,
     "versions": [
+      {
+        "version": "1.1",
+        "date": "2026-05-12",
+        "changes": [
+          "Added 17 new sources to ground two new skills (make_orchestrator_agent and make_agent_knowledge): anthropic_subagents, anthropic_prompt_caching, anthropic_citations, anthropic_files, google_adk_multi_agents, google_adk_a2a, google_files, google_caching, openai_multi_agent, openai_handoffs, openai_agents_class, openai_running_agents, openai_tracing, openai_file_search, xai_multi_agent, xai_grok_multi_agent_model_card, xai_collections.",
+          "5 fetched clean and complete: anthropic_subagents, anthropic_prompt_caching, anthropic_citations, anthropic_files, xai_grok_multi_agent_model_card.",
+          "12 fetched as summaries (small-model WebFetch pattern, same issue noted for openai_agents_sdk and xai_overview); placeholders staged with key-fact notes; manual deep-fetch via source_docs/dropbox/ pending.",
+          "URL migrations documented: adk.dev (was google.github.io/adk-docs), developers.openai.com (was platform.openai.com — now 403/Assistants deprecated sunset 2026-08-26).",
+          "Source count: 9 → 26."
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      },
       {
         "version": "1.0",
         "date": "2026-03-11",

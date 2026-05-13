@@ -1,6 +1,6 @@
 {
   "_description": "Refresh-attempt log for source_docs/*.md cache files. Distinct from each cache file's metadata header (which records when CONTENT last changed). This log records when a REFRESH was attempted and what happened.",
-  "last_refresh_run": "2026-05-12",
+  "last_refresh_run": "2026-05-13",
   "sources": {
     "anthropic_agent_sdk": {
       "last_attempted": "2026-05-12",
@@ -73,6 +73,142 @@
       "size_after": 15413,
       "fetch_status": "success",
       "notes": "Four APIs (Responses, Voice, Imagine Images, Imagine Video) on grok-4.3. OpenAI-compatible client libraries; base URL https://api.x.ai/v1. URL unchanged; manual fetch on 2026-05-12 needed because 2026..."
+    },
+    "anthropic_subagents": {
+      "last_attempted": "2026-05-12",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 21787,
+      "fetch_status": "success",
+      "notes": "WAVE-2 ADD for Skill A (orchestrator). Programmatic AgentDefinition fields (description/prompt/tools/disallowedTools/model/skills/memory/mcpServers/maxTurns/background/effort/permissionMode), filesystem-based agents, general-purpose subagent via Agent tool. What subagents inherit. Detecting via tool_use blocks with name='Agent' (renamed from 'Task' in v2.1.63). Resuming via session_id+agentId. Subagents cannot spawn subagents."
+    },
+    "anthropic_prompt_caching": {
+      "last_attempted": "2026-05-12",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 100697,
+      "fetch_status": "success",
+      "notes": "WAVE-2 ADD for Skill B (knowledge). Automatic caching vs explicit cache_control breakpoints, ephemeral cache lifetime (5 min default, 1h beta), cache hit/miss accounting in usage fields, pricing model (cache_creation_input_tokens vs cache_read_input_tokens), prompt structure best practices for cache reuse. Full 100KB body."
+    },
+    "anthropic_citations": {
+      "last_attempted": "2026-05-12",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 16744,
+      "fetch_status": "success",
+      "notes": "WAVE-2 ADD for Skill B (knowledge). Document types (plain text/PDF/custom content), citation indices, citations.enabled per document (all-or-none), cited_text not counted toward output tokens. INCOMPATIBLE with Structured Outputs (returns 400). Streaming via citations_delta. Files API integration via file_id source."
+    },
+    "anthropic_files": {
+      "last_attempted": "2026-05-12",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 12085,
+      "fetch_status": "success",
+      "notes": "WAVE-2 ADD for Skill B (knowledge). Beta (anthropic-beta: files-api-2025-04-14). Create-once use-many model. 500MB per file, 500GB per org. File types (PDF/text/images/datasets). Workspace-scoped. Available on Claude API, AWS Platform, Microsoft Foundry; NOT Bedrock or Vertex AI. Only files created by skills/code-execution are downloadable."
+    },
+    "google_adk_multi_agents": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 69271,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (69KB). Full ADK multi-agents doc body now cached. || PRIOR: WAVE-2 ADD for Skill A (orchestrator). WebFetch returned small-model summary (~1.5KB raw, expanded to 2.9KB with metadata+checklist). Placeholder preserves key concepts (SequentialAgent/ParallelAgent/LoopAgent, sub_agents tree, transfer_to_agent, AgentTool, 7 patterns). Material-for-MkDocs site likely triggering summarization. Manual fetch needed via dropbox/."
+    },
+    "google_adk_a2a": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 1753,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 confirmed: hub page with 7 child page links; no substantive body. Child pages remain ungathered. || PRIOR: WAVE-2 ADD for Skill A (orchestrator). /a2a/ root is a navigation hub; substantive content lives in 7 child pages (intro, quickstart-exposing for Python/Go/Java, quickstart-consuming for Python/Go/Java, a2a-extension V2). Placeholder lists all child URLs for manual follow-up via dropbox/."
+    },
+    "xai_multi_agent": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 19563,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (19KB). Full multi-agent reference now cached. || PRIOR: WAVE-2 ADD for Skill A (orchestrator). WebFetch returned small-model summary (~1.3KB raw). Key facts captured: model grok-4.20-multi-agent; agent_count=4 (quick) or 16 (deep); reasoning.effort low/medium→4, high/xhigh→16; leader agent + encrypted sub-agents; built-in tools (web_search, x_search, code_execution, collections_search); no client-side tools; incompatible with OpenAI Chat Completions; max_tokens unsupported. Manual fetch needed."
+    },
+    "xai_grok_multi_agent_model_card": {
+      "last_attempted": "2026-05-12",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 1410,
+      "fetch_status": "success",
+      "notes": "WAVE-2 ADD for Skill A (orchestrator). Small model card page — dense and complete. 2M context window, $1.25/$0.20/$2.50 in/cache/out per 1M tokens, 1800 RPM, 10M TPM, us-east-1 + eu-west-1, supports function calling + structured outputs + reasoning. Captures all 6 aliases."
+    },
+    "xai_collections": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 20547,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (20KB). Full collections_search tool reference + curl/SDK examples now cached. || PRIOR: WAVE-2 ADD for Skill B (knowledge). WebFetch returned small-model summary (~1.4KB raw). Tool name collections_search (xAI SDK) / file_search (OpenAI Responses API). Citation URI pattern collections://[collection_id]/files/[file_id]. Combinable with web_search/x_search. Per research report, higher-value than plain xai_files for the knowledge skill. Manual fetch needed for curl/SDK examples."
+    },
+    "openai_multi_agent": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 4934,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (5KB after html→md conversion). Page is genuinely short (overview + decision matrix). || PRIOR: WAVE-2 ADD for Skill A (orchestrator). WebFetch returned small-model summary (~1.6KB raw). Matches OpenAI SDK summarization pattern noted in research report + existing openai_agents_sdk.md fetch note. Key facts captured: LLM-driven vs code-based orchestration; agents-as-tools (Agent.as_tool) vs handoffs patterns; 5 LLM tactics; deterministic patterns (structured output classification, chaining, asyncio.gather, evaluator loops). Manual fetch needed."
+    },
+    "openai_handoffs": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 12894,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (13KB). Full handoffs reference with all params + code samples now cached. || PRIOR: WAVE-2 ADD for Skill A (orchestrator). Partial fetch (~3KB raw) — some code samples captured but meta-prose framing suggests summarization. Key facts captured: handoffs represented as tools (transfer_to_<agent_name>); handoff() params (agent, tool_name_override, tool_description_override, on_handoff, input_type, input_filter, is_enabled, nest_handoff_history); HandoffInputData fields; handoff_filters.remove_all_tools; RECOMMENDED_PROMPT_PREFIX. Manual fetch recommended."
+    },
+    "openai_agents_class": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 18215,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (18KB). Full Agent class reference + Agent.as_tool() pattern now cached. || PRIOR: WAVE-2 ADD for Skill A+B grounding. WebFetch returned small-model summary (~2.5KB raw). Captured all Agent class properties (name, instructions, prompt, handoff_description, handoffs, model, model_settings, tools, mcp_servers, input_guardrails, output_guardrails, output_type, hooks, tool_use_behavior, reset_tool_choice); manager pattern vs handoffs; RunHooks vs AgentHooks; tool_choice values; tool_use_behavior values (run_llm_again/stop_on_first_tool/StopAtTools/ToolsToFinalOutputFunction). Manual fetch needed for full type signatures."
+    },
+    "openai_running_agents": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 34473,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (34KB). Full Runner reference, exception hierarchy, persistence strategies now cached. || PRIOR: WAVE-2 ADD for Skill A (orchestrator). WebFetch returned structured summary (~5KB raw) — best of the OpenAI fetches. Captures Runner.run/run_sync/run_streamed; agent loop; input types; RunConfig categories; 4 persistence strategies (to_input_list, session, conversation_id, previous_response_id); call_model_input_filter; error_handlers; tool_execution vs ModelSettings.parallel_tool_calls; reasoning_item_id_policy; durable integrations (Dapr/Temporal/Restate/DBOS); exception hierarchy. Manual fetch still recommended for full RunConfig type signatures."
+    },
+    "openai_tracing": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 13582,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (14KB). Full tracing API + integration list now cached. || PRIOR: WAVE-2 ADD for Skill A (orchestrator). WebFetch returned small-model summary (~1.5KB raw). Captures Traces vs Spans; auto-wrapped operations; disable mechanisms; trace() context manager; contextvar concurrency; generation_span()/function_span() sensitive data control via RunConfig.trace_include_sensitive_data and OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA; add_trace_processor vs set_trace_processors; 30+ ecosystem integrations (Weights & Biases, Datadog, LangSmith, Braintrust, others). Manual fetch needed for full integrations list with URLs."
+    },
+    "openai_file_search": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 14202,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (14KB). Full File Search tool reference now cached. URL note retained: hyphenated /tools-file-search (not /tools/file-search which 404s). || PRIOR: WAVE-2 ADD for Skill B (knowledge). URL CORRECTION: research report's /tools/file-search 404s; working URL is /tools-file-search (hyphen). platform.openai.com alternate returns 403 (anti-bot, matches existing openai_agents_sdk.md note). WebFetch returned small-model summary (~1.5KB raw). Key facts captured: Responses API tool with semantic+keyword search over OpenAI-managed vector stores; setup = vector store + File API upload + add to store; 30+ formats; max_num_results/metadata filtering/include params; file_search_call response + message with citations; Tier 1 100 RPM, Tier 4-5 1000 RPM. Manual fetch needed."
+    },
+    "google_files": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 28053,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (28KB). Full Files API doc body now cached. || PRIOR: WAVE-2 ADD for Skill B (knowledge). WebFetch returned small-model summary (~1.5KB raw). Key facts captured: 2GB per file, 20GB per project, 48-hour retention, PDFs ≤50MB, use Files API >100MB total request; free across regions; files.upload/get/list/delete; multimodal prompting best practices (image-before-text, few-shot, sequential decomposition, output-format specification; troubleshooting via describe-first/element-references/step-by-step/lower-temperature). Manual fetch needed for full Python/JS/REST code samples."
+    },
+    "google_caching": {
+      "last_attempted": "2026-05-13",
+      "action": "added",
+      "size_before": 0,
+      "size_after": 19366,
+      "fetch_status": "success",
+      "notes": "Manual dropbox/ fetch on 2026-05-13 merged in (19KB). Full caching doc body now cached. || PRIOR: WAVE-2 ADD for Skill B (knowledge). WebFetch returned small-model summary (~1.3KB raw). Key facts captured: implicit caching (default for Gemini 2.5+, 1024-4096 token minimums by model) vs explicit caching (manual, default TTL 1h, Gemini 3 Flash 1024 / Gemini 3 Pro 4096 minimums, supports videos/PDFs/text/system-instructions); hit-rate strategies (large-common content first, similar-prefix bursts); cache_hit visible in usage_metadata; billing = cached tokens at reduced rates + storage duration + standard non-cached. Manual fetch needed for full Python/JS code samples and cache management API."
     }
   }
 }
