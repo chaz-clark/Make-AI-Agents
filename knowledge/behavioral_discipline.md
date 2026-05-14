@@ -273,6 +273,41 @@ In narrative summary:
 
 ---
 
+## Structural non-default applicability — three mechanisms
+
+"When to deviate" above covers *situational* skips: per-task decisions to bypass a principle because the user said so or the case warrants it. This section covers *structural* non-default shapes — agents that, by their very design, don't match the default LLM-at-runtime / per-interaction_pattern assumptions. The discipline still applies; it just applies in a different shape, and the agent declares that shape explicitly.
+
+Three mechanisms exist. They compose — an agent can use one, two, or all three.
+
+| Mechanism | Field on agent's `behavioral_discipline` object | When to use | Working example |
+|---|---|---|---|
+| **Non-LLM agent classification** | `applies_to: "operator"` | The agent has no LLM at runtime. The human OPERATOR runs the script; the discipline applies to the operator's reasoning, not to a system_prompt. | `canvas-toolbox/lib/agents/canvas_blueprint_sync.json` (deterministic_script) |
+| **BD-QC check exemption** | `_qc_checks_na: {"<check_id>": "<reason>"}` | A specific BD-QC check doesn't apply because the verification surface differs (e.g., BD-QC-004's test-case-shape check is N/A for an agent verified by pytest under `tests/`). The discipline still applies via BD-QC-001's MD section. | `canvas_blueprint_sync.json` declares BD-QC-002 and BD-QC-004 N/A |
+| **Principle out of scope** | `override_decisions[]: {"principle": "<id>", "decision": "out_of_scope", "reason": "<...>"}` | A specific principle genuinely doesn't apply because of the `interaction_pattern` — not "the agent chose to skip," but "the pattern itself precludes the principle from being relevant." | `canvas-toolbox/lib/agents/ira_program_alignment.json` (P-005 `out_of_scope` for a conversational agent whose phase structure IS the small-steps decomposition) |
+
+### Why the three are distinct
+
+- `applies_to: "operator"` is **whole-agent classification** — one declaration affects how every check is interpreted.
+- `_qc_checks_na` is **per-check exemption** — specific BD-QC IDs are skipped with reasons, leaving the rest in force.
+- `override_decisions[].decision: "out_of_scope"` is **per-principle declaration** — the principle never applied because of structural shape, not because the agent opted out.
+
+### What they share
+
+All three make non-default applicability EXPLICIT rather than silent. The hard rule (state which principle is skipped and why) extends to all three: declare which mechanism is in play, *in the agent's own JSON*, with a reason that names the structural mismatch.
+
+### The `decision` field on `override_decisions[]`
+
+The `decision` field is OPTIONAL on each `override_decisions[]` entry.
+
+- **Absent (default)** — semantics: "the principle was applicable; the agent or user decided to skip; reason articulates why this task warrants the skip." This is the v3.6 default semantics.
+- **`"out_of_scope"`** — semantics: "the principle never applied because the agent's `interaction_pattern` structurally precludes it; reason articulates the structural mismatch (not a choice to skip)."
+
+A future BD-QC check may enforce `decision: "out_of_scope"` for any override whose reason cites the interaction_pattern as the cause. For now, treat the vocabulary as documented and use the working examples above as templates.
+
+The canonical vocabulary lists for `applies_to`, `_qc_checks_na`, and `override_decisions[].decision` live in `behavioral_discipline.json` → `agent_applicability_vocabulary`.
+
+---
+
 ## How agents inherit this
 
 Every agent built from `make_agent.md` includes a compact version of this discipline in its own MD and system prompt. Every gem built from `make_gem.md` includes a gem-tailored version.
@@ -293,6 +328,7 @@ If `skills/karpathy-guidelines/` is loaded by the host tool, it reinforces this 
 |---|---|
 | Principles by stable ID with metadata | `behavioral_discipline.json` → `principles` |
 | Which principles apply to which agent type | `behavioral_discipline.json` → `agent_type_applicability` |
+| Vocabulary for `applies_to`, `_qc_checks_na`, and `override_decisions[].decision` | `behavioral_discipline.json` → `agent_applicability_vocabulary` |
 | Trust markers (artifact → principle) | `behavioral_discipline.json` → `trust_markers` |
 | Override rules and no-override list | `behavioral_discipline.json` → `override_rules` |
 | Compact boilerplate templates for system prompts and MD sections | `behavioral_discipline.json` → `compact_boilerplate` |
