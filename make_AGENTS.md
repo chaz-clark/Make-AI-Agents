@@ -154,18 +154,20 @@ The skill responds with a proposed AGENTS.md draft, waits for confirmation per P
 
 ### 1. Duplicating discipline content INTO the AGENTS.md prose (vs. packaging the discipline FILES alongside)
 
-**Problem**: There are two distinct mistakes that look similar:
+**Problem**: There are THREE distinct mistakes that look similar:
 - **(a) Inlining the discipline content**: Generated AGENTS.md restates the behavioral discipline in full prose — copies all 10 principles, examples, override rules — into the Working Style section itself. AGENTS.md balloons to 1000+ lines and stays in sync with `knowledge/behavioral_discipline.md` only by manual effort.
 - **(b) Failing to package the files**: Generated AGENTS.md is lean (points at `knowledge/behavioral_discipline.md`) but the target repo doesn't actually have that file. The pointer is broken in every project that wasn't explicitly set up with the discipline.
+- **(c) Preserving stale vendoring-pattern language under minimum-diff**: A refresh of an older AGENTS.md leaves a stale Active Context (or Structure) bullet that describes the Make-AI-Agents reference as a `git subtree` — language from the pre-2026-05-13 era. The actual local posture is `clone+gitignore` per the current rule, but the bullet wasn't rewritten because P-007 (minimum diff) preserved adjacent code. Result: the AGENTS.md reads as endorsing a vendoring pattern the project no longer uses, and a new agent in that repo will follow the stale instruction (e.g. try to `git subtree pull --prefix=...` on a path that's a regular clone, get a confusing error).
 
-Both kill the propagation — (a) by duplication-drift, (b) by broken-reference.
+All three kill the propagation — (a) by duplication-drift, (b) by broken-reference, (c) by stale-instruction-drift.
 
-**Why each happens**: (a) Skill writes "comprehensive" output instead of pointers. (b) Skill writes pointer-only output without ensuring the target file exists.
+**Why each happens**: (a) Skill writes "comprehensive" output instead of pointers. (b) Skill writes pointer-only output without ensuring the target file exists. (c) Refresh treats vendoring-pattern language as "adjacent code that was correct for its time" and preserves it verbatim — but the canonical posture changed (subtree → clone+gitignore as of 2026-05-13), so the language IS itself the defect, not adjacent code.
 
 **Solution**:
 - The AGENTS.md prose is a POINTER — Working Style references `knowledge/behavioral_discipline.md` by file path. The `compact_boilerplate.working_style_template` in `make_AGENTS.json` is a ~3-line summary naming the four no-override principles, not a copy of all 10.
 - The FILES are PACKAGED alongside — per Quickstart step 4, `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json` are copied from Make-AI-Agents into the target's `knowledge/` folder (with a snapshot header). The pointer in Working Style then resolves to a local file that exists.
-- Together: lean AGENTS.md prose + co-located discipline files = discipline propagates correctly to the target repo without duplication-drift OR broken-reference.
+- **During refresh, SCAN for stale vendoring-pattern language and REWRITE** — explicit narrow exception to P-007. If the existing AGENTS.md mentions `git subtree`, `git subtree pull`, `git subtree push`, `subtree add`, `.gitmodules`, or `git submodule` in the Active Context / Structure / Project-specific rules sections, propose a rewrite to the canonical clone+gitignore form. Canonical Active Context bullet template (substitute the repo name for `make-ai-agents`): `\`make-ai-agents\` is a **local clone, gitignored** at \`make-ai-agents/\` (not a subtree, not a submodule — see \`.gitignore\`). Refresh with \`cd make-ai-agents && git pull\`. Re-clone fresh by removing the folder and running \`git clone https://github.com/chaz-clark/Make-AI-Agents.git make-ai-agents\` from the repo root.` Surface each rewrite in the refresh handoff doc so the maintainer sees the change explicitly.
+- Together: lean AGENTS.md prose + co-located discipline files + current vendoring-pattern language = discipline propagates correctly without duplication-drift, broken-reference, or stale-instruction-drift.
 
 ### 2. Stale Active Context
 
