@@ -63,6 +63,12 @@ The synthesis: Karpathy's *Think Before Coding* maps to Toyota's *Genchi Genbuts
 
 ---
 
+## Communication register
+
+The preferred register — **TBP / Toyota lexicon** for execution discipline, **Agile / Scrum lexicon** (parking lot / sprint / story) for work management — is defined canonically in the **karpathy-guidelines backbone**, loaded via the host tool (Claude Code plugin / skill, Cursor rule, or per-project `CLAUDE.md`). It composes with this discipline at the worker level (see "How agents inherit this" below). In short: reach for the TBP term over its startup-jargon equivalent — say **Genchi Genbutsu**, never "dogfooding."
+
+---
+
 ## The Ten Principles
 
 Each principle leads with the plain-English action. The Toyota concept is in italic parentheses for the lineage. Stable IDs (P-001 through P-010) are defined in the JSON; this section is the prose explanation.
