@@ -12,3 +12,11 @@ AGENTJ_*.md
 canvas-sync.md
 source_docs/dropbox/
 temp/
+
+# Cloned handoff convention repo — clone+gitignore, refresh via `cd handoff && git pull`
+handoff/
+
+# Build scaffolding for the future clone-steward repo — local-only,
+# not canonical Make-AI-Agents knowledge. Migrates into the steward
+# repo (generic-ified) when that's built; remove this line then.
+knowledge/toolkit_clone_stewardship.md
