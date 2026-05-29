@@ -77,6 +77,13 @@
         "format": "handoff/ clone at target repo root + handoff/ entry added to the target's .gitignore",
         "example": "/Users/chazclar/Documents/GitHub/canvas-toolbox/handoff/",
         "conditions": "CONDITIONAL — required when the target repo participates in the cross-repo handoff convention. Participation detected via (i) auto-signal: target repo has a handoffs/ folder; OR (ii) explicit user confirmation to the prompt 'Will this agent communicate with other agents via handoffs?'. Skipped otherwise — the recognition snippet still ships standalone in Working Style. Added 2026-05-28 (Sprint F)."
+      },
+      {
+        "name": "learned_directory",
+        "type": "directory",
+        "format": "knowledge/learned/ directory at the target repo's knowledge path, with .gitkeep if empty",
+        "example": "/Users/chazclar/Documents/GitHub/canvas-toolbox/knowledge/learned/",
+        "conditions": "REQUIRED — every generated AGENTS.md ships with the Learning loop section AND an empty knowledge/learned/ directory ready for the agent to write distilled lessons (P-009 as structural artifact). The .gitkeep file ensures the directory exists in version control even when empty. Verified by BD-QC-008. Added 2026-05-28 (Sprint B)."
       }
     ],
     "side_effects": "Creates or updates AGENTS.md at project root after user confirmation. Copies knowledge/behavioral_discipline.{md,json} into the target's knowledge/ folder unless already present (with snapshot header for traceability). Does NOT delete the existing CLAUDE.md — that is a separate follow-up step.",
@@ -115,6 +122,17 @@
         "must_include": [
           "discipline pointer to knowledge/behavioral_discipline.md or equivalent",
           "handoff recognition section (## Handoff document recognition) baked verbatim from handoff/AGENTS_snippet.md — heading + path-pattern table + 7 numbered rules + status/direction enum quick-lookups. Verified by AGENTS-QC-008."
+        ]
+      },
+      {
+        "id": "learning_loop",
+        "heading": "## Learning loop",
+        "description": "P-009 (Hansei + Yokoten) as a structural artifact — closed-loop knowledge distillation. At session end, the agent writes distilled lessons to `knowledge/learned/<file>.md` for future invocations to read. Bake the canonical text from compact_boilerplate.learning_loop_template. Verified by BD-QC-008 (knowledge/behavioral_discipline.json). Added 2026-05-28 (Sprint B). Placed between Working Style and Active Context — behaviors → learning mechanism → state.",
+        "required": true,
+        "must_include": [
+          "section heading `## Learning loop`",
+          "reference to `knowledge/learned/` directory pattern",
+          "rule that a lesson must be specific and reusable (not generic 'task done' prose)"
         ]
       },
       {
@@ -168,7 +186,7 @@
   "agents_md_template": {
     "_tier": "tier_1_core",
     "_description": "The skeleton AGENTS.md the make_AGENTS skill substitutes into. Placeholders use {{double_braces}}.",
-    "template": "# {{project_name}}\n\n{{one_line_description}}\n\n## Project Purpose\n\n**This is**: {{what_this_is}}\n\n**This is NOT**: {{what_this_is_not}}\n\n**Audience**: {{audience}}\n\n## Structure\n\n```\n{{folder_layout}}\n```\n\n## Working Style\n\n{{working_style_block}}\n\n{{project_specific_rules}}\n\n{{handoff_recognition_block}}\n\n## Active Context\n\n_Last updated: {{iso_date}}_\n\n{{active_context_bullets}}\n\n{{optional_sections_block}}\n"
+    "template": "# {{project_name}}\n\n{{one_line_description}}\n\n## Project Purpose\n\n**This is**: {{what_this_is}}\n\n**This is NOT**: {{what_this_is_not}}\n\n**Audience**: {{audience}}\n\n## Structure\n\n```\n{{folder_layout}}\n```\n\n## Working Style\n\n{{working_style_block}}\n\n{{project_specific_rules}}\n\n{{handoff_recognition_block}}\n\n{{learning_loop_block}}\n\n## Active Context\n\n_Last updated: {{iso_date}}_\n\n{{active_context_bullets}}\n\n{{optional_sections_block}}\n"
   },
 
   "compact_boilerplate": {
@@ -178,7 +196,8 @@
     "project_specific_rules_template": "**Project-specific rules**:\n{{rules_bullets}}",
     "active_context_template": "{{active_bullets}}\n\nNext up: {{next_up}}",
     "handoff_recognition_source": "handoff/AGENTS_snippet.md",
-    "handoff_recognition_instructions": "Always baked into every generated AGENTS.md per Quickstart step 4.5. Read handoff/AGENTS_snippet.md from this Make-AI-Agents repo (the handoff convention repo is cloned at handoff/). Copy its content from '## Handoff document recognition' through end-of-file VERBATIM into the generated AGENTS.md's Working Style section (after the discipline pointer subsection, before Active Context). Prepend two HTML-comment refresh-trace lines above the section: '<!-- handoff/AGENTS_snippet.md @ <sha> -->' and '<!-- refresh: cd handoff && git pull -->' so a future reader sees when it was baked and how to refresh. The snippet is SELF-CONTAINED — its 7 rules + path-pattern table + status/direction enums do NOT depend on the target repo having handoff/ co-located at runtime. Co-location of the handoff/ clone is a SEPARATE conditional step (see Quickstart 4.5 (b)) triggered by participation signals (target has handoffs/ folder, or user confirms 'will this agent communicate with other agents'). AGENTS-QC-008 verifies both the baked snippet and the conditional co-location."
+    "handoff_recognition_instructions": "Always baked into every generated AGENTS.md per Quickstart step 4.5. Read handoff/AGENTS_snippet.md from this Make-AI-Agents repo (the handoff convention repo is cloned at handoff/). Copy its content from '## Handoff document recognition' through end-of-file VERBATIM into the generated AGENTS.md's Working Style section (after the discipline pointer subsection, before Active Context). Prepend two HTML-comment refresh-trace lines above the section: '<!-- handoff/AGENTS_snippet.md @ <sha> -->' and '<!-- refresh: cd handoff && git pull -->' so a future reader sees when it was baked and how to refresh. The snippet is SELF-CONTAINED — its 7 rules + path-pattern table + status/direction enums do NOT depend on the target repo having handoff/ co-located at runtime. Co-location of the handoff/ clone is a SEPARATE conditional step (see Quickstart 4.5 (b)) triggered by participation signals (target has handoffs/ folder, or user confirms 'will this agent communicate with other agents'). AGENTS-QC-008 verifies both the baked snippet and the conditional co-location.",
+    "learning_loop_template": "## Learning loop\n\nAt session end, distill non-obvious lessons from the session into a structured entry under `knowledge/learned/`:\n\n- **File**: `knowledge/learned/YYYY-MM-DD-<short-slug>.md` (or update an existing rolling file like `knowledge/learned/preferences.md` for cumulative patterns).\n- **Frontmatter**: `name`, `observed_in: <session-context>`, `confidence: low | med | high`.\n- **Body**: the lesson, the trigger, the suggested rule.\n\nWhat counts: surprises, non-obvious quirks, user-preference signals, system gotchas. What does NOT count: generic \"task done\" prose. **A lesson must be specific and reusable.**\n\nFuture invocations of agents in this repo read `knowledge/learned/` alongside the core knowledge files. This is the closed-loop distillation pattern — **P-009 (Hansei + Yokoten) formalized as a structural artifact**, in the Make-AI-Agents idiom (no DSPy/GEPA, no server — just structured markdown the agent reads next time). Inspired by Hermes Agent's auto-distillation; rebuilt as a single Markdown-directory convention."
   },
 
   "validation": {
@@ -195,7 +214,8 @@
       "Active Context section starts with a `_Last updated: YYYY-MM-DD_` line",
       "No tool-specific language in the file body (no 'Claude Code does X' style instructions)",
       "Refresh only: no stale vendoring-pattern tokens (`git subtree`, `git subtree pull/push`, `subtree add`, `.gitmodules`, `git submodule`) describe the CURRENT or RECOMMENDED posture in any section (AGENTS-QC-007). Negative-framing or historical-migration mentions are allowed.",
-      "Working Style contains the canonical handoff recognition section (AGENTS-QC-008): heading `## Handoff document recognition` present + path-pattern table present (with `Path pattern` / `What it is` columns and rows for `handoffs/HANDOFF_<topic>.md`, `handoffs/<YYYY-MM-DD>_<topic>.md`, etc.) + all 7 numbered rules present + `## Quick lookup — Status enum` and `## Quick lookup — Direction enum` tables present. Conditional: if the target repo has a `handoffs/` folder, the `handoff/` clone is co-located at the target repo root AND `handoff/` is listed in the target's `.gitignore`."
+      "Working Style contains the canonical handoff recognition section (AGENTS-QC-008): heading `## Handoff document recognition` present + path-pattern table present (with `Path pattern` / `What it is` columns and rows for `handoffs/HANDOFF_<topic>.md`, `handoffs/<YYYY-MM-DD>_<topic>.md`, etc.) + all 7 numbered rules present + `## Quick lookup — Status enum` and `## Quick lookup — Direction enum` tables present. Conditional: if the target repo has a `handoffs/` folder, the `handoff/` clone is co-located at the target repo root AND `handoff/` is listed in the target's `.gitignore`.",
+      "Generated AGENTS.md contains a `## Learning loop` section baked from compact_boilerplate.learning_loop_template (verified by BD-QC-008 in knowledge/behavioral_discipline.json). The target repo has `knowledge/learned/` as a directory (with `.gitkeep` if empty). P-009 (Hansei + Yokoten) is structurally present, not just discipline-in-prose."
     ],
     "success_criteria": [
       "Generated AGENTS.md is tool-agnostic (readable by any agentic dev tool)",
@@ -319,7 +339,7 @@
           "Initial bare-bones make_AGENTS skill — sibling to make_agent and make_gem.",
           "Defines required and optional sections for AGENTS.md.",
           "Embeds behavioral discipline pointer (compact_boilerplate.working_style_template) so every generated AGENTS.md inherits the discipline.",
-          "5 skill-specific QC checks (AGENTS-QC-001 through AGENTS-QC-005). AGENTS-QC-006 added 2026-05-13 for discipline-file co-location enforcement. AGENTS-QC-007 added 2026-05-14 (issue #10) for refresh-time stale-vendoring-pattern scan — triggered by three same-day hand-fixes across canvas-toolbox, handoff, and Make-AI-Agents after the subtree → clone+gitignore migration on 2026-05-13. AGENTS-QC-008 added 2026-05-28 (Sprint F, Hermes-research synthesis) for handoff convention recognition: every generated AGENTS.md bakes handoff/AGENTS_snippet.md (7-rule canonical) verbatim into Working Style; if the target repo has handoffs/, the handoff/ clone is conditionally co-located + gitignored (same propagation pattern as AGENTS-QC-006 for the discipline). Compact_boilerplate adds handoff_recognition_source pointer + handoff_recognition_instructions; agents_md_template adds {{handoff_recognition_block}}; io_contract.outputs adds conditional handoff_repo_co_located.",
+          "5 skill-specific QC checks (AGENTS-QC-001 through AGENTS-QC-005). AGENTS-QC-006 added 2026-05-13 for discipline-file co-location enforcement. AGENTS-QC-007 added 2026-05-14 (issue #10) for refresh-time stale-vendoring-pattern scan — triggered by three same-day hand-fixes across canvas-toolbox, handoff, and Make-AI-Agents after the subtree → clone+gitignore migration on 2026-05-13. AGENTS-QC-008 added 2026-05-28 (Sprint F, Hermes-research synthesis) for handoff convention recognition: every generated AGENTS.md bakes handoff/AGENTS_snippet.md (7-rule canonical) verbatim into Working Style; if the target repo has handoffs/, the handoff/ clone is conditionally co-located + gitignored (same propagation pattern as AGENTS-QC-006 for the discipline). Compact_boilerplate adds handoff_recognition_source pointer + handoff_recognition_instructions; agents_md_template adds {{handoff_recognition_block}}; io_contract.outputs adds conditional handoff_repo_co_located. Sprint B (2026-05-28, also Hermes synthesis): a new 6th required section `## Learning loop` is added to agents_md_required_sections (between Working Style and Active Context); compact_boilerplate adds learning_loop_template; agents_md_template adds {{learning_loop_block}}; io_contract.outputs adds learned_directory. BD-QC-008 in behavioral_discipline.json enforces presence of the Learning loop section + knowledge/learned/ directory — P-009 (Hansei + Yokoten) as compile-time slot, no longer prose discipline.",
           "Skill itself operates as interaction_pattern: single_write_workflow with applicable_principles P-001, P-002, P-003, P-004, P-006, P-007, P-008, P-009, P-010 (skip P-005)."
         ]
       }

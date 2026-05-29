@@ -1,7 +1,7 @@
 {
   "_metadata": {
-    "version": "1.2",
-    "last_updated": "2026-05-14",
+    "version": "1.3",
+    "last_updated": "2026-05-28",
     "description": "Structured behavioral discipline rules for AI agents. Paired with behavioral_discipline.md (narrative).",
     "instructions": "Read by make_agent and make_agent_qc. MD = the why; JSON = the rules. Update both files together.",
     "companion_files": {
@@ -360,6 +360,13 @@
         "name": "Non-interactive mode requires alert channel",
         "rule": "Any agent with io_contract.non_interactive_mode: true MUST declare an alert_channel in its spec. Without an alert channel, P-003 (Stop on Defect) has nowhere to surface to in non-interactive mode.",
         "severity": "critical"
+      },
+      {
+        "check_id": "BD-QC-008",
+        "name": "Learning loop structural artifact (P-009 as compile-time slot)",
+        "rule": "Agent's MD has a `## Learning loop` section describing the closed-loop distillation pattern (P-009 Hansei + Yokoten formalized as a structural artifact, not just prose discipline). The agent's knowledge folder includes a `knowledge/learned/` subdirectory (gitkept if empty). PASS: section heading `## Learning loop` is present; directory `knowledge/learned/` exists at the agent's knowledge path. FAIL: either missing. Without this structural slot, P-009 stays prose discipline rather than a self-improving artifact — every invocation re-discovers lessons previous sessions surfaced. Inspired by Hermes Agent's closed-loop skill distillation; rebuilt in the Make-AI-Agents idiom (no DSPy/GEPA, no server — just structured markdown the agent reads next time). Severity medium: agents still work without it, but they don't compound experience across sessions. Added 2026-05-28 (Sprint B).",
+        "severity": "medium",
+        "_propagation": "Enforced by make_AGENTS at AGENTS.md generation time via the `learning_loop` required section in make_AGENTS.json. Generated AGENTS.md files bake compact_boilerplate.learning_loop_template verbatim and create knowledge/learned/ (with .gitkeep) in the target repo. make_agent will adopt the same pattern in a follow-up sprint so per-agent specs also inherit the slot."
       }
     ]
   },
@@ -383,6 +390,13 @@
 
   "changelog": {
     "versions": [
+      {
+        "version": "1.3",
+        "date": "2026-05-28",
+        "changes": [
+          "Added BD-QC-008 — Learning loop structural artifact (P-009 as compile-time slot). Generated AGENTS.md files (via make_AGENTS) and future per-agent specs (via make_agent) must contain a `## Learning loop` section + a `knowledge/learned/` directory. Closed-loop distillation pattern in the Make-AI-Agents idiom; inspired by Hermes Agent's auto-distillation but rebuilt as structured markdown (no DSPy/GEPA, no server). Part of Sprint B from the 2026-05-28 Hermes-research synthesis."
+        ]
+      },
       {
         "version": "1.2",
         "date": "2026-05-14",

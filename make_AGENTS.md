@@ -47,7 +47,15 @@
 
    **(c) Surface what was done** in the generation summary: which sha was baked from `handoff/AGENTS_snippet.md`; whether `handoff/` was co-located and the reason (participation signal yes/no).
 
-5. **[Validate]**: Run `make_agent_qc` against the generated AGENTS.md if it makes sense — AGENTS.md is structurally similar to an agent spec but not identical. See `## Validation and Testing (core)` for what applies. AGENTS-QC-006 verifies the discipline files are co-located (or the pointer resolves to a cloned-subdirectory path). **On refresh** (existing AGENTS.md as input): AGENTS-QC-007 scans Active Context / Structure / Project-specific rules for stale vendoring-pattern tokens (`git subtree`, `subtree pull/push/add`, `.gitmodules`, `git submodule`) — if any describe the CURRENT posture, propose a rewrite to the canonical clone+gitignore form (see Common Pitfall #1) rather than preserving them under P-007. **AGENTS-QC-008** (added 2026-05-28, Sprint F) verifies the handoff recognition section is structurally complete (heading present, path-pattern table present, all 7 rules present, status enum + direction enum quick-lookups present) AND — conditionally — that if the target repo has a `handoffs/` folder, the `handoff/` clone is co-located and gitignored.
+4.6. **[Bake Learning loop section + create `knowledge/learned/`]** (REQUIRED — added 2026-05-28, Sprint B):
+
+   **(a) Bake the Learning loop section** into the generated AGENTS.md between the handoff recognition section and Active Context. Paste the canonical text from `make_AGENTS.json` → `compact_boilerplate.learning_loop_template` verbatim. This is the structural form of **P-009 (Hansei + Yokoten)** — agents end sessions by writing distilled lessons to `knowledge/learned/<file>.md` for future invocations to read. Inspired by Hermes Agent's auto-distillation; rebuilt as a Markdown-directory convention (no DSPy/GEPA, no server).
+
+   **(b) Create the directory**: `mkdir -p <target>/knowledge/learned/` and add a `.gitkeep` file so the convention exists in version control even before the agent has written its first lesson.
+
+   **(c) Verified by BD-QC-008** (in `knowledge/behavioral_discipline.json`): agent MD has the `## Learning loop` heading; `knowledge/learned/` exists. Without this slot, P-009 stays prose discipline rather than a self-improving artifact — every invocation re-discovers lessons previous sessions already surfaced.
+
+5. **[Validate]**: Run `make_agent_qc` against the generated AGENTS.md if it makes sense — AGENTS.md is structurally similar to an agent spec but not identical. See `## Validation and Testing (core)` for what applies. AGENTS-QC-006 verifies the discipline files are co-located (or the pointer resolves to a cloned-subdirectory path). **On refresh** (existing AGENTS.md as input): AGENTS-QC-007 scans Active Context / Structure / Project-specific rules for stale vendoring-pattern tokens (`git subtree`, `subtree pull/push/add`, `.gitmodules`, `git submodule`) — if any describe the CURRENT posture, propose a rewrite to the canonical clone+gitignore form (see Common Pitfall #1) rather than preserving them under P-007. **AGENTS-QC-008** (added 2026-05-28, Sprint F) verifies the handoff recognition section is structurally complete (heading present, path-pattern table present, all 7 rules present, status enum + direction enum quick-lookups present) AND — conditionally — that if the target repo has a `handoffs/` folder, the `handoff/` clone is co-located and gitignored. **BD-QC-008** (added 2026-05-28, Sprint B, in `knowledge/behavioral_discipline.json`) verifies the `## Learning loop` section is present + `knowledge/learned/` directory exists in the target repo.
 
 6. **[Output]**: Confirm AGENTS.md location with the user. If migrating from `CLAUDE.md`, propose deletion as a separate step (per P-002 — don't bundle the deletion with the creation).
 
@@ -132,8 +140,9 @@ The contract for every AGENTS.md this skill generates.
 1. **`# <Project Name>`** — title, ~1 line description below
 2. **`## Project Purpose`** — what this repo IS and is NOT, ~3-5 bullets each. Includes the audience (who uses this).
 3. **`## Structure`** — annotated folder layout. Reference, not exhaustive.
-4. **`## Working Style`** — behavioral discipline pointer (the `compact_boilerplate.working_style_template` substituted in) + any project-specific rules (e.g., "No `__init__.py` files").
-5. **`## Active Context`** — current state, in-flight work, recent major changes, open issues. Date-stamped.
+4. **`## Working Style`** — behavioral discipline pointer (the `compact_boilerplate.working_style_template` substituted in), project-specific rules, AND the canonical handoff recognition snippet (baked from `handoff/AGENTS_snippet.md`, per Sprint F / AGENTS-QC-008).
+5. **`## Learning loop`** *(added 2026-05-28, Sprint B)* — closed-loop knowledge distillation pattern (P-009 as structural artifact). Baked from `compact_boilerplate.learning_loop_template`. Verified by BD-QC-008 in `knowledge/behavioral_discipline.json`. Target repo gets a `knowledge/learned/` directory (gitkept) for the agent to write distilled lessons.
+6. **`## Active Context`** — current state, in-flight work, recent major changes, open issues. Date-stamped.
 
 ### Optional sections (when criteria apply)
 
