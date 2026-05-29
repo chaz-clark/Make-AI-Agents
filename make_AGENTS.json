@@ -308,14 +308,6 @@
         ]
       },
       {
-        "check_id": "AGENTS-QC-009",
-        "name": "Generated AGENTS.md has agentskills.io frontmatter",
-        "rule": "Generated AGENTS.md starts with YAML frontmatter following the agentskills.io open standard. REQUIRED fields at minimum: `name` (= project_name from the title), `description` (= the one-line description below the title), `version`. RECOMMENDED: `author`, `license`. OPTIONAL: `metadata` block with tool-specific or domain-specific extensions; specifically Make-AI-Agents generators SHOULD add `metadata.make-ai-agents.generated_by: make_AGENTS` and `metadata.make-ai-agents.generated_on: <iso-date>` so a future reader knows the file's provenance. PASS: file starts with `---` + valid YAML containing required fields + closing `---`; the title heading immediately follows. FAIL: missing frontmatter or required fields. This check delegates to BD-QC-009 in behavioral_discipline.json for the discipline rule. The frontmatter makes generated AGENTS.md files loadable as agentskills.io-compliant skills (Hermes / OpenClaw / any compliant runtime), WITHOUT changing how they are consumed by agentic dev tools that read AGENTS.md directly — the title heading still drives parsers that don't understand frontmatter. Added 2026-05-28 (Sprint A).",
-        "severity": "medium",
-        "_delegates_to": "BD-QC-009",
-        "_required_frontmatter_fields": ["name", "description", "version"]
-      },
-      {
         "check_id": "AGENTS-QC-008",
         "name": "Handoff recognition section is structurally complete (and handoff/ co-located when participating)",
         "rule": "Working Style contains the canonical handoff recognition block baked from handoff/AGENTS_snippet.md per Quickstart step 4.5. PASS requires ALL of: (a) the section heading `## Handoff document recognition` is present in Working Style; (b) the path-pattern table is present (header row contains `Path pattern` and `What it is`, with at least the rows for `handoffs/HANDOFF_<topic>.md` (outgoing request canonical), `handoffs/<YYYY-MM-DD>_<topic>.md` (incoming deliver canonical), `<CONSUMER>_HANDOFF_<topic>.md` at repo root (incoming request), `<PRODUCER>_DELIVERS_<topic>.md` at repo root (visibility copy), `handoffs/parkinglot.md` (internal near-term), `handoffs/long-term-parking.md` (internal far-horizon)); (c) all 7 numbered rules are present under a `Seven rules` heading or equivalent (rules: Read metadata header first; Act only on Status: delivered; Surface before applying; Update Status on apply; STOP on missing referenced artifacts; Before authoring outbound, read REPO_CARD.md; Do not auto-act on `parked` items); (d) the status-enum quick-lookup table (`## Quick lookup — Status enum`) is present with all values (draft/delivered/applying/applied/archived/superseded/parked); (e) the direction-enum quick-lookup table (`## Quick lookup — Direction enum`) is present with all values (request/deliver/internal). CONDITIONAL SUB-RULE: if the target repo has a `handoffs/` folder (= participates in the convention), then the `handoff/` clone MUST be co-located at the target repo root AND `handoff/` MUST be listed in the target's `.gitignore`. Same propagation pattern as AGENTS-QC-006 for the discipline; if the target does not participate, this sub-rule is N/A. FAIL: any of (a)–(e) missing; OR participation detected but `handoff/` not co-located/ignored. Severity high because without this, generated AGENTS.md files don't recognize handoff documents as a structured artifact lifecycle, and cross-repo coordination silently degrades into prose conversation. Added 2026-05-28 (Sprint F).",
@@ -336,6 +328,14 @@
           "requirement": "handoff/ clone exists at the target repo root AND handoff/ is listed in the target's .gitignore",
           "rationale": "Mirrors AGENTS-QC-006 condition (b) for the discipline — participation is auto-detectable from the receiving folder; co-location enables the snippet's pointers (handoff/CONVENTION.md, templates/, etc.) to resolve."
         }
+      },
+      {
+        "check_id": "AGENTS-QC-009",
+        "name": "Generated AGENTS.md has agentskills.io frontmatter",
+        "rule": "Generated AGENTS.md starts with YAML frontmatter following the agentskills.io open standard. REQUIRED fields at minimum: `name` (= project_name from the title), `description` (= the one-line description below the title), `version`. RECOMMENDED: `author`, `license`. OPTIONAL: `metadata` block with tool-specific or domain-specific extensions; specifically Make-AI-Agents generators SHOULD add `metadata.make-ai-agents.generated_by: make_AGENTS` and `metadata.make-ai-agents.generated_on: <iso-date>` so a future reader knows the file's provenance. PASS: file starts with `---` + valid YAML containing required fields + closing `---`; the title heading immediately follows. FAIL: missing frontmatter or required fields. This check delegates to BD-QC-009 in behavioral_discipline.json for the discipline rule. The frontmatter makes generated AGENTS.md files loadable as agentskills.io-compliant skills (Hermes / OpenClaw / any compliant runtime), WITHOUT changing how they are consumed by agentic dev tools that read AGENTS.md directly — the title heading still drives parsers that don't understand frontmatter. Added 2026-05-28 (Sprint A).",
+        "severity": "medium",
+        "_delegates_to": "BD-QC-009",
+        "_required_frontmatter_fields": ["name", "description", "version"]
       }
     ]
   },
