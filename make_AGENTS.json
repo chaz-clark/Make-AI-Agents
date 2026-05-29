@@ -1,7 +1,7 @@
 {
   "_metadata": {
     "template_version": "1.0",
-    "last_updated": "2026-05-14",
+    "last_updated": "2026-05-28",
     "description": "make_AGENTS skill — generates tool-agnostic AGENTS.md project context files. Sibling to make_agent.md and make_gem.md.",
     "instructions": "MD = the why (mission, principles, narrative). JSON = the what (required/optional sections, template strings, compact boilerplate, validation). Update both files together.",
     "companion_files": {
@@ -12,7 +12,7 @@
     "skill_details": {
       "skill_name": "make_AGENTS",
       "version": "1.0",
-      "last_updated": "2026-05-14",
+      "last_updated": "2026-05-28",
       "description": "Generates AGENTS.md project context files that are tool-agnostic and embed the behavioral discipline.",
       "owner": "Project: Make-AI-Agents",
       "complexity": "simple-to-standard"
@@ -70,6 +70,13 @@
         "format": "knowledge/behavioral_discipline.md + knowledge/behavioral_discipline.json copied into the TARGET project's knowledge/ folder (with snapshot header indicating origin commit-sha)",
         "example": "/Users/chazclar/Documents/GitHub/canvas-toolbox/knowledge/behavioral_discipline.{md,json}",
         "conditions": "Required when the target repo does not already have these files (either at canonical knowledge/ path OR at a cloned-subdirectory path like make_ai_agents/knowledge/). Skipped if already present; the Working Style pointer is then updated to whichever local path resolves. Without this packaging step, the Working Style pointer is a broken reference."
+      },
+      {
+        "name": "handoff_repo_co_located",
+        "type": "directory",
+        "format": "handoff/ clone at target repo root + handoff/ entry added to the target's .gitignore",
+        "example": "/Users/chazclar/Documents/GitHub/canvas-toolbox/handoff/",
+        "conditions": "CONDITIONAL — required when the target repo participates in the cross-repo handoff convention. Participation detected via (i) auto-signal: target repo has a handoffs/ folder; OR (ii) explicit user confirmation to the prompt 'Will this agent communicate with other agents via handoffs?'. Skipped otherwise — the recognition snippet still ships standalone in Working Style. Added 2026-05-28 (Sprint F)."
       }
     ],
     "side_effects": "Creates or updates AGENTS.md at project root after user confirmation. Copies knowledge/behavioral_discipline.{md,json} into the target's knowledge/ folder unless already present (with snapshot header for traceability). Does NOT delete the existing CLAUDE.md — that is a separate follow-up step.",
@@ -103,9 +110,12 @@
       {
         "id": "working_style",
         "heading": "## Working Style",
-        "description": "Behavioral discipline pointer (substituted from compact_boilerplate.working_style_template) plus any project-specific rules.",
+        "description": "Behavioral discipline pointer (substituted from compact_boilerplate.working_style_template), any project-specific rules, AND the canonical handoff recognition section baked from handoff/AGENTS_snippet.md (per Quickstart step 4.5 / AGENTS-QC-008).",
         "required": true,
-        "must_include": ["discipline pointer to knowledge/behavioral_discipline.md or equivalent"]
+        "must_include": [
+          "discipline pointer to knowledge/behavioral_discipline.md or equivalent",
+          "handoff recognition section (## Handoff document recognition) baked verbatim from handoff/AGENTS_snippet.md — heading + path-pattern table + 7 numbered rules + status/direction enum quick-lookups. Verified by AGENTS-QC-008."
+        ]
       },
       {
         "id": "active_context",
@@ -158,7 +168,7 @@
   "agents_md_template": {
     "_tier": "tier_1_core",
     "_description": "The skeleton AGENTS.md the make_AGENTS skill substitutes into. Placeholders use {{double_braces}}.",
-    "template": "# {{project_name}}\n\n{{one_line_description}}\n\n## Project Purpose\n\n**This is**: {{what_this_is}}\n\n**This is NOT**: {{what_this_is_not}}\n\n**Audience**: {{audience}}\n\n## Structure\n\n```\n{{folder_layout}}\n```\n\n## Working Style\n\n{{working_style_block}}\n\n{{project_specific_rules}}\n\n## Active Context\n\n_Last updated: {{iso_date}}_\n\n{{active_context_bullets}}\n\n{{optional_sections_block}}\n"
+    "template": "# {{project_name}}\n\n{{one_line_description}}\n\n## Project Purpose\n\n**This is**: {{what_this_is}}\n\n**This is NOT**: {{what_this_is_not}}\n\n**Audience**: {{audience}}\n\n## Structure\n\n```\n{{folder_layout}}\n```\n\n## Working Style\n\n{{working_style_block}}\n\n{{project_specific_rules}}\n\n{{handoff_recognition_block}}\n\n## Active Context\n\n_Last updated: {{iso_date}}_\n\n{{active_context_bullets}}\n\n{{optional_sections_block}}\n"
   },
 
   "compact_boilerplate": {
@@ -166,7 +176,9 @@
     "_description": "Templates substituted into the generated AGENTS.md. The discipline pointer is the most important — it propagates the behavioral discipline from this repo into every project that uses an AGENTS.md generated by this skill.",
     "working_style_template": "This project follows the behavioral discipline defined in `knowledge/behavioral_discipline.md` (if present in this repo) or the equivalent discipline loaded via the host tool's skill system. **Read that file before doing non-trivial work in this repo.**\n\nThe four no-override principles — **P-001 Read Before Claiming, P-003 Stop on Defect, P-007 Pull Don't Push, P-010 Respect Intent** — apply unconditionally; the other six (P-002, P-004, P-005, P-006, P-008, P-009) have documented override conditions in the discipline file.",
     "project_specific_rules_template": "**Project-specific rules**:\n{{rules_bullets}}",
-    "active_context_template": "{{active_bullets}}\n\nNext up: {{next_up}}"
+    "active_context_template": "{{active_bullets}}\n\nNext up: {{next_up}}",
+    "handoff_recognition_source": "handoff/AGENTS_snippet.md",
+    "handoff_recognition_instructions": "Always baked into every generated AGENTS.md per Quickstart step 4.5. Read handoff/AGENTS_snippet.md from this Make-AI-Agents repo (the handoff convention repo is cloned at handoff/). Copy its content from '## Handoff document recognition' through end-of-file VERBATIM into the generated AGENTS.md's Working Style section (after the discipline pointer subsection, before Active Context). Prepend two HTML-comment refresh-trace lines above the section: '<!-- handoff/AGENTS_snippet.md @ <sha> -->' and '<!-- refresh: cd handoff && git pull -->' so a future reader sees when it was baked and how to refresh. The snippet is SELF-CONTAINED — its 7 rules + path-pattern table + status/direction enums do NOT depend on the target repo having handoff/ co-located at runtime. Co-location of the handoff/ clone is a SEPARATE conditional step (see Quickstart 4.5 (b)) triggered by participation signals (target has handoffs/ folder, or user confirms 'will this agent communicate with other agents'). AGENTS-QC-008 verifies both the baked snippet and the conditional co-location."
   },
 
   "validation": {
@@ -182,7 +194,8 @@
       "Working Style section contains a pointer to the behavioral discipline",
       "Active Context section starts with a `_Last updated: YYYY-MM-DD_` line",
       "No tool-specific language in the file body (no 'Claude Code does X' style instructions)",
-      "Refresh only: no stale vendoring-pattern tokens (`git subtree`, `git subtree pull/push`, `subtree add`, `.gitmodules`, `git submodule`) describe the CURRENT or RECOMMENDED posture in any section (AGENTS-QC-007). Negative-framing or historical-migration mentions are allowed."
+      "Refresh only: no stale vendoring-pattern tokens (`git subtree`, `git subtree pull/push`, `subtree add`, `.gitmodules`, `git submodule`) describe the CURRENT or RECOMMENDED posture in any section (AGENTS-QC-007). Negative-framing or historical-migration mentions are allowed.",
+      "Working Style contains the canonical handoff recognition section (AGENTS-QC-008): heading `## Handoff document recognition` present + path-pattern table present (with `Path pattern` / `What it is` columns and rows for `handoffs/HANDOFF_<topic>.md`, `handoffs/<YYYY-MM-DD>_<topic>.md`, etc.) + all 7 numbered rules present + `## Quick lookup — Status enum` and `## Quick lookup — Direction enum` tables present. Conditional: if the target repo has a `handoffs/` folder, the `handoff/` clone is co-located at the target repo root AND `handoff/` is listed in the target's `.gitignore`."
     ],
     "success_criteria": [
       "Generated AGENTS.md is tool-agnostic (readable by any agentic dev tool)",
@@ -270,6 +283,28 @@
           ".gitmodules",
           "git submodule"
         ]
+      },
+      {
+        "check_id": "AGENTS-QC-008",
+        "name": "Handoff recognition section is structurally complete (and handoff/ co-located when participating)",
+        "rule": "Working Style contains the canonical handoff recognition block baked from handoff/AGENTS_snippet.md per Quickstart step 4.5. PASS requires ALL of: (a) the section heading `## Handoff document recognition` is present in Working Style; (b) the path-pattern table is present (header row contains `Path pattern` and `What it is`, with at least the rows for `handoffs/HANDOFF_<topic>.md` (outgoing request canonical), `handoffs/<YYYY-MM-DD>_<topic>.md` (incoming deliver canonical), `<CONSUMER>_HANDOFF_<topic>.md` at repo root (incoming request), `<PRODUCER>_DELIVERS_<topic>.md` at repo root (visibility copy), `handoffs/parkinglot.md` (internal near-term), `handoffs/long-term-parking.md` (internal far-horizon)); (c) all 7 numbered rules are present under a `Seven rules` heading or equivalent (rules: Read metadata header first; Act only on Status: delivered; Surface before applying; Update Status on apply; STOP on missing referenced artifacts; Before authoring outbound, read REPO_CARD.md; Do not auto-act on `parked` items); (d) the status-enum quick-lookup table (`## Quick lookup — Status enum`) is present with all values (draft/delivered/applying/applied/archived/superseded/parked); (e) the direction-enum quick-lookup table (`## Quick lookup — Direction enum`) is present with all values (request/deliver/internal). CONDITIONAL SUB-RULE: if the target repo has a `handoffs/` folder (= participates in the convention), then the `handoff/` clone MUST be co-located at the target repo root AND `handoff/` MUST be listed in the target's `.gitignore`. Same propagation pattern as AGENTS-QC-006 for the discipline; if the target does not participate, this sub-rule is N/A. FAIL: any of (a)–(e) missing; OR participation detected but `handoff/` not co-located/ignored. Severity high because without this, generated AGENTS.md files don't recognize handoff documents as a structured artifact lifecycle, and cross-repo coordination silently degrades into prose conversation. Added 2026-05-28 (Sprint F).",
+        "severity": "high",
+        "structural_fingerprint_tokens": [
+          "## Handoff document recognition",
+          "Path pattern",
+          "handoffs/HANDOFF_<topic>.md",
+          "handoffs/<YYYY-MM-DD>_<topic>.md",
+          "handoffs/parkinglot.md",
+          "handoffs/long-term-parking.md",
+          "## Quick lookup — Status enum",
+          "## Quick lookup — Direction enum"
+        ],
+        "expected_rule_count": 7,
+        "conditional_co_location_check": {
+          "trigger": "target repo contains a handoffs/ directory",
+          "requirement": "handoff/ clone exists at the target repo root AND handoff/ is listed in the target's .gitignore",
+          "rationale": "Mirrors AGENTS-QC-006 condition (b) for the discipline — participation is auto-detectable from the receiving folder; co-location enables the snippet's pointers (handoff/CONVENTION.md, templates/, etc.) to resolve."
+        }
       }
     ]
   },
@@ -284,7 +319,7 @@
           "Initial bare-bones make_AGENTS skill — sibling to make_agent and make_gem.",
           "Defines required and optional sections for AGENTS.md.",
           "Embeds behavioral discipline pointer (compact_boilerplate.working_style_template) so every generated AGENTS.md inherits the discipline.",
-          "5 skill-specific QC checks (AGENTS-QC-001 through AGENTS-QC-005). AGENTS-QC-006 added 2026-05-13 for discipline-file co-location enforcement. AGENTS-QC-007 added 2026-05-14 (issue #10) for refresh-time stale-vendoring-pattern scan — triggered by three same-day hand-fixes across canvas-toolbox, handoff, and Make-AI-Agents after the subtree → clone+gitignore migration on 2026-05-13.",
+          "5 skill-specific QC checks (AGENTS-QC-001 through AGENTS-QC-005). AGENTS-QC-006 added 2026-05-13 for discipline-file co-location enforcement. AGENTS-QC-007 added 2026-05-14 (issue #10) for refresh-time stale-vendoring-pattern scan — triggered by three same-day hand-fixes across canvas-toolbox, handoff, and Make-AI-Agents after the subtree → clone+gitignore migration on 2026-05-13. AGENTS-QC-008 added 2026-05-28 (Sprint F, Hermes-research synthesis) for handoff convention recognition: every generated AGENTS.md bakes handoff/AGENTS_snippet.md (7-rule canonical) verbatim into Working Style; if the target repo has handoffs/, the handoff/ clone is conditionally co-located + gitignored (same propagation pattern as AGENTS-QC-006 for the discipline). Compact_boilerplate adds handoff_recognition_source pointer + handoff_recognition_instructions; agents_md_template adds {{handoff_recognition_block}}; io_contract.outputs adds conditional handoff_repo_co_located.",
           "Skill itself operates as interaction_pattern: single_write_workflow with applicable_principles P-001, P-002, P-003, P-004, P-006, P-007, P-008, P-009, P-010 (skip P-005)."
         ]
       }
