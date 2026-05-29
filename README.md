@@ -42,6 +42,32 @@ The key is to give your AI a clear directive ("Use this skill...") and then prov
 
 ---
 
+## Why Per-Repo Agents — and How This Compares to Hermes / OpenClaw
+
+Tools like **Hermes** (Nous Research) and **OpenClaw** are powerful — they're full **agent systems** you install and run: a CLI, a daemon, a gateway process for Telegram/Discord, a centralized skills store in `~/.hermes/` or `~/.openclaw/`. Worth it if you want an unattended assistant that pings you on Telegram from a $5 VPS.
+
+NGAI takes the opposite shape: **portable agent specs that live in your repo and activate in whatever AI tool you already use.**
+
+| | Hermes / OpenClaw | NGAI (this repo) |
+|---|---|---|
+| **Install** | uv, Python 3.11, Node.js, ffmpeg, MinGit, then the system itself; configure a provider, a gateway, and skills | **Zero.** Use whatever agentic CLI you already have — Claude Code, Cursor, Aider, Antigravity, etc. |
+| **Where the agent lives** | A centralized store (`~/.hermes/skills/`) shared across projects | **In your repo,** as `agent.md` + `agent.json`. Each repo's agent is the repo's agent. |
+| **Activation** | Run the system, talk to its CLI or gateway | **Open the repo in your tool.** The `AGENTS.md` *is* the agent's role — your tool reads it and acts on it. |
+| **Lock-in** | Skills run in Hermes (or OpenClaw via migration) | **Open standard.** `AGENTS.md` is tool-agnostic; the same spec runs anywhere it's read. |
+| **Maintenance** | Daemons, gateway processes, upgrades, dependency churn | **None of yours.** The host tool maintains itself. |
+| **Unattended automation** (Telegram capture, cron) | ✅ Built-in | ❌ Not in this repo — but the sibling **[AgentJ](https://github.com/chaz-clark/agentj)** runs NGAI specs on a schedule when you want that. |
+
+**The trade is deliberate.** NGAI gives up Hermes-style ambient presence (Telegram bots, gateway processes, $5-VPS daemons) in exchange for three things its audience values more:
+
+- **Zero install for the user.** Non-technical faculty, students, and professionals using whatever AI tool is already on their laptop don't need to set anything up — they clone the repo and open it.
+- **Per-project isolation by construction.** No global skill store to clobber across projects; each repo carries its own specialist.
+- **True tool-portability.** Google's April 2026 *Gemini Enterprise Agent Platform* standardized on the exact shape NGAI uses — *"subagents as Markdown + YAML in a repo, storable in a repository, enabling teams to standardize and version specialized agents."* The [Hermes Kanban v1 spec](https://github.com/NousResearch/hermes-agent/blob/main/docs/hermes-kanban-v1-spec.pdf) (§1.3) explicitly names this as a gap in their own approach — *"No portable file artifact yet."* NGAI already has the portable file artifact, deployed at the personal-and-educational scale instead of enterprise.
+
+**Use Hermes / OpenClaw** if you're building an unattended Telegram-pingable assistant on a cloud VM.
+**Use NGAI** if you want repos that come with their own AI specialist, run in whatever tool you and your audience already use, and stay portable across tools. For scheduled or background execution, layer in **AgentJ** — it runs the same specs without changing anything in them.
+
+---
+
 ## The NGAI Workflow (The "How")
 
 This is a **documentation-driven workflow** where you instruct an AI assistant to generate a complete agent spec for you.
