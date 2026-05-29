@@ -1,3 +1,15 @@
+---
+name: make_agent_qc
+description: Quality-control checks for Make-AI-Agents agent specs. Delegates to BD-QC in behavioral_discipline.json.
+version: "1.0"
+author: chaz-clark
+license: MIT
+metadata:
+  make-ai-agents:
+    spec_json: make_agent_qc.json
+    skill_type: qc
+---
+
 # Agent Quality Control (QC) Guide
 
 ## Agent Instructions

@@ -1,3 +1,16 @@
+---
+name: make_AGENTS
+description: Generates tool-agnostic AGENTS.md project context files with discipline + handoff recognition + Learning loop baked in. Sibling to make_agent and make_gem.
+version: "1.0"
+author: chaz-clark
+license: MIT
+metadata:
+  make-ai-agents:
+    spec_json: make_AGENTS.json
+    skill_type: meta
+    propagates: [behavioral_discipline, handoff_recognition, learning_loop]
+---
+
 # make_AGENTS — AGENTS.md Generation Skill
 
 ## Agent Instructions
@@ -55,7 +68,13 @@
 
    **(c) Verified by BD-QC-008** (in `knowledge/behavioral_discipline.json`): agent MD has the `## Learning loop` heading; `knowledge/learned/` exists. Without this slot, P-009 stays prose discipline rather than a self-improving artifact — every invocation re-discovers lessons previous sessions already surfaced.
 
-5. **[Validate]**: Run `make_agent_qc` against the generated AGENTS.md if it makes sense — AGENTS.md is structurally similar to an agent spec but not identical. See `## Validation and Testing (core)` for what applies. AGENTS-QC-006 verifies the discipline files are co-located (or the pointer resolves to a cloned-subdirectory path). **On refresh** (existing AGENTS.md as input): AGENTS-QC-007 scans Active Context / Structure / Project-specific rules for stale vendoring-pattern tokens (`git subtree`, `subtree pull/push/add`, `.gitmodules`, `git submodule`) — if any describe the CURRENT posture, propose a rewrite to the canonical clone+gitignore form (see Common Pitfall #1) rather than preserving them under P-007. **AGENTS-QC-008** (added 2026-05-28, Sprint F) verifies the handoff recognition section is structurally complete (heading present, path-pattern table present, all 7 rules present, status enum + direction enum quick-lookups present) AND — conditionally — that if the target repo has a `handoffs/` folder, the `handoff/` clone is co-located and gitignored. **BD-QC-008** (added 2026-05-28, Sprint B, in `knowledge/behavioral_discipline.json`) verifies the `## Learning loop` section is present + `knowledge/learned/` directory exists in the target repo.
+4.7. **[Prepend agentskills.io frontmatter]** (REQUIRED — added 2026-05-28, Sprint A):
+
+   Prepend YAML frontmatter to the very top of the generated AGENTS.md per `make_AGENTS.json` → `compact_boilerplate.frontmatter_template`. **Required fields**: `name`, `description`, `version`. **Recommended**: `author`, `license`. **Provenance**: `metadata.make-ai-agents.generated_by: make_AGENTS` and `metadata.make-ai-agents.generated_on: <iso-date>`.
+
+   This is the Make-AI-Agents idiom adoption of the **[agentskills.io open standard](https://agentskills.io)** — the same standard Hermes Agent and OpenClaw consume. Generated AGENTS.md files become **drop-in skills** in any agentskills.io-compliant runtime, layered atop the rich `.json` sidecar where one exists. Verified by **AGENTS-QC-009** (delegates to BD-QC-009).
+
+5. **[Validate]**: Run `make_agent_qc` against the generated AGENTS.md if it makes sense — AGENTS.md is structurally similar to an agent spec but not identical. See `## Validation and Testing (core)` for what applies. AGENTS-QC-006 verifies the discipline files are co-located (or the pointer resolves to a cloned-subdirectory path). **On refresh** (existing AGENTS.md as input): AGENTS-QC-007 scans Active Context / Structure / Project-specific rules for stale vendoring-pattern tokens (`git subtree`, `subtree pull/push/add`, `.gitmodules`, `git submodule`) — if any describe the CURRENT posture, propose a rewrite to the canonical clone+gitignore form (see Common Pitfall #1) rather than preserving them under P-007. **AGENTS-QC-008** (added 2026-05-28, Sprint F) verifies the handoff recognition section is structurally complete (heading present, path-pattern table present, all 7 rules present, status enum + direction enum quick-lookups present) AND — conditionally — that if the target repo has a `handoffs/` folder, the `handoff/` clone is co-located and gitignored. **BD-QC-008** (added 2026-05-28, Sprint B, in `knowledge/behavioral_discipline.json`) verifies the `## Learning loop` section is present + `knowledge/learned/` directory exists in the target repo. **AGENTS-QC-009** (added 2026-05-28, Sprint A) verifies the agentskills.io frontmatter is present and has required fields; delegates to **BD-QC-009** in the discipline JSON.
 
 6. **[Output]**: Confirm AGENTS.md location with the user. If migrating from `CLAUDE.md`, propose deletion as a separate step (per P-002 — don't bundle the deletion with the creation).
 

@@ -1,3 +1,16 @@
+---
+name: make_orchestrator_agent
+description: Generates orchestrator-pattern agents that route and decompose work to specialist sub-agents. Per Hermes Kanban v1 §6 — disabled execution toolsets + prescriptive system message + specialist roster.
+version: "1.0"
+author: chaz-clark
+license: MIT
+metadata:
+  make-ai-agents:
+    spec_json: make_orchestrator_agent.json
+    skill_type: meta
+    pattern: orchestrator
+---
+
 # make_orchestrator_agent Skill Guide
 
 ## Skill Instructions

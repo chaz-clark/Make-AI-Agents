@@ -1,3 +1,16 @@
+---
+name: make_agent
+description: Generates Make-AI-Agents-spec agents (.md + .json) with behavioral discipline baked in. The meta-skill of the ecosystem.
+version: "3.6"
+author: chaz-clark
+license: MIT
+metadata:
+  make-ai-agents:
+    spec_json: make_agent.json
+    skill_type: meta
+    propagates: [behavioral_discipline]
+---
+
 # <Your Agent Name> Agent Guide
 
 ## Agent Instructions

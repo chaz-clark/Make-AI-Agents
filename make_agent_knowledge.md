@@ -1,3 +1,15 @@
+---
+name: make_agent_knowledge
+description: Generates knowledge files (.md + .json) consumed by Make-AI-Agents agents at runtime. Reference / Identity / Procedural shapes.
+version: "1.0"
+author: chaz-clark
+license: MIT
+metadata:
+  make-ai-agents:
+    spec_json: make_agent_knowledge.json
+    skill_type: meta
+---
+
 # make_agent_knowledge Skill Guide
 
 ## Skill Instructions

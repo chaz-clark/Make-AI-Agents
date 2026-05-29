@@ -1,3 +1,15 @@
+---
+name: make_AGENTS_qc
+description: Quality-control checks for generated AGENTS.md files. Delegates to AGENTS-QC (make_AGENTS.json) and BD-QC (behavioral_discipline.json).
+version: "1.0"
+author: chaz-clark
+license: MIT
+metadata:
+  make-ai-agents:
+    spec_json: make_AGENTS_qc.json
+    skill_type: qc
+---
+
 # make_AGENTS_qc — AGENTS.md Quality Control
 
 ## Agent Instructions
