@@ -99,7 +99,7 @@ _Last updated: 2026-05-13_
   - `handoff` (GitHub) — has AGENTS.md (9 KB, seed stage); audit against AGENTS-QC-001..006; deliver via handoff convention
   - `ds460-master` (local) — has AGENTS.md (9.9 KB); audit + package discipline locally (no push)
   - `ds250-onln-master` (local) — CLAUDE.md (21.9 KB) → AGENTS.md migration; canvas_toolbox/ clone present; local only
-  - `itm327-master` (local) — CLAUDE.md (11.7 KB) → AGENTS.md migration; gh_issues_agent/ clone present; local only
+  - `itm327-master` (local) — CLAUDE.md (11.7 KB) → AGENTS.md migration; gh-issues-agent/ clone present; local only
   - `m119-master` (local) — CLAUDE.md (2.7 KB, sparse) → AGENTS.md migration; canvas_toolbox/ clone present; local only
 
   **Next-sprint scope (4 targets — optional creates, no existing context to preserve):**
@@ -173,7 +173,7 @@ The LLM reads the QC meta-skill, reads the target spec, runs the rule set, and r
 | `make_*` | Naming convention for **meta-skills** (templates that generate other things). `make_agent` generates single agents, `make_orchestrator_agent` generates multi-agent orchestrators, `make_agent_knowledge` generates runtime knowledge files, `make_gem` generates Gem instructions, `make_AGENTS` generates `AGENTS.md` files. |
 | `compact_boilerplate` | Template strings (in the `*.json` of a meta-skill) that get substituted into generated outputs. The discipline propagates through these. |
 | `non_interactive_mode` (NI mode) | An agent runs without a synchronous user (cron, webhook, scheduled batch). Opt-in graduation path — agents are validated interactively first. Requires an `alert_channel` (BD-QC-007). |
-| clone+gitignore | The canonical vendored-upstream consumption pattern in this repo (per the 2026-05-13 cross-project rule). Vendored repos are cloned at the host root and listed in `.gitignore`, so the host's tracked tree stays clean and refreshes are just `cd <clone> && git pull`. Currently in use: `temp/` (andrej-karpathy-skills), `gh_issues_agent/`. NOT used: `git subtree` — migrated away 2026-05-13 because subtree mechanics noise up the host's `git pull` and `git log`. |
+| clone+gitignore | The canonical vendored-upstream consumption pattern in this repo (per the 2026-05-13 cross-project rule). Vendored repos are cloned at the host root and listed in `.gitignore`, so the host's tracked tree stays clean and refreshes are just `cd <clone> && git pull`. Currently in use: `temp/` (andrej-karpathy-skills), `gh-issues-agent/`. NOT used: `git subtree` — migrated away 2026-05-13 because subtree mechanics noise up the host's `git pull` and `git log`. |
 | `NGAI` | "Non-General AI" — the project's framing for what this repo produces: purpose-built specialist agents (and Gems) rather than general-purpose chatbots. Each agent built from `make_agent.md` is an NGAI specialist with a specific mission, contract, and behavioral discipline. The term appears in README and historical context (e.g., `README_Disclosure.md`); use it when discussing the project's design philosophy with stakeholders. |
 
 ---

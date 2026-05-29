@@ -5,7 +5,7 @@ gpt.qmd
 *.qmd
 CLAUDE.md
 handoffs/
-gh_issues_agent/
+gh-issues-agent/
 .github_issues/
 .DS_Store
 AGENTJ_*.md
