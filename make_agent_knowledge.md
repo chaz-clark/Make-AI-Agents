@@ -1,7 +1,7 @@
 ---
 name: make_agent_knowledge
 description: Generates knowledge files (.md + .json) consumed by Make-AI-Agents agents at runtime. Reference / Identity / Procedural shapes.
-version: "1.0"
+version: "1.1"
 author: chaz-clark
 license: MIT
 metadata:
@@ -158,7 +158,7 @@ Pick the shape before drafting. Each shape has a different required JSON array a
 
 **When to use**: The content is a set of discrete, indexable items (terms, entries, rules) that the agent looks up rather than reads end-to-end. Order of entries does not change meaning.
 
-**MD spine**: title, scope, body (table or per-entry sections), provenance, last_updated.
+**MD spine**: title, scope, provenance, last_updated, body (table or per-entry sections).
 
 **JSON required**: `facts[]` — array of `{ id, term, definition, citations?[] }` entries. `provenance.sources[]` must be non-empty (KNW-QC-005).
 
@@ -170,7 +170,7 @@ Pick the shape before drafting. Each shape has a different required JSON array a
 
 **When to use**: The content is a small (5-15) set of named principles, each with a description, rationale, trigger, and trust marker. Order matters (principles are numbered/IDed).
 
-**MD spine**: title, scope, body (one section per principle), provenance (optional), last_updated.
+**MD spine**: title, scope, provenance (optional), last_updated, body (one section per principle).
 
 **JSON required**: `principles[]` — array of `{ id, name, compact_statement, trigger, trust_marker, override?{} }` entries. The existing `knowledge/behavioral_discipline.md/.json` is the proven exemplar of this shape — this skill formalizes the pattern it demonstrates.
 
@@ -182,7 +182,7 @@ Pick the shape before drafting. Each shape has a different required JSON array a
 
 **When to use**: The content is a set of named playbooks (typically 3-12), each with a trigger, prerequisites, steps, and a success condition. Order within a playbook matters; order of playbooks does not.
 
-**MD spine**: title, scope, body (one section per playbook), provenance (recommended), last_updated.
+**MD spine**: title, scope, provenance (recommended), last_updated, body (one section per playbook).
 
 **JSON required**: `playbooks[]` — array of `{ id, name, trigger, prerequisites[], steps[], success_condition }` entries.
 

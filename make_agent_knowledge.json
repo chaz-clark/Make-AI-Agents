@@ -1,7 +1,7 @@
 {
   "_metadata": {
-    "template_version": "1.0",
-    "last_updated": "2026-05-13",
+    "template_version": "1.1",
+    "last_updated": "2026-06-01",
     "description": "make_agent_knowledge skill — generates knowledge file pairs (.md + .json) that agents reference at runtime via cross_references.knowledge_files[]. Three shapes: reference, identity, procedural. Authoring scaffold only — no ingestion pipeline.",
     "instructions": "MD = the why (mission, shape decisions, runtime philosophy). JSON = the what (per-shape required sections, JSON skeleton, runtime_strategy rules, KNW-QC family). Update both files together.",
     "companion_files": {
@@ -14,8 +14,8 @@
     },
     "skill_details": {
       "skill_name": "make_agent_knowledge",
-      "version": "1.0",
-      "last_updated": "2026-05-13",
+      "version": "1.1",
+      "last_updated": "2026-06-01",
       "description": "Generates knowledge file pairs (.md + .json) used by agents as runtime artifacts. Authoring scaffold only — emits empty-but-structured templates.",
       "owner": "Project: Make-AI-Agents",
       "complexity": "simple-to-standard"
@@ -209,14 +209,6 @@
         "required": true
       },
       {
-        "id": "body",
-        "heading": "(shape-specific)",
-        "description": "The shape's body section — terms/entries (reference), principles (identity), or playbooks (procedural). Skill generates the heading; body is filled by the author.",
-        "required": true,
-        "min_body_size_bytes": 100,
-        "_note": "KNW-QC-001 enforces non-empty body — a file with less than 100 bytes of body content past the headers is rejected (placeholder-only files are dead code)."
-      },
-      {
         "id": "provenance",
         "heading": "**Provenance**:",
         "description": "Inline bolded provenance pointer naming the source(s). Required text for reference shape; recommended for procedural; optional for identity.",
@@ -227,13 +219,46 @@
         "heading": "_Last updated: YYYY-MM-DD_",
         "description": "Date stamp signaling freshness.",
         "required": true
+      },
+      {
+        "id": "body",
+        "heading": "(shape-specific)",
+        "description": "The shape's body section — terms/entries (reference), principles (identity), or playbooks (procedural). Skill generates the heading; body is filled by the author. Body sits LAST in the canonical order — after the metadata header (title → scope → provenance → last_updated) — matching the compact_boilerplate templates and standard human-readable structure (metadata first, content second).",
+        "required": true,
+        "min_body_size_bytes": 100,
+        "_note": "KNW-QC-001 enforces non-empty body — a file with less than 100 bytes of body content past the headers is rejected (placeholder-only files are dead code)."
       }
     ]
   },
 
   "knowledge_md_optional_sections": {
     "_tier": "tier_2_recommended",
-    "_description": "Sections to include only when criteria apply. None are required by KNW-QC; the skill emits them when authoring conditions match.",
+    "_description": "Recognized optional sections. The skill emits these when authoring conditions match. NOTE: this list is NON-EXHAUSTIVE — additional body sections beyond those named here are PERMITTED and are not a QC failure. KNW-QC-001 validates that the five REQUIRED sections are present; it does not constrain what else the body contains. Use _mapping_guidance below to choose canonical homes for common content patterns before reaching for a new house-style heading.",
+    "_mapping_guidance": {
+      "_description": "When a knowledge file needs content that doesn't fit one of the recognized optionals, map it to a canonical home before introducing new section names. Reduces structural drift across the knowledge corpus.",
+      "patterns": [
+        {
+          "content_type": "Cross-file relationship narrative (how this knowledge composes with siblings)",
+          "canonical_home": "## Related Knowledge"
+        },
+        {
+          "content_type": "Orienting frame / weak-vs-strong framing / lens before the body",
+          "canonical_home": "Inline in the body's lead paragraph, OR a top-of-body subsection under the shape's body heading (not a separate top-level H2)."
+        },
+        {
+          "content_type": "References / bibliography",
+          "canonical_home": "JSON companion's `provenance.sources[]` is the canonical home. A `## References` body section is redundant but harmless and may be added for human-reader convenience when the source list is substantial."
+        },
+        {
+          "content_type": "Quick reference / cheat sheet / at-a-glance summary",
+          "canonical_home": "An additional body subsection IS PERMITTED (e.g., `## Quick Reference`). Treat as a project-house-style section — not all content needs to fit a recognized optional."
+        },
+        {
+          "content_type": "Audit tags / categorical surface shared across consumer agents",
+          "canonical_home": "An additional body subsection IS PERMITTED (canvas-toolbox precedent: `## Audit Tags Emitted`). Treat as a project-house-style section."
+        }
+      ]
+    },
     "sections": [
       {
         "id": "audience",
@@ -380,7 +405,7 @@
       "If shape=reference, provenance_sources is provided and non-empty"
     ],
     "post_run_checklist": [
-      "knowledge/<knowledge_name>.md exists with all knowledge_md_required_sections in order (title, scope, body, provenance, last_updated)",
+      "knowledge/<knowledge_name>.md exists with all knowledge_md_required_sections in order (title, scope, provenance, last_updated, body)",
       "knowledge/<knowledge_name>.json exists with shape field set and the shape-specific required array key present (facts/principles/playbooks)",
       "_metadata.runtime_strategy is set to one of embed | read_at_runtime | either, consistent with body size per runtime_strategy_rules",
       "consumed_by[] is non-empty",
@@ -438,9 +463,9 @@
       {
         "check_id": "KNW-QC-001",
         "name": "All required sections present in the generated MD",
-        "rule": "Generated knowledge MD contains all five sections from knowledge_md_required_sections in order: title, scope, body, provenance, last_updated. Plus the shape-specific extension section from knowledge_shapes.<shape>.md_extra_sections. The body must have at least 100 bytes of content past the section headers — placeholder-only files are rejected.",
+        "rule": "Generated knowledge MD contains all five sections from knowledge_md_required_sections in order: title, scope, provenance, last_updated, body. Plus the shape-specific extension section from knowledge_shapes.<shape>.md_extra_sections. The body must have at least 100 bytes of content past the section headers — placeholder-only files are rejected. Additional body sections beyond the required five and recognized optionals are PERMITTED and not a QC failure (see knowledge_md_optional_sections._description and _mapping_guidance).",
         "severity": "critical",
-        "_md_only_applicability": "FULLY assessable on MD-only files. The required surface forms (shape tagline, **Scope** label, _Last updated_ footer) may be missing in legacy files even when the underlying content is present — report PARTIAL in that case, not FAIL. A pre-skill MD whose spine concepts (title, scope, body, provenance) are conceptually present but use different surface markers should be a PARTIAL/retrofit candidate, not a critical failure."
+        "_md_only_applicability": "FULLY assessable on MD-only files. The required surface forms (shape tagline, **Scope** label, _Last updated_ footer) may be missing in legacy files even when the underlying content is present — report PARTIAL in that case, not FAIL. A pre-skill MD whose spine concepts (title, scope, provenance, body) are conceptually present but use different surface markers should be a PARTIAL/retrofit candidate, not a critical failure."
       },
       {
         "check_id": "KNW-QC-002",
@@ -499,6 +524,18 @@
   "changelog": {
     "_tier": "tier_3_optional",
     "versions": [
+      {
+        "version": "1.1",
+        "date": "2026-06-01",
+        "changes": [
+          "FIX #14 (bug): knowledge_md_required_sections order now matches what compact_boilerplate templates actually emit — title → scope → provenance → last_updated → body. Previously the order list said body-before-provenance but every template + every existing canvas-toolbox knowledge file placed body last. Resolved in favor of templates (lower-impact than rewriting every existing file).",
+          "Updated post_run_checklist + KNW-QC-001 rule + _md_only_applicability wording to cite the new canonical order.",
+          "FIX #15 (recommendation): knowledge_md_optional_sections._description now explicitly marks the list as NON-EXHAUSTIVE — additional body sections are PERMITTED and not a QC failure. Added _mapping_guidance with canonical homes for common content patterns (cross-file relationship, orienting frame, references, quick reference, audit tags) so authors map house-style content to existing structure before adding new headings.",
+          "KNW-QC-001 rule now cross-references the non-exhaustive policy explicitly."
+        ],
+        "breaking_changes": [],
+        "contributors": []
+      },
       {
         "version": "1.0",
         "date": "2026-05-13",
