@@ -1,243 +1,264 @@
-# NGAI Agent Spec Templates
+# Make AI Agents
 
-This guide explains how to use documentation templates to create a purpose-built "Agent Spec", turning a General AI into a Non-General AI specialist for a specific task. This guide assumes you are using an AI-powered CLI to assist you.
+A set of templates that turn the AI tool you already use — Claude Code, Cursor, Codex, Antigravity, GitHub Copilot — into a specialist for the project in your current repo. Drop the templates into your repo, point your AI at them, and your AI behaves like the specialist they describe. No daemon to install, no system to maintain, no vendor account holding the definition hostage.
 
-## First-Time User? Start Here (2 min read)
-
-The workflow in this guide uses a Command-Line Interface (CLI) to have a conversation with an AI, like the one you're using now. If this is your first time working this way, the concept is simple:
-
-1.  **You give a command in plain English.** (e.g., "Create a new agent spec for a translator.")
-2.  **The AI understands the goal and uses its tools** to perform actions (e.g., creating files `translator.json` and `translator.md`).
-3.  **You review the result** and provide the next instruction.
-
-For a fantastic and detailed visual explanation of how AI works in a CLI, we highly recommend watching this video from Network Chuck. It's the perfect "Level 0" introduction.
-
-➡️ **Watch: [Network Chuck Explains AI in the CLI](https://www.youtube.com/watch?v=placeholder_video_id)** *(Please replace this placeholder link with the actual video URL.)*
-
-Once you're comfortable with the basic idea, this guide's **Quickstart** will be your "Level 1" guide for the specific task of creating agent specs.
-
-## How to Talk to Your AI About Agent Specs (3 min read)
-
-Once you've set up your AI CLI (as Network Chuck explains), you'll be ready to tell it how to use these templates. Think of each `make_agent` template (`make_agent.json` and `make_agent.md`) as defining a **meta-skill** for your AI: the skill of *creating other agent specs*.
-
-You'll guide your AI by telling it to "adopt" this skill and then provide the specific details for the new agent you want to document.
-
-### Common Prompting Patterns:
-
-1.  **To start a new spec (like the Quickstart):**
-    > "Use the 'Agent Spec Creation' skill defined by the `make_agent.json` and `make_agent.md` templates. Create a new Tier 1 agent spec for a 'Simple Summarizer'. The agent's code will be in `src/agents/summarizer.py`."
-
-    *Your AI should then begin a conversational flow, asking you for the details required to fill the spec.*
-
-2.  **To edit an existing spec:**
-    > "Using the `Agent Spec Creation` skill, load the existing spec for 'MyTranslator' (`translator.json` and `translator.md`). Update the mission in `translator.md` to clarify its purpose for legal documents."
-
-3.  **To ask for validation:**
-    > "Using the `Agent Spec Creation` skill, review the `my_agent.json` spec. Does it conform to Tier 2 requirements for a production agent? Provide a concise summary of any missing fields."
-
-4.  **To understand a spec:**
-    > "Using the `Agent Spec Reading` skill, summarize the key principles and pitfalls defined in the `my_agent.md` file."
-
-The key is to give your AI a clear directive ("Use this skill...") and then provide the context ("...for this agent..."). The more clearly you define the task, the better your AI can assist you.
+Built for developers, designers, and faculty who want their AI assistant to consistently behave like a specialist for a specific project — and want that "specialist definition" to live with the code, not in a vendor account.
 
 ---
 
-## Why Per-Repo Agents — and How This Compares to Hermes / OpenClaw
+# What you can do with it
 
-Tools like **Hermes** (Nous Research) and **OpenClaw** are powerful — they're full **agent systems** you install and run: a CLI, a daemon, a gateway process for Telegram/Discord, a centralized skills store in `~/.hermes/` or `~/.openclaw/`. Worth it if you want an unattended assistant that pings you on Telegram from a $5 VPS.
+- **Generate a new agent spec** without writing JSON yourself — describe the agent in conversation, the AI fills the templates for you
+- **Make your project's AI specialist portable** across Claude Code, Cursor, Aider, Antigravity, Codex, and any other tool that reads `AGENTS.md`
+- **Validate a spec is production-ready** with a 20-rule QC pass that checks behavior, contracts, pitfalls, and test cases
+- **Generate your project's `AGENTS.md`** so every AI tool that opens the repo gets the same project context, automatically
+- **Generate runtime knowledge files** — glossaries, principles, or playbooks the agent consults at execution time
+- **Document a multi-agent orchestrator** with the same template family the individual specs use
+- **Build the same shape Google's Gemini Enterprise Agent Platform standardized on** in April 2026: portable agent definitions as `Markdown + YAML`, versioned in the repo
 
-NGAI takes the opposite shape: **portable agent specs that live in your repo and activate in whatever AI tool you already use.**
-
-| | Hermes / OpenClaw | NGAI (this repo) |
-|---|---|---|
-| **Install** | uv, Python 3.11, Node.js, ffmpeg, MinGit, then the system itself; configure a provider, a gateway, and skills | **Zero.** Use whatever agentic CLI you already have — Claude Code, Cursor, Aider, Antigravity, etc. |
-| **Where the agent lives** | A centralized store (`~/.hermes/skills/`) shared across projects | **In your repo,** as `agent.md` + `agent.json`. Each repo's agent is the repo's agent. |
-| **Activation** | Run the system, talk to its CLI or gateway | **Open the repo in your tool.** The `AGENTS.md` *is* the agent's role — your tool reads it and acts on it. |
-| **Lock-in** | Skills run in Hermes (or OpenClaw via migration) | **Open standard.** `AGENTS.md` is tool-agnostic; the same spec runs anywhere it's read. |
-| **Maintenance** | Daemons, gateway processes, upgrades, dependency churn | **None of yours.** The host tool maintains itself. |
-| **Unattended automation** (Telegram capture, cron) | ✅ Built-in | ❌ Not in this repo — but the sibling **[AgentJ](https://github.com/chaz-clark/agentj)** runs NGAI specs on a schedule when you want that. |
-
-**The trade is deliberate.** NGAI gives up Hermes-style ambient presence (Telegram bots, gateway processes, $5-VPS daemons) in exchange for three things its audience values more:
-
-- **Zero install for the user.** Non-technical faculty, students, and professionals using whatever AI tool is already on their laptop don't need to set anything up — they clone the repo and open it.
-- **Per-project isolation by construction.** No global skill store to clobber across projects; each repo carries its own specialist.
-- **True tool-portability.** Google's April 2026 *Gemini Enterprise Agent Platform* standardized on the exact shape NGAI uses — *"subagents as Markdown + YAML in a repo, storable in a repository, enabling teams to standardize and version specialized agents."* The [Hermes Kanban v1 spec](https://github.com/NousResearch/hermes-agent/blob/main/docs/hermes-kanban-v1-spec.pdf) (§1.3) explicitly names this as a gap in their own approach — *"No portable file artifact yet."* NGAI already has the portable file artifact, deployed at the personal-and-educational scale instead of enterprise.
-
-**Use Hermes / OpenClaw** if you're building an unattended Telegram-pingable assistant on a cloud VM.
-**Use NGAI** if you want repos that come with their own AI specialist, run in whatever tool you and your audience already use, and stay portable across tools. For scheduled or background execution, layer in **AgentJ** — it runs the same specs without changing anything in them.
+Full template index lives at the bottom of this file under [This repo's structure](#this-repos-structure).
 
 ---
 
-## The NGAI Workflow (The "How")
+# Getting started
 
-This is a **documentation-driven workflow** where you instruct an AI assistant to generate a complete agent spec for you.
+Three small choices and the templates are usable:
 
-**Your Role**: Provide the core logic and review the AI's output.
-**AI's Role**: Generate the boilerplate `.json` and `.md` files, fill in the details based on your instructions, and help you validate.
+1. **Pick an IDE** — the app where you open files and talk to your AI assistant.
+2. **Pick an AI assistant** — use whichever subscription you already have, so you don't pay twice.
+3. **Get the templates into your project** — your AI walks you through it (recommended), or do the steps yourself.
 
-```
-YOU: "Let's create a spec for a new Summarizer agent."
- │
- ▼
-AI: Creates `summarizer.json` & `summarizer.md` from templates.
- │
- ▼
-YOU: "The agent is an LLM agent. Its input is 'text', output is 'summary'."
- │
- ▼
-AI: Fills `agent_type` and `io_contract` in the JSON.
- │
-...and so on.
-```
-
-**Result**: A complete, consistent, and validated Agent Spec, created via conversation.
-
-## Quickstart: Building Your First Agent Spec with an AI CLI
-
-This 15-minute process guides you in directing an AI assistant to create your agent spec.
-
-### Step 1: Initialize the Spec (Your Prompt to the AI)
-> **Your Prompt:**
-> "Using the `make_agent` templates, create a new Tier 1 agent spec for a 'Simple Summarizer'. The agent's code will be in `src/agents/summarizer.py`."
-
-### Step 2: Define the Core Contract (A Conversation)
-> **AI Asks:** "What is the implementation type for this agent?"
->
-> **Your Response:** "This is an `llm_agent`."
->
-> **AI Asks:** "What is the I/O contract?"
->
-> **Your Response:** "The input is a string named 'text'. The output is a string named 'summary'."
-
-### Step 3: Provide Key Data & Validation
-> **Your Prompt:**
-> "The primary data is a system prompt: 'You are a very concise summarizer.'"
->
-> "For validation, add a test case where the input text is '...' and the expected output is '...'. The command to run the test is `pytest tests/test_summarizer.py`."
-
-### Step 4: Generate the Narrative
-> **Your Prompt:**
-> "Now, for the `summarizer.md` file: The mission is to summarize long text using GPT-4. Add a pitfall about avoiding texts longer than 10K tokens."
-
-### Step 5: Review and Validate
-The AI has now generated both files. Your final step is to review them for accuracy and run the validation command you provided.
+You don't have to be a frameworks expert. The AI handles the structural bits; you describe the agent you want.
 
 ---
 
-*The rest of this README provides the detailed context (Tiers, Design Rationale, FAQs) that the AI will use as its own reference to complete your requests.*
+## Step 1 — Pick your IDE
 
-## Keeping Templates Current
+An **IDE** is the app you'll work in. Pick one, download it, install it like any other application.
 
-All `make_*` templates are kept up to date with evolving AI platform best practices using a two-agent documentation update system plus a raw-HTTP fetch utility:
+| If you… | Use | Free? | Download |
+|---|---|---|---|
+| **have no strong preference** *(the safe default)* | **Visual Studio Code** — the standard, with the largest selection of AI assistant extensions | yes | [code.visualstudio.com](https://code.visualstudio.com/) |
+| **want the AI to drive** *(and want a generous free option built in)* | **Antigravity IDE** — Google's agent-first IDE; Gemini is built in, no separate extension needed | yes (public preview, full Gemini 3 Pro) | [antigravityide.org](https://antigravityide.org/) |
+| **work in R / Python / Quarto** | **Positron** — Posit's data-science IDE, with built-in *Positron Assistant* | yes | [positron.posit.co](https://positron.posit.co/download.html) |
 
-| Component | Files | What it does |
-|-------|-------|-------------|
-| **Doc Refresh Agent** | `update_agents/doc_refresh_agent.md` / `update_agents/doc_refresh_agent.json` | Spec for the refresh workflow (staleness → fetch → validate → write → report). Uses `fetch_doc.py` as its fetcher. |
-| **Doc Analysis Agent** | `update_agents/doc_analysis_agent.md` / `update_agents/doc_analysis_agent.json` | Reads cached docs, diffs against templates using an intent-first reading protocol, and proposes minimal additive improvements — always updating both the `.json` and companion `.md` together |
-| **fetch_doc.py** | `update_agents/fetch_doc.py` | Raw-HTTP fetcher with 5 modes (default fetch, `--list-links`, `--batch`, `--from-html`, `--check`). Replaces the prior WebFetch+manual-save flow; validated as a byte-identical drop-in across 5 platforms (2026-05-13). Run via `uv run update_agents/fetch_doc.py <url>`. |
-
-**Typical cadence**: Run `doc_refresh_agent` monthly (or after a major platform release), then run `doc_analysis_agent` to surface any proposals worth adding to the templates.
-
-```
-fetch_doc.py       →  raw-HTTP fetcher (or --from-html for JS-rendered sources)
-doc_refresh_agent  →  orchestrates fetch_doc.py calls; updates source_docs/ cache
-doc_analysis_agent →  proposes scored changes; each JSON change paired with companion MD update
-make_agent_qc      →  validates templates (20 rules, 17 dimensions, including MD/JSON companion sync and ORCH-QC + KNW-QC families)
-```
-
-Cached source documentation lives in `source_docs/` (35 files as of 2026-05-13, across Anthropic, Google ADK/Gemini, OpenAI, and xAI). See `update_agents/update_agent.md` for a quick navigation guide to both agents and the fetch tool.
+> ⚠️ **About Antigravity IDE:** it has Gemini built in and is locked to Gemini — you cannot plug a ChatGPT, Claude, or Copilot subscription into it. Pick Antigravity if you're happy using Gemini. If you have a ChatGPT, Claude, or Copilot subscription you want to use, pick **Visual Studio Code** here and the matching extension in Step 2.
 
 ---
 
-## What This Is (and Isn't)
+## Step 2 — Pick your AI assistant
 
-**This is a documentation template system** for NGAI agents, designed to be used with an AI assistant.
+Use the subscription you **already have** so you don't pay twice. In your IDE, open the **Extensions panel**, search by the name below, click **Install**, then **sign in** when it prompts you.
 
-**You implement**: Your agent's actual code (Python, JS, etc.).
-**We provide**: Templates that an AI can fill on your behalf to document your agent consistently.
+| You already have… | Install this | Sign in with | Link |
+|---|---|---|---|
+| **ChatGPT** *(Plus / Pro / Business / Edu / Enterprise)* | **Codex – OpenAI's coding agent** | your ChatGPT account | [Marketplace listing](https://marketplace.visualstudio.com/items?itemName=openai.chatgpt) |
+| **Claude** *(Pro / Team / Max)* | **Claude Code** *(official Anthropic extension)* | your Claude account | [Marketplace listing](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code) |
+| **GitHub Copilot** | **GitHub Copilot** + **GitHub Copilot Chat** | your GitHub account | [Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) · [Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) |
+| **None of those** | Use **Antigravity IDE** instead of VS Code (from Step 1) — it's free, no extension to install, Gemini is built in | a Google account | [antigravityide.org](https://antigravityide.org/) |
+
+> 💡 **Common mix-up:** GitHub Copilot is a *separate* Microsoft/GitHub subscription — it does **not** connect to a ChatGPT account. If you have ChatGPT Plus, install **Codex** (first row); if you have Copilot, install **Copilot** (third row).
+
+> 📓 **Positron users:** Positron has a built-in **Positron Assistant** — skip Step 2 and go to Step 3.
+
+---
+
+## Step 3 — Get the templates into your project
+
+Pick the path that fits your comfort level. Most people use Option A.
+
+### Option A — Start here: your agent sets it up
+
+Open your existing project in the IDE you set up in Steps 1-2, then give your AI assistant this prompt:
+
+> *"Help me set up Make AI Agents so I can document my project's agents. The templates are at https://github.com/chaz-clark/Make-AI-Agents — please clone the repo into a `Make-AI-Agents/` folder, gitignore it, and read its `AGENTS.md` so you know how to use the templates."*
+
+The agent clones the repo, adds the gitignore line, reads the templates, and is ready to help. You just answer its questions.
+
+### Option B — Manual setup
+
+```bash
+git clone https://github.com/chaz-clark/Make-AI-Agents.git
+echo "Make-AI-Agents/" >> .gitignore
+```
+
+Then open your project in your IDE. Any AI tool that supports the `AGENTS.md` convention (see the table further down) will discover the templates automatically — you just have to ask for them by name in conversation.
+
+### Option C — A colleague is setting it up for you
+
+You just need to describe the agent you want — what it should do, what its input is, what its output is, and a one-sentence mission. They'll do the rest.
+
+---
+
+# Your first agent spec (5-minute walkthrough)
+
+**Goal:** end this walkthrough with two files in your project — `summarizer.json` (the structured contract) and `summarizer.md` (the narrative mission) — that any AI tool can read to make itself act like your "Simple Summarizer" specialist.
+
+**Ask your agent:**
+
+> *"Use the Make AI Agents templates to create a new Tier 1 agent spec for a 'Simple Summarizer'. The implementation will be at `src/agents/summarizer.py`."*
+
+*Tier 1 is the smallest tier — minimal fields, ~15 minutes total to fill. (See the [Tier System](#tier-system) for when to use Tier 2 or 3.)*
+
+Your agent will then start asking for the details. A typical conversation:
+
+> **AI:** "What kind of agent is this — LLM-backed, code-only, or hybrid?"
+>
+> **You:** "LLM-backed."
+>
+> **AI:** "What's the input and output contract?"
+>
+> **You:** "Input is a string named 'text'. Output is a string named 'summary'."
+>
+> **AI:** "What's the system prompt?"
+>
+> **You:** "*You are a very concise summarizer.*"
+>
+> **AI:** "Any validation test cases?"
+>
+> **You:** "Given a 1000-word article, the summary should be ≤ 200 chars. Test command: `pytest tests/test_summarizer.py`."
+
+Then for the narrative:
+
+> *"For the `summarizer.md` companion: the mission is to summarize long articles using GPT-4. Add a pitfall about texts longer than 10K tokens."*
+
+**Result:** two files now live in your project. Any AI tool that opens the repo reads them and acts as the Simple Summarizer specialist.
+
+To validate the spec is production-ready, ask:
+
+> *"Run the make_agent QC checks against `summarizer.json`."*
+
+That runs 20 quality rules over the spec and reports any gaps.
+
+---
+
+# Common things to ask your agent
+
+Once the templates are in your project, this is the everyday vocabulary. Same pattern: state the outcome, not the file path. The AI finds the template.
+
+| You want to… | Ask your agent (example) |
+|---|---|
+| **Create a new agent spec** | *"Create a new Tier 1 agent spec for a code reviewer. The implementation will be at `src/agents/code_review.py`."* |
+| **Edit an existing spec** | *"In my `translator.md`, update the mission so it focuses on legal documents."* |
+| **Validate a spec** | *"Run the make_agent QC checks against `my_agent.json`. Tier 2 production rules."* |
+| **Generate or refresh `AGENTS.md`** | *"Generate an `AGENTS.md` for this project."* or *"Refresh the `AGENTS.md` so it reflects recent changes."* |
+| **Generate a knowledge file the agent consults at runtime** | *"Create a procedural-shape knowledge file at `knowledge/incident_playbooks` for the on-call agent."* |
+| **Understand an existing spec** | *"Summarize the key principles and pitfalls in `my_agent.md`."* |
+
+The pattern is: state what you want to be true, the AI uses the templates to make it true.
+
+---
+
+# Using with AI coding tools
+
+This repo's templates are read by any AI tool that supports the `AGENTS.md` convention. With the `Make-AI-Agents/` clone in your project root, the AI tool discovers the templates when you open the repo.
+
+| Tool | How it loads |
+|---|---|
+| Claude Code, Cursor, Aider, Antigravity, Codex, Windsurf, Zed, Amp | Automatic — just open the repo |
+| VS Code + GitHub Copilot | Set `chat.useAgentsMdFile: true` in user settings (one-time) |
+| Gemini Enterprise Agent Platform | Native — Google standardized on this exact shape in April 2026 |
+
+Once loaded, ask in conversation. Outcome-language, not file paths.
+
+---
+
+# What this is (and what it isn't)
+
+**This is** a documentation template system for AI agents — Markdown + JSON files that any agentic AI tool reads as instructions.
+
+- **You implement** the agent's actual code (Python, JavaScript, whatever).
+- **The templates** are how the AI tool consistently knows what your agent is, what it does, and how to validate it.
+
+**This is NOT** a runtime. It doesn't ship to production. It doesn't run agents. It doesn't install a daemon. It's a specification layer the AI tool reads — the actual execution happens in your code and your AI tool.
+
+If you need *scheduled / background* execution of the same specs (cron jobs, Telegram bots, webhooks), the sibling project **[AgentJ](https://github.com/chaz-clark/agentj)** runs Make-AI-Agents specs on a schedule without changing anything in them.
+
+---
 
 ## Suggested folder layout (your project)
+
 ```
 project/
+├── Make-AI-Agents/                 # the templates (clone-and-gitignore)
 ├── src/agents/
-│   └── <agent>.py                # Your implementation
+│   └── <agent>.py                  # your implementation
 ├── docs/agents/
-│   ├── <agent>.json              # Agent definition (this template)
-│   └── <agent>.md                # Agent narrative (this template)
+│   ├── <agent>.json                # agent definition (this template)
+│   └── <agent>.md                  # agent narrative (this template)
 └── tests/
-    └── test_<agent>.py           # Reference validation.test_cases from JSON
+    └── test_<agent>.py             # references validation.test_cases from JSON
 ```
 
 ## This repo's structure
+
 ```
 Make-AI-Agents/
 ├── AGENTS.md                          # project context for any agentic dev tool (canonical)
-├── make_agent.md / .json              # Agent spec template (the meta-skill)
-├── make_agent_qc.md / .json           # Agent spec QC template (20 rules, 17 dimensions)
+├── make_agent.md / .json              # agent spec template (the meta-skill)
+├── make_agent_qc.md / .json           # agent spec QC template (20 rules, 17 dimensions)
 ├── make_AGENTS.md / .json             # AGENTS.md generation template
 ├── make_AGENTS_qc.md / .json          # AGENTS.md QC template
-├── make_orchestrator_agent.md / .json # Multi-agent orchestrator template (2026-05-13)
-├── make_agent_knowledge.md / .json    # Runtime knowledge file template (2026-05-13)
+├── make_orchestrator_agent.md / .json # multi-agent orchestrator template (2026-05-13)
+├── make_agent_knowledge.md / .json    # runtime knowledge file template (2026-05-13)
 ├── make_gems/                         # Gemini Gem templates (sibling to make_agent)
 │   ├── make_gem.md / .json
 │   └── make_gem_qc.md / .json
-├── knowledge/                         # Source-of-truth + generated knowledge files
+├── knowledge/                         # source-of-truth + generated knowledge files
 │   ├── behavioral_discipline.md       # Toyota Way + Karpathy framework — narrative
-│   ├── behavioral_discipline.json     # Same — structured rules for skill consumption
-│   └── source_docs_index.{md,json}    # Reference-shape catalog of the 35 cached platform docs
-├── update_agents/                     # Doc refresh + analysis agents + fetch utility
+│   ├── behavioral_discipline.json     # same — structured rules for skill consumption
+│   └── source_docs_index.{md,json}    # reference-shape catalog of the 35 cached platform docs
+├── update_agents/                     # doc refresh + analysis agents + fetch utility
 │   ├── update_agent.md / .json
 │   ├── doc_refresh_agent.md / .json
 │   ├── doc_analysis_agent.md / .json
-│   ├── doc_refresh_workflow.md / .json   # Orchestrator (multi_agent) coordinating the refresh
-│   ├── merge_agent.md / .json            # Single agent: merges dropbox stagings → source_docs
-│   └── fetch_doc.py                   # Raw-HTTP doc fetcher (5 modes, 2026-05-13)
-└── source_docs/                       # 35 cached platform docs (Anthropic/Google ADK/OpenAI/xAI)
+│   └── fetch_doc.py                   # raw-HTTP doc fetcher (5 modes, 2026-05-13)
+└── source_docs/                       # 35 cached platform docs (Anthropic / Google ADK / OpenAI / xAI)
 ```
 
-## Tier System (choose based on your needs)
+---
 
-**Tier 1 (Core)** - *For prototypes, internal tools.* (15 min)
-**Tier 2 (Production)** - *For shared, deployed services.* (25 min)
-**Tier 3 (Complex)** - *For frameworks, platform components.* (40 min)
+# Tier system
 
-(See `make_agent.json` for full details on which fields belong to which tier).
+Pick the tier that matches what you're building. The template adapts:
 
-## Behavioral Discipline (baked into every agent)
+- **Tier 1 (Core)** — *prototypes, internal tools.* ~15 min to fill.
+- **Tier 2 (Production)** — *shared, deployed services.* ~25 min to fill.
+- **Tier 3 (Complex)** — *frameworks, platform components.* ~40 min to fill.
 
-Every agent built from `make_agent.md` inherits a behavioral discipline drawn from the **Toyota Production System** (system-level discipline) reinforced by **Andrej Karpathy's four coding-agent guidelines** (worker-level habits). The discipline produces agents that are visible, predictable, and correctable — the three properties end users need in order to extend trust.
+See `make_agent.json` for which fields belong to which tier.
 
-The source of truth lives in `knowledge/`:
+---
 
-- **`knowledge/behavioral_discipline.md`** — narrative explanation of the 10 principles (P-001 through P-010), the foundation, when to deviate, and how it composes with `karpathy-guidelines`.
-- **`knowledge/behavioral_discipline.json`** — structured rules that `make_agent` reads when generating new agents: which principles apply to which agent type, the trust markers QC checks for, override rules, the compact boilerplate template, and non-interactive (cron/webhook) mode mappings.
+# Behavioral discipline (baked into every agent)
 
-The discipline includes principles like:
-- **Read Before Claiming** (Genchi Genbutsu) — read the actual source, don't theorize from priors
-- **Plan Before Acting** (Nemawashi + TBP) — propose the plan, wait for confirmation
-- **Stop on Defect** (Jidoka + Andon) — first failure, halt and surface
-- **Document the Change** (A3) — structured one-page change reports
-- **Reflect, and Tell the User** (Hansei) — name the lesson where future sessions see it
+Every spec generated by `make_agent` inherits a behavioral discipline drawn from the **Toyota Production System** (system-level) reinforced by **Andrej Karpathy's four coding-agent guidelines** (worker-level habits). The discipline produces agents that are **visible** (you see what they do), **predictable** (no silent claims), and **correctable** (failures halt and surface).
 
-`make_agent` picks the applicable subset based on agent type (read-only vs multi-step batch vs single-call API vs conversational). `make_agent_qc` validates that new agents have adopted the discipline appropriately for their type. See `knowledge/behavioral_discipline.md` → "How agents inherit this" for the full mechanism.
+Full detail — the 10 principles (P-001 through P-010), when each applies, when each can be overridden — lives at [`knowledge/behavioral_discipline.md`](knowledge/behavioral_discipline.md). The `make_agent_qc` skill validates new specs against the BD-QC family (BD-QC-001 through BD-QC-009).
 
 The discipline propagates across the meta-skill family:
 
 - **`make_agent` / `make_agent_qc`** — bake all 10 principles into agent specs based on declared `interaction_pattern`.
-- **`make_gem` / `make_gem_qc`** — bake the Gem-tailored subset (P-001, P-003, P-007, P-008, P-009 partial, P-010) into Gemini Gem instructions. See `make_gems/make_gem.md` → "Behavioral Discipline for Gems (core)".
-- **`make_AGENTS` / `make_AGENTS_qc`** — embed the discipline pointer in every generated `AGENTS.md` (project-level context file). The Gem and AGENTS QC skills delegate to the same canonical BD-QC checks in `knowledge/behavioral_discipline.json` — no rule duplication.
+- **`make_gem` / `make_gem_qc`** — bake the Gem-tailored subset into Gemini Gem instructions.
+- **`make_AGENTS` / `make_AGENTS_qc`** — embed the discipline pointer in every generated `AGENTS.md`.
 
-## Optional sections in agent specs
+The Gem and AGENTS QC skills delegate to the same canonical BD-QC checks — no rule duplication.
+
+---
+
+# Optional sections in agent specs
 
 Beyond the core sections, `make_agent.md` supports several optional sections that earn their place when relevant:
 
-- **Domain Terms** — vocabulary table for agents operating in domains with non-obvious terminology
+- **Domain Terms** — vocabulary table for agents in domains with non-obvious terminology
 - **Existing Tooling** — reuse-first inventory when integrating with an existing codebase
 - **External System Lessons** — hard-won knowledge about external systems' non-obvious behavior (distinct from agent-design pitfalls)
 - **Quality Bar** — per-response professional standards checklist (distinct from validation test cases)
 - **File I/O Mode** — declare whether the agent operates on a single text input, a single file, or a folder of files (drives downstream tooling like AgentJ to render the right UI control)
 
-## Why this design (alternatives considered)
+---
+
+# Why this design (alternatives considered)
 
 ### 1. Hybrid Split (JSON + MD)
 **Problem**: How to store both structured data AND narrative context?
@@ -251,13 +272,62 @@ Beyond the core sections, `make_agent.md` supports several optional sections tha
 **Pain point**: "Which test is the source of truth?"
 **Result**: Single source of truth. Tests stay in sync with agent definition.
 
-## Common Questions (FAQ)
+---
 
-### Q1: How is this different from OpenAPI/Swagger?
-**A**: OpenAPI documents REST APIs. This documents entire **agents**, including behavior, prompts, logic, and validation.
+# Keeping templates current
 
-### Q2: Do I need an AI CLI to use this?
-**A**: No, you can still copy and edit the templates manually. However, the workflow is designed to be **10x faster** when used with an AI assistant that can parse the templates and fill them based on conversation.
+All `make_*` templates are kept up to date with evolving AI platform best practices via a two-agent documentation update system plus a raw-HTTP fetch utility:
 
-### Q3: Where does the "loader" code from the old README go?
-**A**: The concept is the same, but the AI assistant will typically handle the loading and instantiation as part of its internal process, guided by your spec. Your `validation.commands` should point to a script that performs a real-world test.
+| Component | Files | What it does |
+|---|---|---|
+| **Doc Refresh Agent** | `update_agents/doc_refresh_agent.md/.json` | Spec for the refresh workflow (staleness → fetch → validate → write → report). Uses `fetch_doc.py` as its fetcher. |
+| **Doc Analysis Agent** | `update_agents/doc_analysis_agent.md/.json` | Reads cached docs, diffs against templates using an intent-first reading protocol, and proposes minimal additive improvements — always updating both the `.json` and companion `.md` together. |
+| **fetch_doc.py** | `update_agents/fetch_doc.py` | Raw-HTTP fetcher with 5 modes (default fetch, `--list-links`, `--batch`, `--from-html`, `--check`). Run via `uv run update_agents/fetch_doc.py <url>`. |
+
+**Typical cadence**: run `doc_refresh_agent` monthly (or after a major platform release), then run `doc_analysis_agent` to surface any proposals worth adding to the templates.
+
+Cached source documentation lives in `source_docs/` (35 files as of 2026-05-13, across Anthropic, Google ADK/Gemini, OpenAI, and xAI). See `update_agents/update_agent.md` for a quick navigation guide.
+
+---
+
+# Why per-repo agents — and how this compares to Hermes / OpenClaw
+
+*This section is for evaluators picking between agent systems. Skip if you're just trying to ship.*
+
+Tools like **Hermes** (Nous Research) and **OpenClaw** are full **agent systems** you install and run: a CLI, a daemon, a gateway process for Telegram/Discord, a centralized skills store in `~/.hermes/` or `~/.openclaw/`. Worth it if you want an unattended assistant that pings you on Telegram from a $5 VPS.
+
+Make AI Agents takes the opposite shape: **portable agent specs that live in your repo and activate in whatever AI tool you already use.**
+
+| | Hermes / OpenClaw | Make AI Agents |
+|---|---|---|
+| **Install** | uv, Python 3.11, Node.js, ffmpeg, MinGit, then the system itself; configure a provider, a gateway, and skills | **Zero.** Use whatever agentic CLI/IDE you already have. |
+| **Where the agent lives** | A centralized store (`~/.hermes/skills/`) shared across projects | **In your repo,** as `agent.md` + `agent.json`. Each repo's agent is the repo's agent. |
+| **Activation** | Run the system, talk to its CLI or gateway | **Open the repo in your tool.** The `AGENTS.md` is the agent's role — your tool reads it and acts on it. |
+| **Lock-in** | Skills run in Hermes (or OpenClaw via migration) | **Open standard.** `AGENTS.md` is tool-agnostic; the same spec runs anywhere it's read. |
+| **Maintenance** | Daemons, gateway processes, upgrades, dependency churn | **None of yours.** The host tool maintains itself. |
+| **Unattended automation** (Telegram, cron) | ✅ Built-in | ❌ Not in this repo — but the sibling **[AgentJ](https://github.com/chaz-clark/agentj)** runs Make AI Agents specs on a schedule when you want that. |
+
+**The trade is deliberate.** Make AI Agents gives up Hermes-style ambient presence (Telegram bots, gateway processes, VPS daemons) in exchange for three things its audience values more:
+
+- **Zero install for the end user.** Non-technical faculty, students, and professionals using whatever AI tool is already on their laptop don't need to set anything up — they clone the repo and open it.
+- **Per-project isolation by construction.** No global skill store to clobber across projects; each repo carries its own specialist.
+- **True tool-portability.** Google's April 2026 *Gemini Enterprise Agent Platform* standardized on the exact shape Make AI Agents uses — *"subagents as Markdown + YAML in a repo, storable in a repository, enabling teams to standardize and version specialized agents."* The [Hermes Kanban v1 spec](https://github.com/NousResearch/hermes-agent/blob/main/docs/hermes-kanban-v1-spec.pdf) (§1.3) explicitly names this as a gap in their own approach — *"No portable file artifact yet."*
+
+**Use Hermes / OpenClaw** if you're building an unattended Telegram-pingable assistant on a cloud VM.
+**Use Make AI Agents** if you want repos that come with their own AI specialist, run in whatever tool you and your audience already use, and stay portable across tools. For scheduled or background execution, layer in **AgentJ** — it runs the same specs without changing anything in them.
+
+---
+
+# FAQ
+
+### Q1: How is this different from OpenAPI / Swagger?
+OpenAPI documents REST APIs. This documents entire **agents**, including behavior, prompts, logic, and validation.
+
+### Q2: Do I need an AI tool to use these templates?
+You can copy and edit the templates manually if you prefer. The workflow is designed to be **10× faster** when used with an AI assistant that can parse the templates and fill them based on conversation.
+
+### Q3: What's "NGAI"?
+Short for **N**on-**G**eneral **AI**. It's the framing the templates were originally built under — *"turn a general AI into a specialist for one specific job"*. You don't need to know the term to use the templates; it just shows up in some older sibling docs.
+
+### Q4: Where does the "loader" code from the old README go?
+The concept is the same, but the AI assistant typically handles loading and instantiation as part of its internal process, guided by your spec. Your `validation.commands` should point to a script that performs a real-world test.
