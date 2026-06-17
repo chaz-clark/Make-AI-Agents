@@ -1,7 +1,7 @@
 {
   "_metadata": {
-    "version": "1.3",
-    "last_updated": "2026-05-28",
+    "version": "1.4",
+    "last_updated": "2026-06-17",
     "description": "Structured behavioral discipline rules for AI agents. Paired with behavioral_discipline.md (narrative).",
     "instructions": "Read by make_agent and make_agent_qc. MD = the why; JSON = the rules. Update both files together.",
     "companion_files": {
@@ -129,7 +129,17 @@
         "skip_when": [
           "Conversational / advisory agents whose output is naturally varied prose"
         ]
-      }
+      },
+      "standard_work_extensions": [
+        {
+          "name": "trunk-always-works (commit + push as one operation)",
+          "added": "2026-06-17",
+          "rule": "When operating in a repo that has an origin remote and is actively pushed to, every commit gets pushed in the same step as the commit itself. No local-only commit debt.",
+          "rationale": "Local-only commits are an Andon condition — not visible to the fleet, not backed up, accumulate silently. Evidence: a consumer repo carried 23 commits ahead of origin/main over weeks before the gap surfaced 2026-06-17 (Make-AI-Agents#16).",
+          "exception": "A repo that is genuinely local-only by deliberate choice — record the choice with WHY in that repo's AGENTS.md per-repo push-policy table.",
+          "rejection": "Do not adopt 'I'll push at the end of the session' as a fallback. Standard Work, not judgment-per-commit."
+        }
+      ]
     },
     {
       "id": "P-009",
@@ -399,6 +409,16 @@
 
   "changelog": {
     "versions": [
+      {
+        "version": "1.4",
+        "date": "2026-06-17",
+        "changes": [
+          "Added P-008 standard_work_extensions[trunk-always-works] — when operating in a repo with an active origin remote, commit and push as one operation. No 'I'll push at the end of the session' fallback. Standard Work, not judgment-per-commit.",
+          "Rationale: local-only commits are an Andon condition (not visible to the fleet, not backed up, accumulate silently). Evidence: a consumer repo carried 23 commits ahead of origin/main over weeks before the gap surfaced 2026-06-17.",
+          "Exception: a repo that is genuinely local-only by deliberate choice — record the choice with WHY in that repo's AGENTS.md per-repo push-policy table.",
+          "Closes Make-AI-Agents#16."
+        ]
+      },
       {
         "version": "1.3",
         "date": "2026-05-28",

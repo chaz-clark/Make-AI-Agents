@@ -208,6 +208,18 @@ Format outputs consistently across runs so the user can predict what they'll see
 
 **Override**: Skip for conversational / advisory agents whose output is naturally varied prose.
 
+**Standard Work for commits — trunk-always-works (added 2026-06-17):**
+
+When operating in a repo that has a remote, **commit and push in the same operation**. Don't leave commits sitting in the local working tree waiting for a separate "I'll push later" pass. Local-only commits are an Andon condition: they're not visible to the rest of the fleet, they're not backed up, and they accumulate silently into multi-week debt (e.g., a consumer repo carried 23 commits ahead of `origin/main` over weeks before the gap surfaced).
+
+The rule:
+
+1. If the repo has an `origin` remote *and* is actively pushed to, every commit gets pushed in the same step as the commit itself.
+2. The only exception is a repo that is **genuinely local-only by deliberate choice** — and that choice must be recorded with WHY in the repo's `AGENTS.md` (per-repo push-policy table).
+3. "I'll push at the end of the session" is not the rule. "Commit + push together" is the rule. Standard Work, not judgment-per-commit.
+
+This codifies *Pull-Don't-Push* (P-007) at the VCS layer: pushing every commit means downstream consumers / other machines / future sessions pull from a single source of truth (origin), not from whichever local working tree happened to have the latest state.
+
 ---
 
 ### P-009 — Reflect, and Tell the User (*Hansei + Yokoten*)

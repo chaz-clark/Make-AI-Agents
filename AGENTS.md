@@ -118,7 +118,17 @@ _Last updated: 2026-05-13_
   2. Audit each current-sprint target against AGENTS-QC-001..006 + the full required-sections contract.
   3. For each behind-the-curve target, run current make_AGENTS to generate `AGENTS_updated.md` (suffixed to avoid overwriting; preserves OG Active Context / Domain Terms / Existing Tooling / project-specific rules).
   4. Package `behavioral_discipline.{md,json}` into each target's `knowledge/` folder per AGENTS-QC-006 (snapshot header for traceability).
-  5. **Public targets:** deliver via handoff convention (per `chaz-clark/handoff` issue #6 — producer-delivers direction) — handoff doc + `AGENTS_updated.md` + discipline files. **Local-only targets** (ds*-master, itm327-master, m119-master): apply directly in the local working tree; do NOT push.
+  5. **Public targets:** deliver via handoff convention (per `chaz-clark/handoff` issue #6 — producer-delivers direction) — handoff doc + `AGENTS_updated.md` + discipline files. **Per-repo push policy (verified 2026-06-17 via Genchi Genbutsu, replaces the prior "Local-only targets … do NOT push" directive — see closed issue #16):**
+
+      | Repo | Remote | Active push? | Push after every commit? |
+      |---|---|---|---|
+      | `ds250-class-code` | `chaz-clark/ds250-class-code` | yes (last push 6 mo ago — slow but real) | **yes** |
+      | `ds460-master` | `chaz-clark/ds460-master` | yes (active; concurrent diverge → reconcile first) | **yes** |
+      | `itm327-master` | `chaz-clark/itm327-master-course` *(remote name differs)* | yes (very active) | **yes** |
+      | `m119-master` | `chaz-clark/m119-master` | yes (active) | **yes** |
+      | *(any future repo with no remote)* | — | n/a | **n/a — but say WHY here** |
+
+      All four "master" repos have active remotes. The old "apply locally and do NOT push" guidance produced unpushed-commit debt (e.g., `itm327-master` accumulated 23 commits ahead of `origin/main` over weeks before being surfaced 2026-06-17). The trunk-always-works discipline now governs: **when a repo has a remote, every commit is pushed in the same operation as the commit itself** (see `knowledge/behavioral_discipline.md` → P-008 Standard Work). If a repo IS genuinely local-only, that's a deliberate choice — record it in this table with WHY.
   6. Track per-repo state via the handoff convention's Status enum (proposed in handoff issue #3) for the public targets; local targets just need a commit in their own repo.
 - Genchi Genbutsu (GG) the new skills further as they're used in canvas-toolbox / AgentJ — any GG findings fold back here.
 - Wave 4 doc-analysis cycle when source_docs next refreshes.
