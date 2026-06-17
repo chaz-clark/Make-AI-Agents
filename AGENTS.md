@@ -1,3 +1,15 @@
+---
+name: Make-AI-Agents
+description: Build workspace for AI agent + Gemini Gem specs and the meta-templates that generate them. Source of truth for the behavioral discipline every consumer repo inherits.
+version: "1.0"
+author: chaz-clark
+license: MIT
+metadata:
+  make-ai-agents:
+    generated_by: make_AGENTS (self-application 2026-06-17)
+    spec_json: make_AGENTS.json
+---
+
 # Make-AI-Agents
 
 A build workspace for AI agents and Gemini Gems, plus the meta-templates that generate them. Agents and Gems are drafted here, then moved to their own dedicated repos when ready.
@@ -74,6 +86,43 @@ The four no-override principles — **P-001 Read Before Claiming, P-003 Stop on 
 - **Updates to `make_agent.md` cascade** — every agent spec generated from it after the change should be regenerated or audited against the new template via `make_agent_qc`.
 - **Make-AI-Agents is the leverage point; consumer repos are the field for Genchi Genbutsu (P-001).** This repo holds the meta-skills (`make_agent`, `make_orchestrator_agent`, `make_agent_knowledge`, etc.) and the discipline. Consumer repos (canvas-toolbox, AgentJ, course repos) USE the skills to generate real artifacts. When an agent in this repo is invoked to "test the skill on" a consumer repo, the goal is **skill improvement here**, NOT to finish the consumer repo's work. Capture what surfaces, fix the skill, commit the skill fix here, hand the field state back to the consumer repo's own agents/maintainers to commit there. Don't cross the boundary: this repo's commits update meta-skills; consumer-repo commits update generated artifacts.
 - **Cascade material changes to consumer repos via handoffs.** When a commit here would materially affect agents working in consumer repos — a new make_AGENTS standard, a behavioral_discipline rule, a new QC check, a new optional section, a sharpened condition — **assess blast radius** before considering the change done. If consumer agents would behave differently with the new version (i.e., generate different AGENTS.md, fail QC under the new rule, gain access to a new pattern), draft a per-consumer handoff doc + proposal file (per the 2026-05-13 sprint pattern documented in this Active Context) and drop into each affected `handoffs/` folder. If the change is cosmetic / internal / non-propagating, skip — and note that skip reasoning in the commit message so future readers know the assessment happened. The cross-repo audit workstreams queued in Active Context are the SYSTEMATIC version of this rule (running it across every consumer at once); day-to-day skill commits should still trigger the lightweight version (assess → drop per affected repo OR explicitly skip with reasoning). The agents in this repo are the **main drivers** of consumer-repo behavior; the propagation discipline is what keeps that driver-relationship trustworthy. Added 2026-05-13.
+
+## Handoff document recognition
+
+This repo participates in the cross-repo `handoff` convention (canonical spec: `handoff/CONVENTION.md`, co-located gitignored clone). When operating in this repo, treat the following file patterns as **handoff documents** — structured artifacts with a lifecycle, NOT prose conversation:
+
+| Path pattern | What it is |
+|---|---|
+| `handoffs/HANDOFF_<topic>.md` | Outgoing `request`-direction handoff (canonical copy) |
+| `handoffs/<YYYY-MM-DD>_<topic>.md` | Incoming `deliver`-direction handoff (canonical consumer record) |
+| `<CONSUMER>_HANDOFF_<topic>.md` at repo root | Incoming `request` dropped by another consumer for us to apply |
+| `<PRODUCER>_DELIVERS_<topic>.md` at repo root | Visibility copy of an incoming `deliver` (canonical is in `handoffs/`) |
+| `handoffs/parkinglot.md` | `internal` handoff — near-term parked ideas; deferred by design |
+| `handoffs/long-term-parking.md` | `internal` handoff — far/someday parked ideas; deferred by design |
+
+**Seven rules for handling a handoff document** (canonical at `handoff/AGENTS_snippet.md`):
+
+1. **Read the metadata header first.** Required fields: `Date`, `Author`, `Direction`, `Status`, `Origin`, `Origin-Commit`, `Topic`. Optional: `Sensitivity`, `Companions`. Missing required → STOP and ask.
+2. **Act only on `Status: delivered`.** Skip `draft`, `applying`, `applied`, `archived`, `superseded`. Escalate restricted/internal-only handoffs.
+3. **Surface before applying.** Summarize the request/delivery — what's asked, what files/repos, what would change. Get per-decision approval.
+4. **Update `Status` on apply.** After committing the change, set `Status: applied` and add a `## Lifecycle marker` with apply date (and optionally commit hash).
+5. **STOP on missing referenced artifacts.** Files / commits / paths the handoff names that don't exist locally → halt and ask. The `Origin-Commit` field is your traceability anchor.
+6. **Before authoring an outbound handoff**, read the target producer's `REPO_CARD.md` if present: confirm `Status: accepting`, intended type is accepted, drop at the named `Drop-location`.
+7. **Do not auto-act on `parked` items.** `parkinglot.md` and `long-term-parking.md` (`Direction: internal`) are deferred *by design*. Act only on operator direction or when the item's `Trigger:` condition is met.
+
+Refresh this section when `handoff/CONVENTION.md` versions up — canonical snippet is at `handoff/AGENTS_snippet.md` in the co-located clone.
+
+## Learning loop
+
+At session end, distill non-obvious lessons from the session into a structured entry under `knowledge/learned/`:
+
+- **File**: `knowledge/learned/YYYY-MM-DD-<short-slug>.md` (or update an existing rolling file like `knowledge/learned/preferences.md` for cumulative patterns).
+- **Frontmatter**: `name`, `observed_in: <session-context>`, `confidence: low | med | high`.
+- **Body**: the lesson, the trigger, the suggested rule.
+
+What counts: surprises, non-obvious quirks, user-preference signals, system gotchas. What does NOT count: generic "task done" prose. **A lesson must be specific and reusable.**
+
+Future invocations of agents in this repo read `knowledge/learned/` alongside the core knowledge files. This is the closed-loop distillation pattern — **P-009 (Hansei + Yokoten) formalized as a structural artifact**, in the Make-AI-Agents idiom (no DSPy/GEPA, no server — just structured markdown the agent reads next time). Inspired by Hermes Agent's auto-distillation; rebuilt as a single Markdown-directory convention.
 
 ## Active Context
 

@@ -1,0 +1,4 @@
+Placeholder so the directory is tracked even when empty.
+
+See AGENTS.md "## Learning loop" — session-end lesson files land here as
+`YYYY-MM-DD-<slug>.md` with frontmatter (name, observed_in, confidence).
