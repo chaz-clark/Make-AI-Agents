@@ -50,8 +50,9 @@ Make-AI-Agents/
 │   ├── course_info_bot.json               # example Gem (Engineering Statistics course bot)
 │   ├── implement_gem.md / .json           # implementation guide for compiled Gems
 │   └── gem_instructions/                  # compiled .txt outputs (gitignored)
-├── knowledge/                             # source-of-truth knowledge files
-│   └── behavioral_discipline.md / .json   # 10 principles, 5 interaction patterns
+├── knowledge/                             # source-of-truth + generated knowledge files
+│   ├── behavioral_discipline.md / .json   # 10 principles, 5 interaction patterns (v1.4)
+│   └── learned/                           # session-end lesson distillation (Sprint B Learning loop landing zone)
 ├── update_agents/                         # doc refresh + analysis agents + utilities
 │   ├── update_agent.md / .json            # entry-point / orchestration
 │   ├── doc_refresh_agent.md / .json       # spec for the refresh workflow (uses fetch_doc.py)
@@ -59,7 +60,7 @@ Make-AI-Agents/
 │   └── fetch_doc.py                       # raw-HTTP doc fetcher (5 modes, 2026-05-13)
 ├── source_docs/                           # 34 cached platform docs (Anthropic / Google ADK / OpenAI / xAI)
 │   └── dropbox/                           # staging folder for manual fetches (gitignored)
-├── handoffs/                              # cross-repo handoff documents (currently empty)
+├── handoffs/                              # cross-repo handoff documents + parkinglot.md (gitignored)
 └── temp/                                  # clone+gitignored: andrej-karpathy-skills (reference; refresh via `cd temp && git pull`; migrated from subtree 2026-05-13)
 ```
 
@@ -126,63 +127,68 @@ Future invocations of agents in this repo read `knowledge/learned/` alongside th
 
 ## Active Context
 
-_Last updated: 2026-05-13_
+_Last updated: 2026-06-18_
 
-**Recent shipped (2026-05-12 → 2026-05-13)**:
-- **`make_orchestrator_agent`** (commit `e539532`) — new sibling skill that generates multi-agent orchestrator specs. Specialists declared by `spec_path`; LLM-routed via auto-generated `delegate_to_<specialist>` tools. Platform coverage: Anthropic subagents / OpenAI Handoffs / Google ADK `sub_agents` as direct targets; xAI documented as exception (anonymous server-side workers).
-- **`make_agent_knowledge`** (commit `e539532`) — new sibling skill that generates runtime knowledge files (`knowledge/*.md` + `.json` pairs). Three shapes: reference, identity, procedural. Authoring scaffold only. `_metadata.runtime_strategy` declares embed vs read-at-runtime per body-size thresholds.
-- **`make_agent_qc`** rules 19 (`ORCH-QC-001..005`) + 20 (`KNW-QC-001..006`) — extends QC to cover the new artifact types. Total: 20 rules, 17 quality dimensions.
-- **`make_agent.json` v3.4–v3.6** — applied 6 doc-analysis proposals (strict tool use, reasoning effort, MCP preference, server/client tool pitfall, memory/state strategy, Gemini-3 temperature exception). `cross_references.knowledge_files[]` field added.
-- **`update_agents/fetch_doc.py`** (commit `a38de4e`, `49f1374`) — raw-HTTP doc fetcher with 5 modes (default, `--list-links`, `--batch`, `--from-html`, `--check`). Replaces the WebFetch+manual-save workflow that was producing small-model summaries. Validated 2026-05-13: byte-identical to manual saves on 11 of 11 sources from 5 platforms.
-- **`source_docs/` 9 → 34 sources** — wave-2 added 17 sources to ground the 2 new skills; the new tool then snagged 8 ADK A2A child pages and refreshed `google_adk_multi_agents` (+20% from upstream language tabs).
-- **`doc_refresh_agent.json` v1.3** — Step 2 (Fetch) rewritten to recommend `fetch_doc.py`; `--from-html` documented as the manual fallback.
+**Recent shipped (2026-05-28 → 2026-06-17):**
 
-**In flight**: nothing — all queued work in this wave landed.
+- **Hermes-research synthesis sprints (2026-05-28)** — three meta-template upgrades + corresponding QC checks, motivated by the Nous Research Hermes Agent comparison work:
+  - **Sprint F** — `## Handoff document recognition` baked into `make_AGENTS` + AGENTS-QC-008 (handoff recognition fingerprint). Commits `7a0853a` → `81ebc9a`.
+  - **Sprint B** — `## Learning loop` as a required AGENTS section + BD-QC-008 (Learning loop structural artifact). `knowledge/learned/` is the closed-loop distillation lane — P-009 (Hansei + Yokoten) formalized as a structural slot.
+  - **Sprint A** — agentskills.io frontmatter on every `make_*` skill MD + AGENTS-QC-009 (frontmatter present). Pure portability win across the `make_*` family.
+  - Blanket per-repo `deliver` handoff dropped into all 14 chaz-clark consumer repos describing how each applies Sprints A/B/F to its own AGENTS.md.
 
-**Open issues** (check GitHub for current state — `gh issue list`): the v3.0–v3.6 polish series (issues #1–#9) is closed. New work would open new issues.
+- **`make_agent_knowledge` v1.0 → v1.1 (2026-06-17, commit `8222d2c`)** — closed `#14` (section order: now `title → scope → provenance → last_updated → body`, matching what the `compact_boilerplate` templates already emitted) and `#15` (optional-sections list documented as NON-EXHAUSTIVE with `_mapping_guidance` for cross-file relationship narrative / orienting frame / references / quick reference / audit tags).
 
-**Next likely**:
-- **🔝 NEXT QUEUED — Cross-repo AGENTS.md audit + regenerate-and-deliver workstream** (queued 2026-05-13 after commit `63bd64e` raised the make_AGENTS bar): every consumer repo (public + local masters) likely has an AGENTS.md that predates the current standards (especially AGENTS-QC-006 — discipline files co-located, not just pointed at), OR is still on CLAUDE.md. Step 1 (enumeration) completed 2026-05-13.
+- **README outcome-oriented rewrite (2026-06-17, commit `d3ab08f`)** — benchmarked against `canvas-toolbox/README.md`. 9 surgical edits moving from artifact-noun framing (*"agent specs"*) to outcome-verb framing (*"turn the AI tool you already use into a specialist for your repo"*). New H1, "What you can do with it" bullet list, 3-step IDE / AI / templates onboarding flow with A/B/C setup paths, Hermes/OpenClaw comparison moved out of the onboarding zone.
 
-  **Current-sprint scope (5 targets — audit/migrate existing context):**
-  - `handoff` (GitHub) — has AGENTS.md (9 KB, seed stage); audit against AGENTS-QC-001..006; deliver via handoff convention
-  - `ds460-master` (local) — has AGENTS.md (9.9 KB); audit + package discipline locally (no push)
-  - `ds250-onln-master` (local) — CLAUDE.md (21.9 KB) → AGENTS.md migration; canvas_toolbox/ clone present; local only
-  - `itm327-master` (local) — CLAUDE.md (11.7 KB) → AGENTS.md migration; gh-issues-agent/ clone present; local only
-  - `m119-master` (local) — CLAUDE.md (2.7 KB, sparse) → AGENTS.md migration; canvas_toolbox/ clone present; local only
+- **trunk-always-works (`#16` closed, 2026-06-17, commit `33b6322`)** — Genchi Genbutsu confirmed all four named "master" repos have active remotes (`itm327-master` had accumulated 23 unpushed commits over weeks). Replaced the blanket "do NOT push" directive with the per-repo push-policy table preserved below. P-008 `standard_work_extensions[trunk-always-works]` added to `behavioral_discipline.{md,json}`. BD bumped to v1.4.
 
-  **Next-sprint scope (4 targets — optional creates, no existing context to preserve):**
-  - `agentj` (GitHub) — no AGENTS.md, no CLAUDE.md; AI agent runtime, peer repo mentioned in handoff/canvas-toolbox docs as a clone+gitignore consumer
-  - `m119-site` (GitHub) — no AGENTS.md, no CLAUDE.md; BYU-Idaho course site, recent activity
-  - `DS250-Course-Polars` (GitHub) — no AGENTS.md, no CLAUDE.md; DS250 course; agents likely work on it without project context today
-  - `gh-issues-agent` (GitHub) — no AGENTS.md, no CLAUDE.md, BUT already carries a `knowledge/` folder with 6 topic files (agile_sprint, canvas_api_gotchas, gh_issues_agent_mission, github_issues_reference, semantic_versioning, sprint_qc). Adding AGENTS.md would (a) give agents working on the tool itself project context, (b) make it a model "agent skill" repo with the discipline embedded, and (c) document it as a consumable-by-other-repos skill for cross-clone reuse. Should also package behavioral_discipline.{md,json} into its existing knowledge/ folder per AGENTS-QC-006 condition (a). Sprint-1 step-2 audit added it post-hoc after the maintainer flagged the omission 2026-05-13.
+- **Own AGENTS.md compliance (2026-06-17 evening, commit `29b5952`)** — applied Sprints A/B/F to this file itself, closing the producer-consumer loop. Frontmatter prepended, Handoff Recognition + Learning loop sections inserted, `knowledge/learned/` created. The producer-applies-to-self gap was caught tonight by Chaz observing this file lagged the standard it propagates.
 
-  **Skipped (out of scope):**
-  - `Make-AI-Agents` — source of truth, passes AGENTS-QC-006 by construction
-  - `canvas-toolbox` — already audited 2026-05-13, passes via condition (b)
-  - Tutorial repos / forks / legacy single-purpose repos / `andrej-karpathy-skills` (upstream CLAUDE.md intentional)
+**In flight:** nothing actively in progress. Parked items live in `handoffs/parkinglot.md` (gitignored) with named triggers for revisit.
 
-  **6-step workstream applied per target:**
-  1. ✅ Enumerate Chaz's repos (public + local masters) — done 2026-05-13. **GG learning from sprint 2 (added 2026-05-13)**: step 1 must check BOTH the local working tree AND GitHub-side state. The initial enumeration used `gh api repos/<owner>/<repo>/contents/AGENTS.md` which only sees PUSHED state. 2 of 4 sprint-2 targets (`agentj`, `gh-issues-agent`) had local-but-not-pushed `AGENTS.md` files that triggered P-003 halts mid-sprint. Future cross-repo audits should run `ls <local-path>/AGENTS.md` in addition to `gh api`, then reconcile (a missing GitHub-side AGENTS.md does NOT imply a missing local one). The P-003 halts caught the discrepancy cleanly — subagents were re-launched with the correct refresh framing — but pre-enumeration verification would have avoided the halt-and-relaunch cycle.
-  2. Audit each current-sprint target against AGENTS-QC-001..006 + the full required-sections contract.
-  3. For each behind-the-curve target, run current make_AGENTS to generate `AGENTS_updated.md` (suffixed to avoid overwriting; preserves OG Active Context / Domain Terms / Existing Tooling / project-specific rules).
-  4. Package `behavioral_discipline.{md,json}` into each target's `knowledge/` folder per AGENTS-QC-006 (snapshot header for traceability).
-  5. **Public targets:** deliver via handoff convention (per `chaz-clark/handoff` issue #6 — producer-delivers direction) — handoff doc + `AGENTS_updated.md` + discipline files. **Per-repo push policy (verified 2026-06-17 via Genchi Genbutsu, replaces the prior "Local-only targets … do NOT push" directive — see closed issue #16):**
+**Open issues** (chaz-clark/Make-AI-Agents, as of 2026-06-18):
 
-      | Repo | Remote | Active push? | Push after every commit? |
-      |---|---|---|---|
-      | `ds250-class-code` | `chaz-clark/ds250-class-code` | yes (last push 6 mo ago — slow but real) | **yes** |
-      | `ds460-master` | `chaz-clark/ds460-master` | yes (active; concurrent diverge → reconcile first) | **yes** |
-      | `itm327-master` | `chaz-clark/itm327-master-course` *(remote name differs)* | yes (very active) | **yes** |
-      | `m119-master` | `chaz-clark/m119-master` | yes (active) | **yes** |
-      | *(any future repo with no remote)* | — | n/a | **n/a — but say WHY here** |
+- `#12` Document the agent-as-drafting-partner pattern around `make_agent_knowledge` — **parked.** Trigger: a second use case beyond canvas-toolbox surfaces the pattern, OR Chaz wants to ship the consumer-trigger contract across the `make_*` family.
+- `#13` `make_AGENTS`: add generic workflow practices to generated Working Style section — **parked** as "Sprint G" candidate. Trigger: next sprint slot.
+- Closed tonight: `#14`, `#15`, `#16`.
 
-      All four "master" repos have active remotes. The old "apply locally and do NOT push" guidance produced unpushed-commit debt (e.g., `itm327-master` accumulated 23 commits ahead of `origin/main` over weeks before being surfaced 2026-06-17). The trunk-always-works discipline now governs: **when a repo has a remote, every commit is pushed in the same operation as the commit itself** (see `knowledge/behavioral_discipline.md` → P-008 Standard Work). If a repo IS genuinely local-only, that's a deliberate choice — record it in this table with WHY.
-  6. Track per-repo state via the handoff convention's Status enum (proposed in handoff issue #3) for the public targets; local targets just need a commit in their own repo.
-- Genchi Genbutsu (GG) the new skills further as they're used in canvas-toolbox / AgentJ — any GG findings fold back here.
-- Wave 4 doc-analysis cycle when source_docs next refreshes.
+**Next likely** (when capacity opens):
+
+- **Sprint G — `#13`'s 5 generic Working Style practices** for the `make_AGENTS` template: docs-sync on every change, verify VCS/build state before claiming, single-repo issue scope (conditional), vendored-upstream change protocol (conditional), project-local dep isolation. Conditionally framed so generated AGENTS.md files adapt rather than copy verbatim (same lesson as `#10` about stale subtree language).
+- **`make_AGENTS` push-policy bake-in — Yokoten of `#16`** — bake the per-repo push-policy table shape into `make_AGENTS` `compact_boilerplate` so future generated AGENTS.md files include the section by default; pairs with a proposed **AGENTS-QC-010** validating it's declared. Surfaces the new rule via the structure consumers actually read.
+- **`#12` drafting-partner pattern** — three coupled pieces (guided fill-in doctrine, consumer-integration trigger contract, upstream-contribution loop). Three open design questions need resolution before it can ship.
+- Genchi Genbutsu the new skills further as they're used in canvas-toolbox / AgentJ — any GG findings fold back here.
+- Wave 4 doc-analysis cycle when `source_docs/` next refreshes.
 - Operationalize `doc_refresh_agent` as a runner (Python) on top of `fetch_doc.py`, enabling scheduled refreshes.
 - Refresh `temp/` clone (`cd temp && git pull`) when the upstream `chaz-clark/andrej-karpathy-skills` ships new guidelines.
+
+---
+
+**Completed workstream — cross-repo AGENTS.md audit + regenerate-and-deliver (2026-05-13 → 2026-06-17):**
+
+Original framing: every consumer repo (public + local masters) likely had an AGENTS.md predating current standards (especially AGENTS-QC-006 — discipline files co-located, not just pointed at), OR was still on CLAUDE.md. Executed end-to-end via the **14-repo blanket handoff drop on 2026-06-17** rather than the originally-planned per-target package pass — same outcome, fewer per-target customizations; each consumer applies Sprints A/B/F themselves following the handoff's action list.
+
+**6-step workstream applied per target** (status as of 2026-06-17):
+
+1. ✅ **Enumerate Chaz's repos (public + local masters)** — done 2026-05-13. **GG learning from sprint 2 (added 2026-05-13)**: step 1 must check BOTH the local working tree AND GitHub-side state. The initial enumeration used `gh api repos/<owner>/<repo>/contents/AGENTS.md` which only sees PUSHED state. 2 of 4 sprint-2 targets (`agentj`, `gh-issues-agent`) had local-but-not-pushed `AGENTS.md` files that triggered P-003 halts mid-sprint. Future cross-repo audits should run `ls <local-path>/AGENTS.md` in addition to `gh api`, then reconcile.
+2. ✅ **Audit each current-sprint target** — done 2026-06-17 (the 14-repo gap-matrix against AGENTS-QC-001..009 + full required-sections contract).
+3. **Generate `AGENTS_updated.md` per behind-the-curve target** — superseded by consumer-side application. Each consumer applies Sprints A/B/F themselves following the handoff's action list (no AGENTS_updated.md artifact produced upstream).
+4. **Package `behavioral_discipline.{md,json}` into each target's `knowledge/` folder** — also superseded; consumers fetch from this repo when applying their handoff (per AGENTS-QC-006 condition (a)).
+5. ✅ **Deliver via handoff convention** — done 2026-06-17 (14 `deliver` handoffs dropped, all `Status: delivered` at producer end).
+6. **Track per-repo state via handoff `Status` enum** — in progress. Make-AI-Agents itself applied its own handoff 2026-06-17 (commit `29b5952`); other consumers apply on their own time.
+
+**Per-repo push policy (canonical, verified 2026-06-17 via Genchi Genbutsu — replaces the prior "Local-only targets … do NOT push" directive; see closed `#16`):**
+
+| Repo | Remote | Active push? | Push after every commit? |
+|---|---|---|---|
+| `ds250-class-code` | `chaz-clark/ds250-class-code` | yes (last push 6 mo ago — slow but real) | **yes** |
+| `ds460-master` | `chaz-clark/ds460-master` | yes (active; concurrent diverge → reconcile first) | **yes** |
+| `itm327-master` | `chaz-clark/itm327-master-course` *(remote name differs)* | yes (very active) | **yes** |
+| `m119-master` | `chaz-clark/m119-master` | yes (active) | **yes** |
+| *(any future repo with no remote)* | — | n/a | **n/a — but say WHY here** |
+
+All four "master" repos have active remotes. The old "apply locally and do NOT push" guidance produced unpushed-commit debt (e.g., `itm327-master` accumulated 23 commits ahead of `origin/main` over weeks before being surfaced 2026-06-17). The trunk-always-works discipline now governs: **when a repo has a remote, every commit is pushed in the same operation as the commit itself** (see `knowledge/behavioral_discipline.md` → P-008 Standard Work). If a repo IS genuinely local-only, that's a deliberate choice — record it in this table with WHY.
 
 ## Existing Tooling
 
@@ -237,4 +243,4 @@ The LLM reads the QC meta-skill, reads the target spec, runs the rule set, and r
 
 ---
 
-_AGENTS.md last revised 2026-05-13. Generated 2026-04-29 using `make_AGENTS.md` v1.0; revised in-place for the wave-2 additions (make_orchestrator_agent, make_agent_knowledge, fetch_doc.py, source_docs 9 → 34). Maintenance: update Active Context after major shipped work; refresh other sections only when the underlying truth changes._
+_AGENTS.md last revised 2026-06-18. Generated 2026-04-29 using `make_AGENTS.md` v1.0; revised in-place for the wave-2 additions (make_orchestrator_agent, make_agent_knowledge, fetch_doc.py, source_docs 9 → 34); brought to Hermes-sprint compliance 2026-06-17 (Sprints A/B/F applied via commit `29b5952`, eat-the-cooking moment); Active Context fully refreshed 2026-06-18 to reflect 2026-05-28 sprint synthesis + 2026-06-17 v1.1 fixes / README rewrite / trunk-always-works / own-compliance work. Maintenance: update Active Context after major shipped work; refresh other sections only when the underlying truth changes._
