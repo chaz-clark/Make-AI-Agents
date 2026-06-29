@@ -39,7 +39,7 @@ A fast-path validation flow:
 1. **[Locate]**: Find the target `AGENTS.md` and (optionally) the repo root it describes.
    - Example: `AGENTS.md` at `/path/to/project/AGENTS.md`; repo root is `/path/to/project/`.
 
-2. **[Parse rules]**: Load structured rules from `make_AGENTS_qc.json` — the 9 rules, their weights, and severity levels.
+2. **[Parse rules]**: Load structured rules from `make_AGENTS_qc.json` — the 11 rules, their weights, and severity levels.
 
 3. **[Read sources]**: Read the AGENTS.md fully. If repo root is provided, read the discipline source at `knowledge/behavioral_discipline.md/.json` (or equivalent) and run `git ls-files` for the structure check.
 
@@ -63,7 +63,7 @@ For detailed rules and scoring, see `make_AGENTS_qc.json`.
 - Worked examples of good and broken AGENTS.md files
 
 ### The JSON File (.json) Contains:
-- The 9 numbered rules with conditions, actions, weights, severity
+- The 11 numbered rules with conditions, actions, weights, severity
 - Quality dimension definitions with weights
 - Severity levels (critical / high / medium / low)
 - Test cases and expected outputs
@@ -140,7 +140,7 @@ P-002, P-004, P-005, P-006 are skipped per `read_only.skip_unless_applicable` �
 
 Conversational invocation — this is a meta-skill, not a script. Example prompt to your agentic dev tool:
 
-> "Use `make_AGENTS_qc.md` and `make_AGENTS_qc.json` to validate `<path>/AGENTS.md` against the make_AGENTS contract. The repo root is `<path>/`. Apply all 9 rules. Output a scored report with critical issues first."
+> "Use `make_AGENTS_qc.md` and `make_AGENTS_qc.json` to validate `<path>/AGENTS.md` against the make_AGENTS contract. The repo root is `<path>/`. Apply all 11 rules. Output a scored report with critical issues first."
 
 The skill responds with a structured report (see `make_AGENTS_qc.json` → `output_format`).
 
@@ -254,7 +254,7 @@ Recommendations:
 
 **Scenario**: Validating an AGENTS.md from a different team's project where you only have the file, not the repo.
 
-**Approach**: Skill applies Rules 1, 2, 3, 4, 5, 6, 8, 9 (the rules that don't require repo access). Skips Rule 7 (Structure Accuracy) and any deep verification. Notes the limitation in the report header.
+**Approach**: Skill applies Rules 1, 2, 3, 4, 5, 6, 8, 9, 10, 11 (the rules that don't require repo access). Skips Rule 7 (Structure Accuracy) and any deep verification. Notes the limitation in the report header.
 
 ---
 
@@ -275,7 +275,9 @@ For full structured tests, see `make_AGENTS_qc.json` → `validation.test_cases`
 - Discipline pointer is a pointer, not a duplicate (Rule 6)
 - Structure section matches `git ls-files` output (Rule 7, requires repo access)
 - Active Context date stamp ≤ 90 days old (Rule 8)
-- Migration Notes references match Migration Notes content (Rule 9)
+- No template placeholders in body (Rule 9)
+- Total file size within thresholds (Rule 10)
+- Active Context is current-state-only, not append-only log (Rule 11)
 
 ### Quality Dimensions (6)
 
