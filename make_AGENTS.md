@@ -112,8 +112,8 @@ For detailed structure, see `make_AGENTS.json`.
 
 ### 2. Concise — Project Context, Not Documentation
 **Description**: AGENTS.md is the file the LLM reads first when working in a project. It is project context, not exhaustive documentation. Long AGENTS.md files dilute their own purpose.
-**Why**: An LLM that has to read 2000 lines of project context before answering a simple question burns budget and surfaces noise. The first 100 lines do 80% of the work.
-**How**: Required sections aim for ~30 lines each. Optional sections only when they earn their presence. Long-form documentation lives in READMEs, not AGENTS.md.
+**Why**: An LLM that has to read 2000 lines of project context before answering a simple question burns budget and surfaces noise. The first 100 lines do 80% of the work. Beyond ~25,000 tokens, the file exceeds common Read-tool limits and becomes unreadable in one pass.
+**How**: Required sections aim for ~30 lines each. Optional sections only when they earn their presence. Long-form documentation lives in READMEs, not AGENTS.md. **Enforced by**: AGENTS-QC-010 (total file size thresholds: soft warn at 1200 lines/12k tokens, hard flag at 25k tokens) and AGENTS-QC-011 (Active Context current-state-only check: flags when >5 dated entries or >150 lines).
 
 ### 3. Active-State-Aware
 **Description**: Every AGENTS.md has an "Active Context" section that surfaces in-flight work, recent major changes, and known follow-ups. This is the section that decays fastest and matters most.
@@ -209,13 +209,13 @@ All three kill the propagation — (a) by duplication-drift, (b) by broken-refer
 - **During refresh, SCAN for stale vendoring-pattern language and REWRITE** — explicit narrow exception to P-007. If the existing AGENTS.md mentions `git subtree`, `git subtree pull`, `git subtree push`, `subtree add`, `.gitmodules`, or `git submodule` in the Active Context / Structure / Project-specific rules sections, propose a rewrite to the canonical clone+gitignore form. Canonical Active Context bullet template (substitute the repo name for `make-ai-agents`): `\`make-ai-agents\` is a **local clone, gitignored** at \`make-ai-agents/\` (not a subtree, not a submodule — see \`.gitignore\`). Refresh with \`cd make-ai-agents && git pull\`. Re-clone fresh by removing the folder and running \`git clone https://github.com/chaz-clark/Make-AI-Agents.git make-ai-agents\` from the repo root.` Surface each rewrite in the refresh handoff doc so the maintainer sees the change explicitly.
 - Together: lean AGENTS.md prose + co-located discipline files + current vendoring-pattern language = discipline propagates correctly without duplication-drift, broken-reference, or stale-instruction-drift.
 
-### 2. Stale Active Context
+### 2. Stale Active Context (or Bloated Active Context)
 
-**Problem**: Six months after generation, the Active Context section still says "v3.0 just shipped" and lists issues that were closed long ago.
+**Problem**: Six months after generation, the Active Context section still says "v3.0 just shipped" and lists issues that were closed long ago. **OR** — the Active Context has grown into an append-only release log spanning hundreds of lines, where every shipped feature since the project's inception is preserved chronologically. The first failure is staleness; the second is bloat.
 
-**Why it happens**: Active Context isn't owned by the make_AGENTS skill after generation — it's the developer's responsibility to update.
+**Why it happens**: Active Context isn't owned by the make_AGENTS skill after generation — it's the developer's responsibility to update. Without discipline, it either goes stale (unmaintained) or bloats (over-maintained as an everything-log). The bloat variant often has a *fresh* date stamp, so date-based freshness checks (AGENTS-QC-008) pass — masking the real problem.
 
-**Solution**: Generate the Active Context section with a date stamp at the top: `_Last updated: YYYY-MM-DD_`. Include a comment in the section explaining when it should be refreshed.
+**Solution**: Generate the Active Context section with a date stamp at the top: `_Last updated: YYYY-MM-DD_`. Include a comment in the section explaining when it should be refreshed. **Enforce boundaries**: AGENTS-QC-011 flags when Active Context exceeds ~5 dated entries or ~150 lines. Recommended remedy: keep the latest 2-3 releases + in-flight work + open follow-ups; move the historical release log to `CHANGELOG.md` (per Principle #2 — long-form documentation lives in READMEs/CHANGELOG, not AGENTS.md).
 
 ### 3. Tool-Specific Instructions
 

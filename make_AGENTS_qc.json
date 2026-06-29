@@ -165,6 +165,24 @@
           "priority": "medium",
           "weight": 0.07,
           "dimension": "specificity"
+        },
+        {
+          "rule_id": 10,
+          "name": "Total File Size Within Threshold",
+          "condition": "AGENTS.md total size stays within readable limits. Soft threshold: ~1200 lines or ~12,000 tokens (warn). Hard threshold: ~25,000 tokens (the common Read-tool cap in Claude Code and similar tools — beyond this the file cannot be read in one pass).",
+          "action": "Medium failure when file exceeds soft threshold (1200 lines / 12k tokens). High failure when file exceeds hard threshold (25k tokens) — file becomes unreadable in one pass. Recommend: trim Active Context to current-state-only (move historical log to CHANGELOG.md), move domain knowledge to knowledge/ files, move long-form docs to README/docs/.",
+          "priority": "medium",
+          "weight": 0.10,
+          "dimension": "completeness"
+        },
+        {
+          "rule_id": 11,
+          "name": "Active Context Is Current-State-Only, Not Append-Only Log",
+          "condition": "Active Context section contains current state, in-flight work, and recent major changes ONLY — not a full historical changelog. Flag when Active Context has >5 dated/versioned release entries OR the section exceeds ~150 lines.",
+          "action": "Medium failure when Active Context looks like an append-only release log (>5 dated entries or >150 lines). Recommend: keep latest 2-3 releases + in-flight work + open follow-ups; move the historical release log to CHANGELOG.md (per Principle #2 — long-form documentation lives in READMEs/CHANGELOG, not AGENTS.md). The overflow does NOT belong in knowledge/ — per make_agent_knowledge Principles #1-#2, knowledge files are runtime artifacts (reference/identity/procedural shapes); a release log is none of those and would fail KNW-QC-003.",
+          "priority": "medium",
+          "weight": 0.08,
+          "dimension": "currency"
         }
       ],
       "evaluation_order": "priority",
@@ -216,10 +234,11 @@
     "dimensions": {
       "completeness": {
         "weight": 0.25,
-        "rules": [1, 7],
+        "rules": [1, 7, 10],
         "checks": [
           "All 5 required sections present and in order",
-          "Structure section accurately reflects the repo (when repo accessible)"
+          "Structure section accurately reflects the repo (when repo accessible)",
+          "Total file size stays within readable thresholds (soft: 1200 lines/12k tokens; hard: 25k tokens)"
         ]
       },
       "specificity": {
@@ -240,10 +259,11 @@
       },
       "currency": {
         "weight": 0.15,
-        "rules": [3, 8],
+        "rules": [3, 8, 11],
         "checks": [
           "Active Context has a date stamp",
-          "Date stamp is within 90 days"
+          "Date stamp is within 90 days",
+          "Active Context is current-state-only, not an append-only log (≤5 dated entries, ≤150 lines)"
         ]
       },
       "tool_agnosticism": {
@@ -290,7 +310,7 @@
         "status": "PASS | NEEDS_IMPROVEMENT | FAIL",
         "agents_md_path": "string",
         "repo_root": "string or null",
-        "rules_evaluated": "integer (1-9)",
+        "rules_evaluated": "integer (1-11)",
         "rules_skipped": "array of rule_ids skipped (e.g. [7] if no repo_root)",
         "timestamp": "ISO 8601"
       },
@@ -309,7 +329,7 @@
         "low": "array of issue objects"
       },
       "issue_object_shape": {
-        "rule_id": "integer (1-9)",
+        "rule_id": "integer (1-11)",
         "rule_name": "string",
         "severity": "critical|high|medium|low",
         "location": "string (line number or section name in AGENTS.md)",
@@ -453,7 +473,7 @@
         "date": "2026-04-29",
         "changes": [
           "Initial QC skill for AGENTS.md.",
-          "9 rules across 6 quality dimensions: completeness, specificity, discipline_integration, currency, tool_agnosticism, optional_section_justification.",
+          "11 rules across 6 quality dimensions: completeness, specificity, discipline_integration, currency, tool_agnosticism, optional_section_justification.",
           "Rule 7 (Structure Genchi Genbutsu) catches drift between AGENTS.md claims and actual repo state when repo_root is provided. Includes an in-flight-content exception for files documented as about-to-commit.",
           "Rule 6 catches the over-paraphrasing-Working-Style failure mode observed during AGENTS.md iteration 1.",
           "Skill itself operates as interaction_pattern: read_only with applicable_principles P-001, P-003, P-007, P-008, P-009, P-010 (skip P-002, P-004, P-005, P-006).",
