@@ -145,6 +145,147 @@ If you find yourself wanting to add a Quickstart or Key Principles section to a 
 
 ---
 
+## Workflow Models: Linear vs Graph-Based (ADK 2.0)
+
+**New in ADK 2.0**: Google ADK introduced four workflow architectures for building multi-agent applications. Choose based on predictability requirements and execution complexity.
+
+### 1. Graph-Based Workflows (ADK 2.0+)
+
+**What**: Compose AI agents and deterministic nodes into a flexible execution graph with decision branching.
+
+**Best for**: Complex workflows where execution paths depend on runtime decisions, parallel fan-out, conditional routing.
+
+**Key capabilities**:
+- Flexible routing with conditional edges
+- Mix of AI agents and deterministic execution nodes
+- Decision branching based on agent outputs
+- Graph visualization and debugging
+
+**Example pattern**:
+```python
+from google.adk import graph
+
+# Define nodes
+research_node = agent_to_node(researcher_agent)
+validation_node = agent_to_node(validation_agent)
+writer_node = agent_to_node(writer_agent)
+
+# Build graph with conditional edges
+workflow = graph.Graph()
+workflow.add_edge(research_node, validation_node)
+workflow.add_conditional_edge(
+    validation_node,
+    condition=lambda result: result.confidence > 0.8,
+    if_true=writer_node,
+    if_false=research_node,  # Loop back for more research
+)
+```
+
+### 2. Dynamic Workflows (ADK 2.0+)
+
+**What**: Build workflows using full programmatic code logic — standard Python/Go control flow.
+
+**Best for**: Complex branching logic, iterative loops, dynamic agent selection based on runtime state.
+
+**Key capabilities**:
+- Full `if/else`, `for`, `while` control flow
+- Dynamic agent selection
+- Arbitrary state transformations
+- Code-native debugging
+
+**Example pattern**:
+```python
+async def dynamic_research_workflow(query: str, ctx: Context):
+    findings = []
+    confidence = 0.0
+
+    # Iterative refinement loop
+    while confidence < 0.9 and len(findings) < 5:
+        result = await researcher_agent.run(query, ctx)
+        findings.append(result)
+
+        # Dynamic agent selection
+        if result.needs_validation:
+            result = await validator_agent.run(result.content, ctx)
+
+        confidence = result.confidence
+
+    # Final synthesis
+    return await writer_agent.run(findings, ctx)
+```
+
+### 3. Collaborative Workflows (ADK 2.0+)
+
+**What**: Single coordinator agent dynamically delegates to sub-agents to accomplish tasks.
+
+**Best for**: LLM-routed delegation, when routing logic is too complex for static graphs.
+
+**Key capabilities**:
+- Coordinator makes delegation decisions via LLM reasoning
+- Sub-agents registered as available specialists
+- Shared session state across agent tree
+- Transfer-to-agent pattern
+
+**Example pattern**:
+```python
+from google.adk import LlmAgent
+
+# Define sub-agents
+researcher = LlmAgent(name="researcher", instruction="Research topics...")
+writer = LlmAgent(name="writer", instruction="Write summaries...")
+
+# Coordinator with sub-agents
+coordinator = LlmAgent(
+    name="coordinator",
+    instruction="Delegate research to researcher, writing to writer.",
+    sub_agents=[researcher, writer],  # Coordinator can transfer to these
+)
+
+# LLM emits transfer_to_agent(agent_name="researcher") tool calls
+```
+
+**Maps to this skill**: Collaborative workflows are the ADK 2.0 equivalent of the orchestrator pattern this skill emits. The coordinator's `sub_agents` list maps to `topology.specialists`, and `transfer_to_agent()` maps to `delegate_to_<specialist>` tools.
+
+### 4. Template Workflows (ADK 1.x+)
+
+**What**: Pre-built workflows with fixed execution logic: sequences, loops, parallel execution.
+
+**Best for**: Simple, predictable workflows where execution order is known upfront.
+
+**Key patterns**:
+- **SequentialAgent**: Runs sub-agents in fixed order (A → B → C)
+- **ParallelAgent**: Runs sub-agents concurrently, waits for all
+- **LoopAgent**: Iterates over sub-agent until termination condition
+
+**Note**: Template workflows are available in ADK 1.x and 2.0, but ADK 2.0's graph-based and dynamic workflows are more flexible replacements. Use template workflows only when the fixed execution logic exactly matches your need.
+
+### Decision Matrix
+
+| Workflow Type | Execution | Routing | Best for |
+|---------------|-----------|---------|----------|
+| **Graph-based** | Graph engine | Declarative conditional edges | Known branching points, parallel fan-out |
+| **Dynamic** | Code logic | `if/else`, `while`, dynamic | Complex loops, runtime agent selection |
+| **Collaborative** | LLM coordinator | LLM tool calls (`transfer_to_agent`) | LLM-driven routing, complex delegation logic |
+| **Template** | Fixed pattern | Pre-defined (sequential/parallel/loop) | Simple, predictable sequences |
+
+### When to Use Graphs vs Delegation
+
+**Use graph-based workflows when**:
+- Execution paths are known at design time (even if conditional)
+- Parallel execution is important (fan-out to multiple agents simultaneously)
+- You need graph visualization and debugging
+- Deterministic routing is preferred over LLM reasoning
+
+**Use collaborative workflows (delegation) when**:
+- Routing logic is too complex for static graphs
+- LLM should decide which specialist to invoke based on natural language understanding
+- Specialists may be added/removed dynamically
+- You want the orchestrator's routing reasoning to be auditable in the trace
+
+**Hybrid pattern**: Use a graph-based workflow where each node is a collaborative agent. Example: Graph defines `research_phase → synthesis_phase`, but each phase uses a collaborative agent to delegate to specialists.
+
+---
+
 ## Topology Declaration
 
 The `topology` object in the generated orchestrator JSON. Required fields:
