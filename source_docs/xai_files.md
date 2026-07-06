@@ -1,18 +1,10 @@
----
-platform: xAI
-label: Grok Files API
-source_url: https://docs.x.ai/developers/files
-last_fetched: 2026-05-13
-fetch_status: success
-size_bytes: 8352
-notes: Added 2026-05-13 via update_agents/fetch_doc.py (Tier 1 raw HTTP). Sibling source to xai_collections.md. Documents the xAI Files API used by attachment_search server-side tool. 48MB/file limit; agentic-models-only; benefits from prompt caching when reused. Identified in 2026-05-12 research as a gap (xai_collections was prioritized for the knowledge skill grounding). Now cached for completeness of the xAI surface.
----
-
 #### Files & Collections
 
 # Files
 
 [View as Markdown](</developers/files.md>)
+
+[Create API key](<https://console.x.ai/team/default/api-keys>)
 
 Grok can search through and reason over documents you attach to chat messages. You can reference any public file by URL or [upload](</developers/files/managing-files>) private files and reference them by ID; either way, the system automatically activates the `attachment_search` tool and transforms your request into an agentic workflow.
 
@@ -197,8 +189,8 @@ Combine files with the [code execution tool](</developers/model-capabilities/fil
 
 ## Next Steps
 
-### [Managing Files →Learn how to upload, list, retrieve, and delete files using the Files API](</developers/files/managing-files>)### [Chat with Files →Explore how to attach files to chat messages and query your documents](</developers/model-capabilities/files/chat-with-files>)
+### [Managing FilesLearn how to upload, list, retrieve, and delete files using the Files APIExplore](</developers/files/managing-files>)### [Public URLsTurn a stored file into a permanent, shareable URL served from the xAI CDNExplore](</developers/files/public-urls>)### [Chat with FilesLearn how to attach files to chat messages and query your documentsExplore](</developers/model-capabilities/files/chat-with-files>)
 
 * * *
 
-Last updated: May 11, 2026
+Last updated: May 26, 2026

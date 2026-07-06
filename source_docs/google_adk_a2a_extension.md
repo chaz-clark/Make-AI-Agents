@@ -1,18 +1,8 @@
----
-platform: Google
-label: Google ADK — A2A Extension Spec
-source_url: https://adk.dev/a2a/a2a-extension/
-last_fetched: 2026-05-13
-fetch_status: success
-size_bytes: 3667
-notes: WAVE-2 a2a deep-fetch (2026-05-13) — gathered via update_agents/fetch_doc.py from the adk.dev/a2a/ hub page. Sibling pages: see other google_adk_a2a_* entries. Skill A (orchestrator) supplementary grounding for the Agent2Agent protocol (Google's cross-vendor cross-agent communication standard).
----
-
-[ ](<https://github.com/google/adk-docs/edit/main/docs/a2a/a2a-extension.md> "Edit this page on GitHub") [ ](<https://github.com/google/adk-docs/raw/main/docs/a2a/a2a-extension.md> "View Markdown source")
+[ ](<https://github.com/google/adk-docs/edit/main/docs/a2a/a2a-extension.md> "Edit this page on GitHub") [ ](<./index.md> "View this page as Markdown")
 
 # A2A extension for improved reliability¶
 
-Supported in ADKPython 1.27.0
+Supported in ADKPython v1.27.0
 
 ADK provides an extension for Agent2Agent \(A2A\) support to improved message and data handling as part of an updated [A2aAgentExecutor](<https://github.com/google/adk-python/blob/main/src/google/adk/a2a/executor/a2a_agent_executor_impl.py>) class. The updated version includes updates to architectural changes to the core agent execution logic and extensions for A2A to improve data handling, while also providing backward compatibility with existing A2A agents.
 

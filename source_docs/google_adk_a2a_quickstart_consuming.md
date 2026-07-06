@@ -1,14 +1,4 @@
----
-platform: Google
-label: Google ADK — A2A Quickstart: Consuming a Remote Agent (Python)
-source_url: https://adk.dev/a2a/quickstart-consuming/
-last_fetched: 2026-05-13
-fetch_status: success
-size_bytes: 13215
-notes: WAVE-2 a2a deep-fetch (2026-05-13) — gathered via update_agents/fetch_doc.py from the adk.dev/a2a/ hub page. Sibling pages: see other google_adk_a2a_* entries. Skill A (orchestrator) supplementary grounding for the Agent2Agent protocol (Google's cross-vendor cross-agent communication standard).
----
-
-[ ](<https://github.com/google/adk-docs/edit/main/docs/a2a/quickstart-consuming.md> "Edit this page on GitHub") [ ](<https://github.com/google/adk-docs/raw/main/docs/a2a/quickstart-consuming.md> "View Markdown source")
+[ ](<https://github.com/google/adk-docs/edit/main/docs/a2a/quickstart-consuming.md> "Edit this page on GitHub") [ ](<./index.md> "View this page as Markdown")
 
 # Quickstart: Consuming a remote agent via A2A¶
 
@@ -49,7 +39,7 @@ First, make sure you have the necessary dependencies installed:
     pip install google-adk[a2a]
     
 
-You can clone and navigate to the [**`a2a_basic`** sample](<https://github.com/google/adk-python/tree/main/contributing/samples/a2a_basic>) here:
+You can clone and navigate to the [**`a2a_basic`** sample](<https://github.com/google/adk-python/tree/main/contributing/samples/a2a/a2a_basic>) here:
     
     
     git clone https://github.com/google/adk-python.git
@@ -88,7 +78,7 @@ To show how your ADK agent can consume a remote agent via A2A, you'll first need
     
     
     # Start the remote a2a server that serves the check_prime_agent on port 8001
-    adk api_server --a2a --port 8001 contributing/samples/a2a_basic/remote_a2a
+    adk api_server --a2a --port 8001 contributing/samples/a2a/a2a_basic/remote_a2a
     
 
 Adding logging for debugging with `--log_level debug`
@@ -96,7 +86,7 @@ Adding logging for debugging with `--log_level debug`
 To enable debug-level logging, you can add `--log_level debug` to your `adk api_server`, as in: 
     
     
-    adk api_server --a2a --port 8001 contributing/samples/a2a_basic/remote_a2a --log_level debug
+    adk api_server --a2a --port 8001 contributing/samples/a2a/a2a_basic/remote_a2a --log_level debug
     
 
 This will give richer logs for you to inspect when testing your agents.  Why use port 8001?

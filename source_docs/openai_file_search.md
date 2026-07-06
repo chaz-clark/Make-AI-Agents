@@ -1,14 +1,3 @@
----
-platform: OpenAI
-label: OpenAI File Search (Responses API tool)
-source_url: https://developers.openai.com/api/docs/guides/tools-file-search
-source_url_2: https://platform.openai.com/docs/guides/tools-file-search
-last_fetched: 2026-05-13
-fetch_status: success
-notes: WAVE-2 ADD (2026-05-12). Skill B (knowledge) grounding. URL note — research report's tools/file-search 404s; correct URL is tools-file-search. Key facts captured: file_search is a Responses API tool that retrieves info from uploaded files via semantic + keyword search over vector stores (OpenAI-managed); models auto-call when appropriate and return results with file citations; setup = create vector store + upload files via File API + add files to vector store; 30+ file formats including PDFs/documents/code/presentations; customization parameters (max_num_results to reduce tokens/latency, metadata filtering, include parameter for detailed search results); response includes file_search_call (query + completion status) plus message with citations; tool available on Responses API (primary), Chat Completions, Assistants API; rate limits Tier 1 = 100 RPM through Tier 4-5 = 1000 RPM; data residency + zero-downtime recovery supported.
-size_bytes: 14202
----
-
 File search is a tool available in the [Responses API](</api/docs/api-reference/responses>). It enables models to retrieve information in a knowledge base of previously uploaded files through semantic and keyword search. By creating vector stores and uploading files to them, you can augment the models’ inherent knowledge by giving them access to these knowledge bases or `vector_stores`.
 
 To learn more about how vector stores and semantic search work, refer to our [retrieval guide](</api/docs/guides/retrieval>).
@@ -468,7 +457,7 @@ python
     9
     10
     response = client.responses.create(
-        model="gpt-4.1",
+        model="gpt-5.5",
         input="What is deep research by OpenAI?",
         tools=[{
             "type": "file_search",
@@ -490,7 +479,7 @@ python
     9
     10
     const response = await openai.responses.create({
-        model: "gpt-4.1",
+        model: "gpt-5.5",
         input: "What is deep research by OpenAI?",
         tools: [{
             type: "file_search",
@@ -522,7 +511,7 @@ python
     9
     10
     response = client.responses.create(
-        model="gpt-4.1",
+        model="gpt-5.5",
         input="What is deep research by OpenAI?",
         tools=[{
             "type": "file_search",
@@ -544,7 +533,7 @@ python
     9
     10
     const response = await openai.responses.create({
-        model: "gpt-4.1",
+        model: "gpt-5.5",
         input: "What is deep research by OpenAI?",
         tools: [{
             type: "file_search",
@@ -581,7 +570,7 @@ python
     13
     14
     response = client.responses.create(
-        model="gpt-4.1",
+        model="gpt-5.5",
         input="What is deep research by OpenAI?",
         tools=[{
             "type": "file_search",
@@ -611,7 +600,7 @@ python
     13
     14
     const response = await openai.responses.create({
-        model: "gpt-4.1",
+        model: "gpt-5.5",
         input: "What is deep research by OpenAI?",
         tools: [{
             type: "file_search",

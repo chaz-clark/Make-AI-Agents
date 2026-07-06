@@ -1,14 +1,4 @@
----
-platform: Google
-label: Google ADK — A2A Quickstart: Exposing an Agent (Go)
-source_url: https://adk.dev/a2a/quickstart-exposing-go/
-last_fetched: 2026-05-13
-fetch_status: success
-size_bytes: 7445
-notes: WAVE-2 a2a deep-fetch (2026-05-13) — gathered via update_agents/fetch_doc.py from the adk.dev/a2a/ hub page. Sibling pages: see other google_adk_a2a_* entries. Skill A (orchestrator) supplementary grounding for the Agent2Agent protocol (Google's cross-vendor cross-agent communication standard).
----
-
-[ ](<https://github.com/google/adk-docs/edit/main/docs/a2a/quickstart-exposing-go.md> "Edit this page on GitHub") [ ](<https://github.com/google/adk-docs/raw/main/docs/a2a/quickstart-exposing-go.md> "View Markdown source")
+[ ](<https://github.com/google/adk-docs/edit/main/docs/a2a/quickstart-exposing-go.md> "Edit this page on GitHub") [ ](<./index.md> "View this page as Markdown")
 
 # Quickstart: Exposing a remote agent via A2A¶
 
