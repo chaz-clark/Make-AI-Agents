@@ -198,7 +198,7 @@ The same knowledge file pair maps to four different runtime primitives depending
 |---|---|---|---|---|
 | **Anthropic** | Inline content blocks; `cache_control: ephemeral` breakpoint on the knowledge block | Files API (`file_id` in `document`/`image` content blocks; `anthropic-beta: files-api-2025-04-14`) | Citations API — `citations.enabled=true` on the document; runner returns `char_location` / `page_location` blocks | `cache_control` on the embedded block (5-min default TTL, 1-hour beta) |
 | **OpenAI** | Inline in the system message | Responses API `file_search` tool over a vector store; create vector store + upload files via File API + add to store | `file_search_call` plus `message.annotations[]` with file citations | Implicit per-prefix caching on Responses API |
-| **Google** | Inline in `system_instruction` or first user turn | Files API (`files.upload`, 48-hour retention, 2GB/file, 20GB/project) | No first-class citation block — agent must restate sources in output | `cachedContent` (explicit cache; min 1024-4096 tokens by model; TTL default 1h) |
+| **Google** | Inline in `system_instruction` or first user turn; **Interactions API** (GA June 2026, recommended): server-side state via `previous_interaction_id`, observable steps, background execution (`background=true`) | Files API (`files.upload`, 48-hour retention, 2GB/file, 20GB/project) | No first-class citation block — agent must restate sources in output | `cachedContent` (explicit cache; min 1024-4096 tokens by model; TTL default 1h) |
 | **xAI** | Inline in system message | `collections_search` tool over uploaded collections; citation URI pattern `collections://[collection_id]/files/[file_id]` | `collections://` URI in `tool_use` output | No first-class explicit cache primitive at this time |
 
 **What the skill writes**: `_metadata.runtime_strategy` is one of `embed` / `read_at_runtime` / `either`. The runner maps it. For files under ~2000 tokens, embed (cheaper to inline than to retrieve). For files over ~8000 tokens, retrieve (avoid burning context). Between 2000 and 8000, either is acceptable — default `embed` if the file would be a cache-friendly prefix on every call, `read_at_runtime` otherwise.
@@ -384,6 +384,110 @@ JSON skeleton excerpt:
 
 ### Comprehensive Validation
 See `make_agent_knowledge.json` → `validation.test_cases` and the `qc_checks` array. The skill's KNW-QC family (KNW-QC-001 through KNW-QC-006) is designed to merge into `make_agent_qc.json` as a downstream step — that merge is NOT done by this skill, it is done in main context by the user.
+
+---
+
+## Platform-Specific Patterns (optional)
+
+When integrating knowledge files with specific platforms, use these platform-native patterns for optimal performance and capabilities.
+
+### Google Gemini: Interactions API (Recommended as of June 2026)
+
+**Status**: Generally Available (GA) as of June 2026, **recommended** for all new Google Gemini projects
+
+**What it replaces**: Older stateless conversation patterns
+
+**Key capabilities**:
+- **Server-side conversation state**: Use `previous_interaction_id` to maintain multi-turn context without re-sending full history
+- **Observable execution steps**: Inspect agent's reasoning and tool execution in real-time
+- **Background execution**: Set `background=true` for long-running tasks that return asynchronously
+
+**Pattern for knowledge-file-consuming agents**:
+```python
+from google import genai
+
+client = genai.Client(api_key="...")
+
+# First turn: embed knowledge file in system instruction
+response = client.models.generate_content(
+    model="gemini-3.5-flash",
+    contents="Summarize the key risk thresholds",
+    config={
+        "system_instruction": open("knowledge/loan_classifier_principles.md").read(),
+        "cached_content_config": {
+            "ttl": "3600s"  # Cache knowledge file for 1 hour
+        }
+    }
+)
+
+# Subsequent turns: reference previous interaction for server-side state
+response2 = client.models.generate_content(
+    model="gemini-3.5-flash",
+    contents="What about commercial loans specifically?",
+    config={
+        "previous_interaction_id": response.interaction_id,  # Server remembers context
+        # No need to re-send knowledge file or conversation history
+    }
+)
+
+# Long-running research task with background execution
+research = client.models.generate_content(
+    model="gemini-3.5-flash",
+    contents="Deep research query requiring multiple steps",
+    config={
+        "previous_interaction_id": response2.interaction_id,
+        "background": True  # Returns immediately, poll for completion
+    }
+)
+# Poll research.interaction_id until status == "completed"
+```
+
+**When to use Interactions API**:
+- ✅ Multi-turn conversations where the agent references knowledge files repeatedly
+- ✅ Long-running tasks (> 30s) that benefit from async execution
+- ✅ Need to observe agent's tool execution steps for debugging or UI rendering
+- ✅ Cost optimization via server-side state (avoid re-sending conversation history)
+
+**When NOT to use**:
+- ❌ Single-turn, stateless operations (simple `generate_content` is sufficient)
+- ❌ Need to maintain full control over conversation state in your application
+
+**See**: `source_docs/google_interactions_api.md` for full API reference
+
+### Anthropic: Managed Agents with Knowledge Files
+
+For **Anthropic Managed Agents** (beta: `managed-agents-2026-04-01`), knowledge files can be:
+- Embedded in `system` or first `user` message (standard pattern)
+- Uploaded via Files API and referenced by `file_id` in `document` content blocks
+- Cached with `cache_control: ephemeral` to reduce cost on repeated calls
+
+**Multi-agent pattern**: All agents in a multi-agent session share the same sandbox and can reference the same uploaded knowledge files via `file_id` — avoids re-uploading the same file for each specialist.
+
+### OpenAI: Sandbox Memory + Knowledge Files
+
+For **OpenAI Sandbox Agents** (beta), knowledge files can persist across runs using sandbox memory:
+
+```python
+from openai_agents import SandboxAgent, Manifest
+
+agent = SandboxAgent(
+    model="gpt-5.5",
+    manifest=Manifest(
+        sandbox_client="e2b",
+        persistent=True,  # Sandbox persists across runs
+        memory_config={"progressive_disclosure": True}  # Lessons from prior runs
+    )
+)
+
+# First run: agent processes knowledge file and learns patterns
+agent.run("Analyze loan_classifier_principles.md and summarize key rules")
+
+# Subsequent runs: sandbox memory contains lessons from first run
+agent.run("Apply those rules to this loan application: [...]")
+# Agent recalls patterns from first run without re-reading knowledge file
+```
+
+**When to use sandbox memory**: When the agent needs to learn from knowledge files over multiple sessions (e.g., refining its understanding of procedural knowledge with each run).
 
 ---
 

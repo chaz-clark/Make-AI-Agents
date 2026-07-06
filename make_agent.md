@@ -36,6 +36,132 @@ A clear and concise statement of the agent's primary purpose.
 
 ---
 
+## Execution Model: Managed vs Self-Hosted (core)
+
+A fundamental decision that affects agent architecture, deployment, and capabilities.
+
+### What Are Managed Agents?
+
+**Managed agents** run in fully managed execution environments provided by AI platforms (Anthropic, Google, OpenAI). The platform handles:
+- Secure sandboxed execution (filesystem, code execution, web browsing)
+- Tool orchestration and lifecycle
+- State persistence across sessions
+- Infrastructure and scaling
+
+**Self-hosted agents** run in your environment (CLI, server, cloud function) with you managing:
+- Execution environment and dependencies
+- Tool implementation and integration
+- State management and persistence
+- Infrastructure and deployment
+
+### Decision Matrix
+
+| Factor | Use Managed | Use Self-Hosted |
+|--------|-------------|-----------------|
+| **Execution needs** | Need sandboxed code execution, file system, web browsing | API-only operations, lightweight tasks |
+| **Tool complexity** | Pre-built tools sufficient (bash, web, files) | Custom tools, proprietary integrations |
+| **State requirements** | Multi-session persistence needed | Stateless or custom state management |
+| **Control level** | Accept platform constraints | Need full control over environment |
+| **Deployment speed** | Instant (single API call) | Custom deployment pipeline |
+| **Cost model** | Pay per managed execution | Pay per API call only |
+| **Security posture** | Trust platform sandbox | Need air-gapped or on-prem execution |
+
+### Platform Comparison
+
+**Anthropic Claude Managed Agents** (Beta: `managed-agents-2026-04-01`)
+- **Environment**: Fully managed sandbox (bash, files, web, code)
+- **Tools**: `agent_toolset_20260401` (pre-built) + custom tools
+- **Multi-agent**: Shared sandbox, isolated session threads
+- **Special**: Advisor Tool (executor + advisor model pattern)
+- **Best for**: General-purpose autonomous agents, multi-agent systems
+
+**Google Antigravity Agent** (`antigravity-preview-05-2026`)
+- **Environment**: Secure Linux sandbox hosted by Google
+- **Model**: Gemini 3.5 Flash
+- **Tools**: Code execution, file management, web browsing
+- **Best for**: General-purpose managed agents, single API call workflows
+
+**Google Deep Research Agent** (`deep-research-preview-04-2026`)
+- **Environment**: Collaborative planning + MCP integration
+- **Variants**: Standard (speed/efficiency) vs Max (comprehensiveness)
+- **Tools**: File Search, visualization, research orchestration
+- **Best for**: Research, context gathering, synthesis tasks
+
+**OpenAI Sandbox Agents** (Beta)
+- **Environment**: Persistent isolated workspaces
+- **Backends**: Unix, Docker, Blaxel, Cloudflare, Daytona, E2B, Modal, Runloop, Vercel
+- **Memory**: Lessons from prior runs (progressive disclosure)
+- **Best for**: Stateful workflows, sandbox memory patterns, multi-backend flexibility
+
+### Configuration Patterns
+
+**Anthropic Managed Agent** (Python):
+```python
+client = Anthropic()
+response = client.beta.agents.messages.create(
+    agent_id="agent_123",
+    tools=[{"type": "agent_toolset_20260401"}],  # Pre-built tools
+    messages=[{"role": "user", "content": "Research X and summarize"}],
+    model="claude-sonnet-4-5",
+    beta="managed-agents-2026-04-01"
+)
+```
+
+**Google Antigravity** (Python):
+```python
+model = genai.GenerativeModel(
+    model_name="gemini-3.5-flash",
+    base_agent="antigravity-preview-05-2026"
+)
+response = model.generate_content("Code a web scraper for Y")
+```
+
+**OpenAI Sandbox Agent** (Python):
+```python
+from openai_agents import SandboxAgent, Manifest
+
+agent = SandboxAgent(
+    name="research_agent",
+    model="gpt-5.5",
+    manifest=Manifest(
+        sandbox_client="e2b",  # or docker, unix, etc.
+        persistent=True
+    )
+)
+result = agent.run("Analyze dataset and generate report")
+```
+
+### When to Use Managed Agents
+
+✅ **Use managed when**:
+- Agent needs code execution, file operations, or web browsing
+- Multi-step workflows requiring persistent state
+- Rapid prototyping without infrastructure setup
+- Delegating complex sub-tasks to autonomous execution
+- Building multi-agent systems with shared resources
+
+❌ **Avoid managed when**:
+- Simple API-only operations (e.g., text classification, extraction)
+- Need air-gapped or on-premises execution
+- Custom tool integrations not supported by platform
+- Cost-sensitive workflows (managed execution adds overhead)
+- Regulatory requirements prevent cloud execution
+
+### Integration with This Guide
+
+For **self-hosted agents**:
+- Follow standard guidance in this document
+- Implement tools as functions/APIs
+- Manage state in your application layer
+
+For **managed agents**:
+- Define agent mission and tools (this doc)
+- Configure managed environment (platform-specific)
+- Use pre-built tools where possible, custom tools for proprietary logic
+- Design for autonomous execution (agent operates independently)
+
+---
+
 ## Agent Quickstart (core)
 
 A fast-path workflow for getting started with this agent:
