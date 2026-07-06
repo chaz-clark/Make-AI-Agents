@@ -162,6 +162,388 @@ For **managed agents**:
 
 ---
 
+## Multimodal Capabilities (optional)
+
+**When to include**: Agent handles voice, images, video, or audio in addition to text.
+
+**When to skip**: Text-only agents.
+
+### Capability Matrix
+
+| Capability | xAI | OpenAI | Google | Anthropic |
+|------------|-----|--------|--------|-----------|
+| **Real-time voice** | ✅ Voice Agent API | ✅ Realtime API | ❌ | ❌ |
+| **Text-to-speech** | ✅ TTS API | ✅ TTS API | ✅ Text-to-Speech | ❌ |
+| **Speech-to-text** | ✅ STT API | ✅ Whisper | ✅ Speech-to-Text | ❌ |
+| **Image generation** | ✅ Imagine API | ✅ DALL-E | ✅ Imagen | ❌ |
+| **Image understanding** | ✅ Vision | ✅ Vision | ✅ Vision | ✅ Vision |
+| **Video generation** | ✅ Imagine Video | ❌ | ✅ Veo | ❌ |
+| **Video understanding** | ❌ | ✅ Vision | ✅ Vision | ❌ |
+
+### Voice Agents
+
+#### xAI Voice Agent (Real-time WebSocket)
+
+**What**: Bidirectional streaming voice conversations over WebSocket.
+
+**Best for**: Phone agents, voice assistants, interactive voice systems, customer support.
+
+**Key capabilities**:
+- Real-time voice input/output
+- Server-side VAD (Voice Activity Detection)
+- Multiple voices (eve, ara, rex, sal, leo) + custom voice cloning
+- Tools integration (file_search, web_search, x_search, MCP, function calling)
+- Session resumption
+- Language hints for multilingual ASR
+
+**Pattern**:
+```python
+import asyncio
+import json
+import websockets
+
+async def voice_agent():
+    async with websockets.connect(
+        "wss://api.x.ai/v1/realtime?model=grok-voice-latest",
+        additional_headers={"Authorization": f"Bearer {xai_api_key}"}
+    ) as ws:
+        # Configure session
+        await ws.send(json.dumps({
+            "type": "session.update",
+            "session": {
+                "voice": "eve",
+                "instructions": "You are a helpful assistant.",
+                "turn_detection": {"type": "server_vad"},
+                "tools": [{"type": "web_search"}],
+            }
+        }))
+
+        # Send text or audio
+        await ws.send(json.dumps({
+            "type": "conversation.item.create",
+            "item": {"type": "message", "role": "user",
+                     "content": [{"type": "input_text", "text": "Hello!"}]}
+        }))
+        await ws.send(json.dumps({"type": "response.create"}))
+
+        # Receive audio/text responses
+        async for msg in ws:
+            event = json.loads(msg)
+            if event["type"] == "response.audio.delta":
+                # Play audio chunk
+                play_audio(event["delta"])
+            elif event["type"] == "response.text.delta":
+                print(event["delta"], end="")
+```
+
+**Tools integration**: Voice agents can call tools mid-conversation (web search, file search, MCP servers, custom functions). Results are spoken to the user.
+
+**Limitations**:
+- Requires WebSocket transport (not HTTP)
+- Authentication via API key (server-side) or Ephemeral Tokens (client-side)
+- Beta stability
+
+**Documentation**: `source_docs/xai_voice_agent.md`
+
+#### OpenAI Realtime API
+
+**What**: Real-time voice and text streaming via WebSocket.
+
+**Best for**: Voice assistants, conversational AI, speech-to-speech applications.
+
+**Pattern**:
+```python
+# Similar to xAI Voice Agent, uses WebSocket transport
+# See OpenAI Realtime API docs for specifics
+```
+
+**Documentation**: Referenced in `source_docs/openai_models.md` (separate from Responses API)
+
+### Voice Integration Patterns
+
+**Standalone voice agent** (agent IS the voice interface):
+```python
+# xAI Voice Agent or OpenAI Realtime API
+# Entire interaction is voice-first
+# Tools are called during conversation
+```
+
+**Voice + text hybrid** (voice input → text processing):
+```python
+# Step 1: Speech-to-text (Whisper, xAI STT, Google STT)
+audio_file = "user_query.wav"
+transcript = client.audio.transcriptions.create(
+    model="whisper-1",
+    file=audio_file,
+)
+
+# Step 2: Text-based agent processes transcript
+agent_response = agent.run(transcript.text)
+
+# Step 3: Text-to-speech (optional)
+speech = client.audio.speech.create(
+    model="tts-1",
+    voice="nova",
+    input=agent_response,
+)
+speech.stream_to_file("response.mp3")
+```
+
+**When to use voice**:
+- User interaction is primarily spoken (phone systems, voice assistants)
+- Accessibility requirements (vision-impaired users)
+- Hands-free operation needed (driving, cooking, manufacturing)
+- Natural conversation flow more important than precision
+
+**When NOT to use voice**:
+- Complex data entry (addresses, IDs, technical terms)
+- Need for permanent written record
+- Noisy environments
+- Privacy concerns (open office, public spaces)
+
+### Image and Video
+
+#### Image Generation
+
+**xAI Imagine** (image generation and editing):
+```python
+import xai_sdk
+
+client = xai_sdk.Client()
+
+# Generate image from text
+response = client.image.sample(
+    prompt="A futuristic city at sunset with flying cars",
+    model="grok-imagine-image-quality",
+    aspect_ratio="16:9",
+    resolution="2K",
+    count=4,
+)
+
+for url in response.urls:
+    download_image(url)
+
+# Edit image with reference images
+response = client.image.edit(
+    prompt="Add snow and make it nighttime",
+    model="grok-imagine-image-quality",
+    reference_images=[img1_url, img2_url, img3_url],  # Up to 3 refs
+)
+```
+
+**OpenAI DALL-E**:
+```python
+from openai import OpenAI
+client = OpenAI()
+
+response = client.images.generate(
+    model="dall-e-3",
+    prompt="A futuristic city at sunset",
+    size="1792x1024",
+    quality="hd",
+    n=1,
+)
+```
+
+**Google Imagen**:
+```python
+# Available via Google Cloud AI Platform
+# See Google documentation for current API patterns
+```
+
+#### Video Generation
+
+**xAI Imagine Video** (text-to-video or image-to-video):
+```python
+# Text to video
+response = client.video.generate(
+    prompt="A drone flying through a forest",
+    model="grok-imagine-video-1.5",
+    duration=5,
+    resolution="1080p",
+)
+
+# Image to video (animate a still image)
+response = client.video.animate(
+    image_url="https://example.com/first-frame.jpg",
+    prompt="Zoom in slowly while the sun rises",
+    model="grok-imagine-video-1.5",
+)
+```
+
+**Google Veo**:
+```python
+# Available via Google Cloud Vertex AI
+# See Google documentation for current API patterns
+```
+
+#### Image and Video Understanding
+
+**All platforms support vision** (analyze images/video in agent context):
+
+**OpenAI**:
+```python
+from agents import Agent, Runner
+
+agent = Agent(
+    name="Image Analyzer",
+    instructions="Analyze images and provide detailed descriptions.",
+)
+
+result = await Runner.run(
+    agent,
+    [
+        {"type": "text", "text": "What's in this image?"},
+        {"type": "image_url", "image_url": {"url": "https://example.com/image.jpg"}},
+    ],
+)
+```
+
+**Anthropic**:
+```python
+from anthropic import Anthropic
+client = Anthropic()
+
+response = client.messages.create(
+    model="claude-sonnet-4-5",
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "Describe this image in detail."},
+            {"type": "image", "source": {"type": "url", "url": image_url}},
+        ],
+    }],
+)
+```
+
+**Google**:
+```python
+import google.generativeai as genai
+
+model = genai.GenerativeModel("gemini-3.5-flash")
+image = genai.upload_file("path/to/image.jpg")
+
+response = model.generate_content(["Describe this image", image])
+```
+
+### Multimodal Agent Patterns
+
+**1. Vision-augmented analyst** (agent processes images as part of analysis):
+```python
+agent = Agent(
+    name="Data Analyst",
+    instructions="Analyze charts, graphs, and screenshots. Extract insights and trends.",
+    tools=[analyze_chart, extract_table_data],
+)
+
+# User sends screenshot of dashboard
+result = await Runner.run(
+    agent,
+    [
+        {"type": "text", "text": "Analyze Q4 performance from this dashboard."},
+        {"type": "image_url", "image_url": {"url": dashboard_screenshot_url}},
+    ],
+)
+```
+
+**2. Creative assistant** (generates images/video as part of workflow):
+```python
+agent = Agent(
+    name="Marketing Content Creator",
+    instructions="Generate social media posts with images and captions.",
+    tools=[generate_image, create_video, schedule_post],
+)
+
+# Agent calls generate_image tool during execution
+# Tool implementation:
+def generate_image(prompt: str) -> str:
+    response = xai_client.image.sample(
+        prompt=prompt,
+        model="grok-imagine-image-quality",
+    )
+    return response.url
+```
+
+**3. Voice-first support agent** (handles customer calls):
+```python
+# xAI Voice Agent with tools
+# Session config includes customer context, CRM integration
+# Agent answers questions, looks up orders, processes requests via voice
+```
+
+### When to Use Multimodal
+
+**Use image generation when**:
+- Agent creates marketing materials, presentations, visualizations
+- User requests creative content (illustrations, mockups, concepts)
+- Workflow includes design/creative output
+
+**Use image understanding when**:
+- User inputs are screenshots, photos, diagrams
+- Agent analyzes visual data (charts, dashboards, documents)
+- OCR or visual inspection is part of the task
+
+**Use voice when**:
+- Primary interface is spoken conversation
+- Accessibility or hands-free operation required
+- Natural conversation flow is critical
+
+**Use video generation when**:
+- Agent creates video content (ads, explainers, animations)
+- Workflow includes video editing or production
+
+**Use video understanding when**:
+- Agent analyzes video content (surveillance, training videos, user demos)
+- Extract information from video frames or motion
+
+### Common Pitfalls
+
+**1. Treating voice as transcribed text**
+
+**Problem**: Building voice agent as STT → text agent → TTS pipeline instead of native voice.
+
+**Why it fails**: Misses latency benefits, natural conversation flow, interruption handling.
+
+**Fix**: Use xAI Voice Agent or OpenAI Realtime API for native voice agents. Use STT→Agent→TTS only for asynchronous voice tasks.
+
+**2. Not handling multimodal tool outputs**
+
+**Problem**: Agent generates image URL but user expects inline display.
+
+**Why it fails**: User sees URL string instead of rendered image.
+
+**Fix**: Return structured output with content type markers. Frontend renders based on type.
+
+```python
+# Good: Structured output
+{
+    "type": "image",
+    "url": "https://...",
+    "description": "Generated marketing banner"
+}
+
+# Bad: Raw URL string
+"Here is your image: https://..."
+```
+
+**3. Ignoring modality costs**
+
+**Problem**: Agent generates 50 images or 10 videos in a single run.
+
+**Why it fails**: Costs explode (xAI Imagine: $0.05/image, $0.08/sec for video).
+
+**Fix**: Set limits on multimodal generation. Require approval for batch generation.
+
+**4. No fallback for unsupported modalities**
+
+**Problem**: Agent requires voice but user's platform doesn't support WebSocket.
+
+**Why it fails**: Agent unusable on restricted networks or mobile browsers.
+
+**Fix**: Provide text fallback. Detect capabilities and degrade gracefully.
+
+---
+
 ## Agent Quickstart (core)
 
 A fast-path workflow for getting started with this agent:
