@@ -2,12 +2,38 @@
 name: make_AGENTS_qc
 description: Quality-control checks for generated AGENTS.md files. Delegates to AGENTS-QC (make_AGENTS.json) and BD-QC (behavioral_discipline.json).
 version: "1.0"
+last_updated: 2026-04-29
 author: chaz-clark
 license: MIT
+optional: true
+rules: 11
+dimensions: 6
+agent_type: rule_based
+interaction_pattern: read_only
+complexity: simple
+applicable_principles:
+  - P-001
+  - P-003
+  - P-007
+  - P-008
+  - P-009
+  - P-010
+dependencies:
+  - make_AGENTS.json (contract source)
+  - knowledge/behavioral_discipline.json (discipline source)
+when_to_use:
+  - After generating a new AGENTS.md via make_AGENTS
+  - Before merging a PR that modifies AGENTS.md
+  - Quarterly drift audit
+  - During CLAUDE.md to AGENTS.md migrations
+when_to_skip:
+  - Validating agent specs (use make_agent_qc)
+  - Validating Gem instructions (use make_gems/make_gem_qc)
+  - Real-time editing feedback (too heavyweight)
 metadata:
   make-ai-agents:
-    spec_json: make_AGENTS_qc.json
     skill_type: qc
+    companion_json_deprecated: "2026-07-07 - consolidated into YAML frontmatter"
 ---
 
 # make_AGENTS_qc — AGENTS.md Quality Control

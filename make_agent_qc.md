@@ -1,13 +1,36 @@
 ---
 name: make_agent_qc
 description: Quality-control checks for Make-AI-Agents agent specs. Delegates to BD-QC in behavioral_discipline.json.
-version: "1.0"
+version: "1.5"
+last_updated: 2026-04-10
 author: chaz-clark
 license: MIT
+optional: true
+rules: 20
+dimensions: 17
+agent_type: rule_based
+complexity: standard
+dependencies:
+  - json (stdlib)
+  - re (stdlib)
+  - pathlib (stdlib)
+  - make_agent.md (reference template)
+  - knowledge/behavioral_discipline.json (BD-QC rules)
+  - make_orchestrator_agent.json (ORCH-QC rules)
+  - make_agent_knowledge.json (KNW-QC rules)
+when_to_use:
+  - Pre-deployment validation of new agents
+  - CI/CD pipeline quality gates
+  - Before sharing agents with other teams
+  - After major template changes
+when_to_skip:
+  - Iterative template development
+  - Minor wording changes
+  - You've internalized the discipline
 metadata:
   make-ai-agents:
-    spec_json: make_agent_qc.json
     skill_type: qc
+    companion_json_deprecated: "2026-07-07 - consolidated into YAML frontmatter"
 ---
 
 # Agent Quality Control (QC) Guide
