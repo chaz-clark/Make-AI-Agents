@@ -226,7 +226,7 @@ Pick the tier that matches what you're building. The template adapts:
 - **Tier 2 (Production)** — *shared, deployed services.* ~25 min to fill.
 - **Tier 3 (Complex)** — *frameworks, platform components.* ~40 min to fill.
 
-See `make_agent.json` for which fields belong to which tier.
+See `make_agent.md` YAML frontmatter and tier guidance sections for which fields belong to which tier.
 
 ---
 
