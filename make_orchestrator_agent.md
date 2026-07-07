@@ -1,14 +1,33 @@
 ---
 name: make_orchestrator_agent
-description: Generates orchestrator-pattern agents that route and decompose work to specialist sub-agents. Per Hermes Kanban v1 §6 — disabled execution toolsets + prescriptive system message + specialist roster.
+description: Generates orchestrator-pattern agents that route and decompose work to specialist sub-agents.
 version: "1.0"
+last_updated: 2026-07-07
 author: chaz-clark
 license: MIT
+skill_type: meta
+pattern: orchestrator
+platforms:
+  - Anthropic
+  - Google ADK 2.0
+  - OpenAI
+dependencies:
+  - make_agent.md
+  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral_discipline.json
+propagates:
+  - behavioral_discipline
+workflow_types:
+  - linear_delegation
+  - graph_based (ADK 2.0)
+  - dynamic_workflow
+  - collaborative_pattern
+see_also:
+  - make_agent.md
+  - make_agent_qc.md
 metadata:
   make-ai-agents:
-    spec_json: make_orchestrator_agent.json
-    skill_type: meta
-    pattern: orchestrator
+    companion_json_deprecated: "2026-07-07 - use YAML frontmatter instead"
 ---
 
 # make_orchestrator_agent Skill Guide

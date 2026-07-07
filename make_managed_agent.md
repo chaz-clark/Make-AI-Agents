@@ -2,13 +2,31 @@
 name: make_managed_agent
 description: Generates platform-managed agent specs (Anthropic/Google/OpenAI) with behavioral discipline. For fully managed execution environments with sandboxed tools.
 version: "1.0"
+created: 2026-07-06
+last_updated: 2026-07-07
 author: chaz-clark
 license: MIT
+skill_type: specialized
+platforms:
+  - Anthropic (Beta: managed-agents-2026-04-01)
+  - Google Antigravity (GA)
+  - OpenAI Sandbox Agents (Preview)
+execution_model: platform_managed
+dependencies:
+  - make_agent.md
+  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral_discipline.json
+  - source_docs/anthropic_managed_agents_overview.md
+  - source_docs/google_managed_agents.md
+  - source_docs/openai_sandbox_agents.md
+propagates:
+  - behavioral_discipline
+see_also:
+  - make_agent.md
+  - knowledge/mcp_integration_patterns.md
 metadata:
   make-ai-agents:
-    spec_json: make_managed_agent.json
-    skill_type: specialized
-    propagates: [behavioral_discipline]
+    companion_json_not_created: "Uses YAML frontmatter only per 2026-07-07 standard"
 ---
 
 # Managed Agent Guide

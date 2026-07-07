@@ -1,13 +1,27 @@
 ---
 name: make_agent_knowledge
-description: Generates knowledge files (.md + .json) consumed by Make-AI-Agents agents at runtime. Reference / Identity / Procedural shapes.
+description: Generates knowledge files consumed by Make-AI-Agents agents at runtime. Reference / Identity / Procedural shapes.
 version: "1.1"
+last_updated: 2026-07-07
 author: chaz-clark
 license: MIT
+skill_type: meta
+knowledge_shapes:
+  - reference
+  - identity
+  - procedural
+interaction_pattern: single_write_workflow
+dependencies:
+  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral_discipline.json
+propagates:
+  - behavioral_discipline
+see_also:
+  - make_agent.md
+  - make_agent_qc.md
 metadata:
   make-ai-agents:
-    spec_json: make_agent_knowledge.json
-    skill_type: meta
+    companion_json_deprecated: "2026-07-07 - use YAML frontmatter instead"
 ---
 
 # make_agent_knowledge Skill Guide

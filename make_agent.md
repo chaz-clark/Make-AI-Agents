@@ -1,14 +1,29 @@
 ---
 name: make_agent
-description: Generates Make-AI-Agents-spec agents (.md + .json) with behavioral discipline baked in. The meta-skill of the ecosystem.
+description: Generates Make-AI-Agents-spec agents with behavioral discipline baked in. The meta-skill of the ecosystem.
 version: "3.6"
+last_updated: 2026-07-07
 author: chaz-clark
 license: MIT
+skill_type: meta
+platforms:
+  - Anthropic
+  - Google
+  - OpenAI
+  - xAI
+dependencies:
+  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral_discipline.json
+propagates:
+  - behavioral_discipline
+see_also:
+  - make_managed_agent.md
+  - make_orchestrator_agent.md
+  - make_agent_knowledge.md
+  - make_agent_qc.md
 metadata:
   make-ai-agents:
-    spec_json: make_agent.json
-    skill_type: meta
-    propagates: [behavioral_discipline]
+    companion_json_deprecated: "2026-07-07 - use YAML frontmatter instead"
 ---
 
 # <Your Agent Name> Agent Guide

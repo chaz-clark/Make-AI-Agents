@@ -1,14 +1,30 @@
 ---
 name: make_AGENTS
-description: Generates tool-agnostic AGENTS.md project context files with discipline + handoff recognition + Learning loop baked in. Sibling to make_agent and make_gem.
+description: Generates tool-agnostic AGENTS.md project context files with discipline + handoff recognition + learning loop baked in. Sibling to make_agent and make_gem.
 version: "1.0"
+last_updated: 2026-07-07
 author: chaz-clark
 license: MIT
-metadata:
-  make-ai-agents:
-    spec_json: make_AGENTS.json
-    skill_type: meta
-    propagates: [behavioral_discipline, handoff_recognition, learning_loop]
+skill_type: meta
+interaction_pattern: single_write_workflow
+dependencies:
+  - make_AGENTS.json (contract/spec - NOT deprecated, holds structure requirements)
+  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral_discipline.json
+propagates:
+  - behavioral_discipline
+  - handoff_recognition
+  - learning_loop
+platforms:
+  - Claude Code
+  - Cursor
+  - Aider
+  - Antigravity
+  - Windsurf
+  - All agentic dev tools
+see_also:
+  - make_AGENTS_qc.md
+  - knowledge/behavioral_discipline.md
 ---
 
 # make_AGENTS — AGENTS.md Generation Skill
