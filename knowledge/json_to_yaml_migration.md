@@ -20,7 +20,7 @@ This guide helps agents and developers migrate from the MD+JSON pair pattern to 
 
 **When NOT to use this guide**:
 - Your JSON files are actively maintained and used by tooling (keep them!)
-- Example: canvas-toolbox uses JSON files successfully - no need to migrate
+- _Update 2026-07-07: canvas-toolbox completed migration to YAML (v1.5.3) after JSON files became stale_
 
 ---
 
@@ -542,22 +542,26 @@ After migrating each agent:
 
 ## Special Cases
 
-### Case 1: canvas-toolbox Agents
+### Case 1: canvas-toolbox Agents ✅ MIGRATED
 
-**Current state**: canvas-toolbox has 7 agents with maintained MD+JSON pairs.
+**Previous state** (2026-05-13): canvas-toolbox had 7 agents with maintained MD+JSON pairs.
 
-**Recommendation**: **DO NOT MIGRATE**
+**Status** (2026-07-07): **MIGRATION COMPLETE** (v1.5.3)
 
-**Why**:
-- JSON files are current (last updated 2026-05-13)
-- Pattern is working (maintained consistently)
-- All 7 pairs are in sync
-- No staleness detected
+**What happened**:
+- 5 JSON files became stale (4 weeks behind MD)
+- Followed the migration guide decision tree → MIGRATE
+- All 7 agents migrated to YAML frontmatter + embedded YAML blocks
+- Updated canvas_api_tool.py parser to read from markdown
+- Zero functional changes (all smoke tests pass)
 
-**When to revisit**:
-- JSON files become stale (>4 weeks old)
-- Maintenance burden increases
-- Tooling stops reading JSON files
+**Results**:
+- Eliminated 165KB of JSON files
+- Consolidated to single .md file per agent
+- Aligned with Anthropic Agent Skills + agentskills.io standard
+- Reduced maintenance burden (1 file instead of 2)
+
+**Success story**: This migration proves the guide works for production repos with runtime tooling dependencies.
 
 ---
 
