@@ -6,11 +6,24 @@ last_updated: 2026-07-07
 author: chaz-clark
 license: MIT
 skill_type: meta
+complexity: simple-to-standard
 interaction_pattern: single_write_workflow
+applicable_principles:
+  - P-001
+  - P-002
+  - P-003
+  - P-004
+  - P-006
+  - P-007
+  - P-008
+  - P-009
+  - P-010
+skipped_principles:
+  P-005: "Single-step workflow (one AGENTS.md per invocation), no decomposition needed"
 dependencies:
-  - make_AGENTS.json (contract/spec - NOT deprecated, holds structure requirements)
   - knowledge/behavioral_discipline.md
   - knowledge/behavioral_discipline.json
+  - handoff/AGENTS_snippet.md
 propagates:
   - behavioral_discipline
   - handoff_recognition
@@ -22,16 +35,24 @@ platforms:
   - Antigravity
   - Windsurf
   - All agentic dev tools
+qc_checks_count: 9
+required_sections: 6
+optional_sections: 5
 see_also:
   - make_AGENTS_qc.md
   - knowledge/behavioral_discipline.md
+  - handoff/CONVENTION.md
+metadata:
+  make-ai-agents:
+    companion_json_deprecated: "2026-07-07 - consolidated into YAML frontmatter + inline sections"
+    contract_location: "See ## Contract: Required Sections and ## Contract: Optional Sections below"
 ---
 
 # make_AGENTS — AGENTS.md Generation Skill
 
 ## Agent Instructions
 1. Read this for mission, structure, principles, and what an AGENTS.md must contain.
-2. Parse `make_AGENTS.json` for structured data — required/optional section lists, the AGENTS.md template, behavioral discipline embed, and validation. Do not parse this Markdown for structured rules.
+2. See **## Contract: Required Sections** and **## Contract: Optional Sections** below for structured section requirements, templates, and validation rules.
 3. Keep generated AGENTS.md files lean. Required sections only by default; add optional sections only when warranted.
 4. **Behavioral Discipline is required.** Consult `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json`. The make_AGENTS skill itself operates as `interaction_pattern: single_write_workflow` and embeds discipline language in every AGENTS.md it generates (in the "Working Style" section).
 
@@ -55,7 +76,7 @@ see_also:
 
 1. **[Identify project context]**: Read the existing `CLAUDE.md` if present. Inspect repo root, key files (READMEs, package.json/pyproject.toml/setup.py, top-level folders). Identify whether the project is mid-migration, has special tooling, has domain-heavy vocabulary. **README sanity check (added 2026-05-13)**: before pulling content from `README.md` into the generated AGENTS.md (especially Project Purpose), verify the README is actually project-specific — a common pattern is for a consumer to copy a scaffold README from an upstream toolkit (e.g., the canvas-toolbox README appears verbatim in multiple downstream master repos). If the README reads as generic toolkit prose with no project-specific identifying content (course name, repo-unique mission, project-unique terminology), treat it as a scaffold and do NOT pull content from it. Fall back to CLAUDE.md, repo folder structure, and recent commit messages for project context.
 
-2. **[Parse template]**: Load `make_AGENTS.json` → `agents_md_template` for the section skeleton, `agents_md_required_sections` and `agents_md_optional_sections` for the contract, `compact_boilerplate` for the discipline embed.
+2. **[Parse template]**: Load contract sections below (see **## Contract: Required Sections** and **## Contract: Optional Sections**) for the section skeleton and discipline embed templates.
 
 3. **[Generate]**: Write `AGENTS.md` at project root. Include all required core sections; add optional sections only if their criteria apply. Embed the behavioral discipline pointer in the "Working Style" section.
 
@@ -78,7 +99,7 @@ see_also:
 
 4.6. **[Bake Learning loop section + create `knowledge/learned/`]** (REQUIRED — added 2026-05-28, Sprint B):
 
-   **(a) Bake the Learning loop section** into the generated AGENTS.md between the handoff recognition section and Active Context. Paste the canonical text from `make_AGENTS.json` → `compact_boilerplate.learning_loop_template` verbatim. This is the structural form of **P-009 (Hansei + Yokoten)** — agents end sessions by writing distilled lessons to `knowledge/learned/<file>.md` for future invocations to read. Inspired by Hermes Agent's auto-distillation; rebuilt as a Markdown-directory convention (no DSPy/GEPA, no server).
+   **(a) Bake the Learning loop section** into the generated AGENTS.md between the handoff recognition section and Active Context. Use the Learning Loop section structure from **## Contract: Required Sections** (section 5) below. This is the structural form of **P-009 (Hansei + Yokoten)** — agents end sessions by writing distilled lessons to `knowledge/learned/<file>.md` for future invocations to read. Inspired by Hermes Agent's auto-distillation; rebuilt as a Markdown-directory convention (no DSPy/GEPA, no server). **MUST include the Hermes promotion rule** from canvas-toolbox: when a learned file is referenced twice, promote it to first-class knowledge.
 
    **(b) Create the directory**: `mkdir -p <target>/knowledge/learned/` and add a `.gitkeep` file so the convention exists in version control even before the agent has written its first lesson.
 
@@ -86,7 +107,7 @@ see_also:
 
 4.7. **[Prepend agentskills.io frontmatter]** (REQUIRED — added 2026-05-28, Sprint A):
 
-   Prepend YAML frontmatter to the very top of the generated AGENTS.md per `make_AGENTS.json` → `compact_boilerplate.frontmatter_template`. **Required fields**: `name`, `description`, `version`. **Recommended**: `author`, `license`. **Provenance**: `metadata.make-ai-agents.generated_by: make_AGENTS` and `metadata.make-ai-agents.generated_on: <iso-date>`.
+   Prepend YAML frontmatter to the very top of the generated AGENTS.md following the agentskills.io standard. **Required fields**: `name`, `description`, `version`. **Recommended**: `author`, `license`. **Provenance**: `metadata.make-ai-agents.generated_by: make_AGENTS` and `metadata.make-ai-agents.generated_on: <iso-date>`.
 
    This is the Make-AI-Agents idiom adoption of the **[agentskills.io open standard](https://agentskills.io)** — the same standard Hermes Agent and OpenClaw consume. Generated AGENTS.md files become **drop-in skills** in any agentskills.io-compliant runtime, layered atop the rich `.json` sidecar where one exists. Verified by **AGENTS-QC-009** (delegates to BD-QC-009).
 
@@ -94,7 +115,7 @@ see_also:
 
 6. **[Output]**: Confirm AGENTS.md location with the user. If migrating from `CLAUDE.md`, propose deletion as a separate step (per P-002 — don't bundle the deletion with the creation).
 
-For detailed structure, see `make_AGENTS.json`.
+For detailed structure, see **## Contract: Required Sections** and **## Contract: Optional Sections** below.
 
 ---
 
@@ -155,7 +176,7 @@ The skill MUST follow the integration flow defined in `make_agent.md` → `## Be
 
 ### What the GENERATED AGENTS.md inherits
 
-Every AGENTS.md this skill generates contains a `## Working Style` section with the behavioral discipline pointer (from `make_AGENTS.json` → `compact_boilerplate.working_style_template`). This is how the discipline propagates from this skill into every project that uses an AGENTS.md generated by it.
+Every AGENTS.md this skill generates contains a `## Working Style` section with the behavioral discipline pointer (see **## Contract: Required Sections**, section 4). This is how the discipline propagates from this skill into every project that uses an AGENTS.md generated by it.
 
 ### Two layers of discipline
 
@@ -186,7 +207,7 @@ The contract for every AGENTS.md this skill generates.
 - **`## Migration Notes`** — when the project is mid-migration (e.g., CLAUDE.md → AGENTS.md, library A → library B). Removed when migration completes.
 - **`## Existing Tooling`** — when the project has scripts/utilities that the LLM should reuse before generating new code.
 
-For each optional section, the JSON has explicit inclusion criteria — see `agents_md_optional_sections[].include_when` in `make_AGENTS.json`.
+For each optional section, see explicit inclusion criteria in **## Contract: Optional Sections** below.
 
 ---
 
@@ -196,7 +217,7 @@ For each optional section, the JSON has explicit inclusion criteria — see `age
 - Project root directory accessible
 - Existing `CLAUDE.md` readable (if present — used as input for migration)
 - `knowledge/behavioral_discipline.md/.json` readable (for the discipline pointer)
-- `make_AGENTS.json` readable (for templates)
+- `handoff/AGENTS_snippet.md` readable (for handoff recognition section)
 
 ### Basic Usage
 Conversational invocation through any agentic tool. Example prompt:
@@ -220,7 +241,7 @@ All three kill the propagation — (a) by duplication-drift, (b) by broken-refer
 **Why each happens**: (a) Skill writes "comprehensive" output instead of pointers. (b) Skill writes pointer-only output without ensuring the target file exists. (c) Refresh treats vendoring-pattern language as "adjacent code that was correct for its time" and preserves it verbatim — but the canonical posture changed (subtree → clone+gitignore as of 2026-05-13), so the language IS itself the defect, not adjacent code.
 
 **Solution**:
-- The AGENTS.md prose is a POINTER — Working Style references `knowledge/behavioral_discipline.md` by file path. The `compact_boilerplate.working_style_template` in `make_AGENTS.json` is a ~3-line summary naming the four no-override principles, not a copy of all 10.
+- The AGENTS.md prose is a POINTER — Working Style references `knowledge/behavioral_discipline.md` by file path. The Working Style template is a ~3-line summary naming the four no-override principles, not a copy of all 10.
 - The FILES are PACKAGED alongside — per Quickstart step 4, `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json` are copied from Make-AI-Agents into the target's `knowledge/` folder (with a snapshot header). The pointer in Working Style then resolves to a local file that exists.
 - **During refresh, SCAN for stale vendoring-pattern language and REWRITE** — explicit narrow exception to P-007. If the existing AGENTS.md mentions `git subtree`, `git subtree pull`, `git subtree push`, `subtree add`, `.gitmodules`, or `git submodule` in the Active Context / Structure / Project-specific rules sections, propose a rewrite to the canonical clone+gitignore form. Canonical Active Context bullet template (substitute the repo name for `make-ai-agents`): `\`make-ai-agents\` is a **local clone, gitignored** at \`make-ai-agents/\` (not a subtree, not a submodule — see \`.gitignore\`). Refresh with \`cd make-ai-agents && git pull\`. Re-clone fresh by removing the folder and running \`git clone https://github.com/chaz-clark/Make-AI-Agents.git make-ai-agents\` from the repo root.` Surface each rewrite in the refresh handoff doc so the maintainer sees the change explicitly.
 - Together: lean AGENTS.md prose + co-located discipline files + current vendoring-pattern language = discipline propagates correctly without duplication-drift, broken-reference, or stale-instruction-drift.
@@ -247,7 +268,7 @@ All three kill the propagation — (a) by duplication-drift, (b) by broken-refer
 
 **Why it happens**: Forgetting the propagation layer; treating AGENTS.md as static documentation.
 
-**Solution**: BD-AGENTS-QC-001 (in `make_AGENTS.json`) checks for the discipline pointer in the Working Style section. If missing, regenerate.
+**Solution**: AGENTS-QC-002 (see **## QC Checks** below) checks for the discipline pointer in the Working Style section. If missing, regenerate.
 
 ---
 
@@ -313,7 +334,7 @@ See the AGENTS.md generated for this `Make-AI-Agents` repo as a worked example, 
 5. Active Context has a date stamp
 
 ### Comprehensive Validation
-For full structured validation, see `make_AGENTS.json` → `validation.test_cases`. The validation includes:
+For full structured validation, see `make_AGENTS_qc.md`. The validation includes:
 - Required section checklist
 - Discipline embed presence check
 - Tool-agnostic language scan
@@ -327,14 +348,14 @@ For full structured validation, see `make_AGENTS.json` → `validation.test_case
 - **Adapted**: Rule 17 (Behavioral Discipline Compliance) → check the discipline pointer is embedded in Working Style; not the full discipline section
 - **Project-specific**: Rule 18 (Non-Interactive Mode) → not applicable to AGENTS.md generation itself
 
-A future `make_AGENTS_qc.md` would be the cleaner long-term solution. For now, manual validation against the checklist in `make_AGENTS.json` works.
+See `make_AGENTS_qc.md` for comprehensive validation logic. For quick validation, use the QC checks table in **## QC Checks** above.
 
 ---
 
 ## Resources and References
 
 ### Skill Files
-- **`make_AGENTS.json`**: Required/optional section lists, AGENTS.md template, compact_boilerplate, validation
+- **This file (`make_AGENTS.md`)**: Required/optional section lists (see contract sections below), AGENTS.md generation guidance, validation
 - **`make_agent.md`**: Sibling template for generating agent specs (referenced for the integration flow pattern)
 - **`make_gem.md`**: Sibling template for Gemini Gems
 - **`knowledge/behavioral_discipline.md` / `.json`**: Source of truth for the discipline embedded in every generated AGENTS.md
@@ -346,7 +367,7 @@ A future `make_AGENTS_qc.md` would be the cleaner long-term solution. For now, m
 
 ### How to Use This Documentation System
 1. Start here (.md) for conceptual understanding
-2. Use `make_AGENTS.json` for the template structure
+2. Use the contract sections in this file for the template structure
 3. Reference `make_agent.md` for the integration flow pattern (recursive — same flow applies to this skill)
 4. Reference `knowledge/behavioral_discipline.md` for the discipline that gets embedded
 
@@ -362,6 +383,105 @@ A future `make_AGENTS_qc.md` would be the cleaner long-term solution. For now, m
 | **Skill Type** | workflow (single AGENTS.md per invocation) |
 | **Interaction Pattern** | `single_write_workflow` |
 | **Complexity** | simple-to-standard |
-| **Key Files** | `make_AGENTS.json`, `make_AGENTS.md`, generates `<project>/AGENTS.md` |
+| **Key Files** | `make_AGENTS.md`, generates `<project>/AGENTS.md` |
 | **Common Pitfall** | Duplicating discipline content instead of pointing to it |
 | **Dependencies** | knowledge/behavioral_discipline.md/.json (for the embed) |
+
+---
+
+## Contract: Required Sections
+
+Every generated AGENTS.md must contain these 6 sections in order:
+
+### 1. Title
+- **Heading**: `# <Project Name>`
+- **Content**: H1 with project name + one-line description below (tag line, not paragraph)
+
+### 2. Project Purpose
+- **Heading**: `## Project Purpose`
+- **Content**: What the repo IS (3-5 bullets) and what it is NOT (2-4 bullets). Includes audience.
+- **Recommended subsections**: What this is, What this is NOT, Audience
+
+### 3. Structure
+- **Heading**: `## Structure`
+- **Content**: Annotated folder layout in a code block. Reference, not exhaustive — top-level + key subfolders only.
+
+### 4. Working Style
+- **Heading**: `## Working Style`
+- **Content**: Behavioral discipline pointer + project-specific rules + handoff recognition section
+- **MUST include**:
+  - Discipline pointer to `knowledge/behavioral_discipline.md` or equivalent
+  - Handoff recognition section (`## Handoff document recognition`) baked verbatim from `handoff/AGENTS_snippet.md` — heading + path-pattern table + 7 numbered rules + status/direction enum quick-lookups (verified by AGENTS-QC-008)
+
+### 5. Learning Loop
+- **Heading**: `## Learning loop`
+- **Content**: P-009 (Hansei + Yokoten) as structural artifact — closed-loop knowledge distillation
+- **MUST include**:
+  - Section heading `## Learning loop`
+  - Reference to `knowledge/learned/` directory pattern  
+  - Rule that a lesson must be specific and reusable (not generic "task done" prose)
+  - **Hermes promotion rule** (adopted from canvas-toolbox): When a learned file is referenced twice, promote it to first-class knowledge file
+- **Placement**: Between Working Style and Active Context
+- **Verified by**: BD-QC-008
+
+### 6. Active Context
+- **Heading**: `## Active Context`
+- **Content**: Current state, in-flight work, recent major changes, open issues. Date-stamped.
+- **MUST include**: `_Last updated: YYYY-MM-DD_` line at the top of the section
+
+---
+
+## Contract: Optional Sections
+
+Include these sections only when the inclusion criteria apply:
+
+### Domain Terms
+- **Include when**: The project has non-obvious vocabulary that an LLM would interpret wrong without explicit definitions
+- **Format**: `Term | Definition` table
+
+### External System Lessons
+- **Include when**: The project interacts with external systems (Canvas API, GitHub API, Stripe, etc.) with non-obvious behaviors discovered through use
+- **Format**: Per-system entry: Behavior / Why it matters / How to handle
+
+### Migration Notes
+- **Include when**: The project is mid-migration (CLAUDE.md → AGENTS.md, library swap, framework upgrade)
+- **Format**: Status, target state, items remaining
+- **Action**: Remove section once migration completes
+
+### Existing Tooling
+- **Include when**: The project has scripts or utilities the LLM should reuse before generating new code
+- **Format**: `Tool | Purpose | When to use` table
+
+### Knowledge Index
+- **Include when**: The project has a folder of topic-specific knowledge files (e.g., `knowledge/`, `.claude/knowledge/`, `lib/agents/knowledge/`) that the LLM loads on-demand per task focus, rather than as a stable embedded prefix on every call
+- **Purpose**: Anti-bloat — lets AGENTS.md stay lean while pointing agents at relevant deep context per-task
+- **Format**: `Topic | File path | When to load` table. The "When to load" column is the trigger that tells the LLM which file is relevant to a given task
+- **Example**:
+  ```markdown
+  | Topic | File | When to load |
+  |---|---|---|
+  | Converter behavior | `.claude/knowledge/converter.md` | When working on RMarkdown→Quarto conversion |
+  | Canvas URL handling | `.claude/knowledge/urls-canvas.md` | When debugging Canvas URL/redirect logic |
+  ```
+
+---
+
+## QC Checks (AGENTS-QC-001 through AGENTS-QC-009)
+
+These validation checks ensure generated AGENTS.md files meet the contract. Defined here for reference; full validation logic in `make_AGENTS_qc.md`.
+
+| Check ID | Name | Rule | Severity |
+|----------|------|------|----------|
+| **AGENTS-QC-001** | All required sections present | Generated AGENTS.md contains all 6 required sections in specified order | critical |
+| **AGENTS-QC-002** | Working Style contains discipline pointer | Working Style section references `knowledge/behavioral_discipline.md` or equivalent | critical |
+| **AGENTS-QC-003** | Active Context has date stamp | Active Context starts with `_Last updated: YYYY-MM-DD_` | high |
+| **AGENTS-QC-004** | No tool-specific language | No tool-specific instructions (e.g., "When using Claude Code...") | medium |
+| **AGENTS-QC-005** | Optional sections meet criteria | Each present optional section satisfies its `include_when` criterion | medium |
+| **AGENTS-QC-006** | Discipline files co-located | Working Style discipline pointer resolves to existing file in target repo | critical |
+| **AGENTS-QC-007** | No stale vendoring language (refresh only) | On refresh, no stale `git subtree`/submodule tokens describe current posture | high |
+| **AGENTS-QC-008** | Handoff recognition complete | Working Style contains canonical handoff section with all structural elements; if target has `handoffs/`, the `handoff/` clone is co-located | high |
+| **AGENTS-QC-009** | agentskills.io frontmatter present | Generated AGENTS.md starts with YAML frontmatter (`name`, `description`, `version` required) | medium |
+
+---
+
+**Template version**: 1.0 (last updated 2026-07-07)

@@ -1,6 +1,6 @@
 ---
 name: make_AGENTS_qc
-description: Quality-control checks for generated AGENTS.md files. Delegates to AGENTS-QC (make_AGENTS.json) and BD-QC (behavioral_discipline.json).
+description: Quality-control checks for generated AGENTS.md files. Validates against the contract defined in make_AGENTS.md and BD-QC rules in behavioral_discipline.json.
 version: "1.0"
 last_updated: 2026-04-29
 author: chaz-clark
@@ -19,7 +19,7 @@ applicable_principles:
   - P-009
   - P-010
 dependencies:
-  - make_AGENTS.json (contract source)
+  - make_AGENTS.md (contract source - see Required/Optional Sections)
   - knowledge/behavioral_discipline.json (discipline source)
 when_to_use:
   - After generating a new AGENTS.md via make_AGENTS
@@ -48,7 +48,7 @@ metadata:
 
 ## Mission (core)
 
-**What it does**: Validates an `AGENTS.md` file (and optionally the repo it describes) against the contract defined in `make_AGENTS.json`. Scores across 6 quality dimensions and surfaces specific issues with severity and recommendations.
+**What it does**: Validates an `AGENTS.md` file (and optionally the repo it describes) against the contract defined in `make_AGENTS.md` (see **## Contract: Required Sections** and **## Contract: Optional Sections**). Scores across 6 quality dimensions and surfaces specific issues with severity and recommendations.
 
 **Why it exists**: An AGENTS.md is the first file an agentic dev tool reads when entering a project. Drift between AGENTS.md and the actual repo state silently misleads every LLM that reads it. The QC catches drift before it lands.
 
@@ -102,11 +102,11 @@ For detailed rules and scoring, see `make_AGENTS_qc.json`.
 ## Key Principles (core)
 
 ### 1. Validate Against the Contract, Not Aesthetics
-**Description**: The contract is `make_AGENTS.json` → `agents_md_required_sections` and `agents_md_optional_sections` (with `include_when` criteria). The QC validates that contract — not stylistic preferences.
+**Description**: The contract is defined in `make_AGENTS.md` → **## Contract: Required Sections** (6 sections) and **## Contract: Optional Sections** (5 sections with `include_when` criteria). The QC validates that contract — not stylistic preferences.
 
 **Why**: An AGENTS.md is a contract between project state and the LLM reading it. If it satisfies the contract and accurately reflects the repo, it's a good AGENTS.md regardless of aesthetic.
 
-**How**: Reference the contract by file path (`make_AGENTS.json`) when applying rules. If a check seems to require a stylistic judgment, raise it as a recommendation, not a rule violation.
+**How**: Reference the contract sections in `make_AGENTS.md` when applying rules. If a check seems to require a stylistic judgment, raise it as a recommendation, not a rule violation.
 
 ### 2. Genchi Genbutsu — Verify Claims Against Reality
 **Description**: AGENTS.md makes claims about the repo (Structure, file paths, recent commits, open issues). When the repo is accessible, verify those claims by going to the source. Flag drift.
@@ -159,7 +159,7 @@ P-002, P-004, P-005, P-006 are skipped per `read_only.skip_unless_applicable` �
 - Target `AGENTS.md` file accessible
 - Repo root accessible (optional but recommended for Genchi Genbutsu rules)
 - `make_AGENTS_qc.json` readable (for rules and scoring)
-- `make_AGENTS.json` readable (for the contract definitions)
+- `make_AGENTS.md` readable (for the contract definitions in Required/Optional Sections)
 - `knowledge/behavioral_discipline.md/.json` readable (for the discipline reference)
 
 ### Basic Usage
@@ -220,7 +220,7 @@ Strict mode does not change the rules; it changes the pass threshold (default 80
 
 **Why it happens**: Authors interpret "optional" as "include if you can fill it" rather than "include only if criteria apply".
 
-**Solution**: Rule 5 (Optional Section Justification) checks each optional section against its `include_when` criterion in `make_AGENTS.json`. If the criterion isn't met, the section gets flagged for removal. Empty/placeholder rows count as failure to meet criterion.
+**Solution**: Rule 5 (Optional Section Justification) checks each optional section against its `include_when` criterion in `make_AGENTS.md` → **## Contract: Optional Sections**. If the criterion isn't met, the section gets flagged for removal. Empty/placeholder rows count as failure to meet criterion.
 
 ---
 
@@ -379,4 +379,4 @@ For canonical scoring weights and rule-to-dimension mapping, see `make_AGENTS_qc
 | **Complexity** | simple-to-standard |
 | **Key Files** | `make_AGENTS_qc.json`, `make_AGENTS_qc.md` |
 | **Common Pitfall** | Running without repo access — skips highest-value drift detection |
-| **Dependencies** | knowledge/behavioral_discipline.md/.json, make_AGENTS.json |
+| **Dependencies** | knowledge/behavioral_discipline.md/.json, make_AGENTS.md |
