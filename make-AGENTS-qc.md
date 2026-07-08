@@ -28,7 +28,7 @@ when_to_use:
   - During CLAUDE.md to AGENTS.md migrations
 when_to_skip:
   - Validating agent specs (use make_agent_qc)
-  - Validating Gem instructions (use make_gems/make_gem_qc)
+  - Validating Gem instructions (use make-gems/make_gem_qc)
   - Real-time editing feedback (too heavyweight)
 metadata:
   make-ai-agents:
@@ -41,7 +41,7 @@ metadata:
 ## Agent Instructions
 1. Read this for mission, principles, common pitfalls, and how to interpret QC reports.
 2. Parse `make_AGENTS_qc.json` for structured rules, scoring weights, and test cases. Do not parse this Markdown for structured rules.
-3. This QC validates a single artifact: a project's `AGENTS.md` file. It does not validate agent specs (use `make_agent_qc`) or Gem instructions (use `make_gems/make_gem_qc`).
+3. This QC validates a single artifact: a project's `AGENTS.md` file. It does not validate agent specs (use `make_agent_qc`) or Gem instructions (use `make-gems/make_gem_qc`).
 4. **Behavioral Discipline applies to this skill itself.** This QC operates as `interaction_pattern: read_only` — read the AGENTS.md, read the repo it claims to describe, produce a report. No writes. See `## Behavioral Discipline (core)` below.
 
 ---
@@ -336,7 +336,7 @@ For canonical scoring weights and rule-to-dimension mapping, see `make_AGENTS_qc
 
 **Don't use for**:
 - Validating agent specs (use `make_agent_qc`)
-- Validating Gem instructions (use `make_gems/make_gem_qc`)
+- Validating Gem instructions (use `make-gems/make_gem_qc`)
 - Validating arbitrary markdown documentation
 - Real-time editing feedback (too heavyweight; use IDE linting)
 
@@ -358,7 +358,7 @@ For canonical scoring weights and rule-to-dimension mapping, see `make_AGENTS_qc
 ### Related Skills
 - `make_AGENTS` — generates AGENTS.md (this QC validates its output)
 - `make_agent_qc` — sibling QC for agent specs
-- `make_gems/make_gem_qc` — sibling QC for Gem instructions
+- `make-gems/make_gem_qc` — sibling QC for Gem instructions
 
 ### How to Use This Documentation System
 1. **Start here** (.md) for validation philosophy and pitfalls

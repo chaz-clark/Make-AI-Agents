@@ -1,15 +1,18 @@
 GEMINI.md
 gem_instructions/
+qc-reports/
 qc_reports/
 gpt.qmd
 *.qmd
 CLAUDE.md
 handoffs/
 gh-issues-agent/
+.github-issues/
 .github_issues/
 .DS_Store
 AGENTJ_*.md
 canvas-sync.md
+source-docs/dropbox/
 source_docs/dropbox/
 temp/
 
