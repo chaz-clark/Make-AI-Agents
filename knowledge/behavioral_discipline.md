@@ -4,7 +4,7 @@ version: "1.4"
 last_updated: 2026-06-17
 description: Structured behavioral discipline rules for AI agents (structured data + narrative).
 skill_type: knowledge
-scope: "All agents built from make_agent.md inherit principles from this file"
+scope: "All agents built from make-agent.md inherit principles from this file"
 companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
 
 principles:
@@ -225,7 +225,7 @@ metadata:
 
 This file is the deep narrative reference. It's read by:
 
-- **Developers** using `make_agent.md` to build new agents — read once to understand the discipline, return when something needs context.
+- **Developers** using `make-agent.md` to build new agents — read once to understand the discipline, return when something needs context.
 - **The `make_agent` skill** when generating new agent specs — it pulls structured rules from `behavioral_discipline.json`; it consults this MD only when the developer asks "why."
 - **The `make_agent_qc` skill** when validating discipline adoption — same split: rules in the JSON, rationale here.
 
@@ -544,7 +544,7 @@ The canonical vocabulary lists for `applies_to`, `_qc_checks_na`, and `override_
 
 ## How agents inherit this
 
-Every agent built from `make_agent.md` includes a compact version of this discipline in its own MD and system prompt. Every gem built from `make_gem.md` includes a gem-tailored version.
+Every agent built from `make-agent.md` includes a compact version of this discipline in its own MD and system prompt. Every gem built from `make_gem.md` includes a gem-tailored version.
 
 `make_agent` reads `behavioral_discipline.json` → `agent_type_applicability` to pick which principles apply to the agent it's generating. Read-only agents skip planning and A3 by default; multi-step batch agents include all ten; conversational agents skip the structured-output principles. See the JSON for the canonical mapping.
 

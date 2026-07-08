@@ -102,7 +102,7 @@ This orchestrator coordinates 3 specialists:
   Purpose: Promote one staged file at a time from `source_docs/dropbox/` to `source_docs/<short_name>.md` with front-matter preservation, `_refresh_log.json` update, and dropbox cleanup. Invoked via `delegate_to_merge_agent`. The orchestrator calls this once per dropbox file that `doc_refresh_agent` staged.
 
 - **`doc_analysis_agent`** (`update_agents/doc_analysis_agent.json`, `interaction_pattern: multi_step_batch`)
-  Purpose: Read the current `source_docs/`, diff against templates (`make_agent.md`/`.json`, `make_orchestrator_agent.*`, `make_agent_knowledge.*`, etc.), score candidates via the necessity test + 5-criterion rubric, and emit a numbered proposal list. Invoked via `delegate_to_doc_analysis_agent`.
+  Purpose: Read the current `source_docs/`, diff against templates (`make-agent.md`/`.json`, `make_orchestrator_agent.*`, `make_agent_knowledge.*`, etc.), score candidates via the necessity test + 5-criterion rubric, and emit a numbered proposal list. Invoked via `delegate_to_doc_analysis_agent`.
 
 Each specialist is referenced by `spec_path` in `doc_refresh_workflow.json → topology.specialists[]`. Specialists are stateless w.r.t. each other; cross-specialist state lives only in this orchestrator's context.
 
@@ -214,4 +214,4 @@ For full principle definitions, examples, and override rationale, see `knowledge
 | **Termination** | All stale sources refreshed + merged; OR analysis returned a synthesized proposal list; OR user-requested phase completed |
 | **max_turns** | 30 |
 | **Common Pitfall** | Forgetting to pass platform-filter from `doc_refresh_agent` step into `doc_analysis_agent` step (cross-agent state) |
-| **Dependencies** | All 3 specialist spec files exist + knowledge/source_docs_index.json (read-at-runtime) |
+| **Dependencies** | All 3 specialist spec files exist + knowledge/source_docs_index.md (read-at-runtime, YAML frontmatter) |

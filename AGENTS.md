@@ -38,11 +38,11 @@ Tracked content only (gitignored files like `GEMINI.md`, `gpt.qmd`, and `qc_repo
 Make-AI-Agents/
 ├── AGENTS.md                       # this file — project context for any agentic dev tool
 ├── README.md / README_QC.md / README_Disclosure.md
-├── make_agent.md / .json                  # agent spec template (the meta-skill)
-├── make_agent_qc.md / .json               # agent spec QC template (20 rules, 17 dimensions)
+├── make-agent.md / .json                  # agent spec template (the meta-skill)
+├── make-agent-qc.md / .json               # agent spec QC template (20 rules, 17 dimensions)
 ├── make_AGENTS.md / .json                 # AGENTS.md generation template (sibling)
-├── make_orchestrator_agent.md / .json     # multi-agent orchestrator template (sibling, 2026-05-13)
-├── make_agent_knowledge.md / .json        # runtime knowledge file template (sibling, 2026-05-13)
+├── make-orchestrator-agent.md / .json     # multi-agent orchestrator template (sibling, 2026-05-13)
+├── make-agent-knowledge.md / .json        # runtime knowledge file template (sibling, 2026-05-13)
 ├── make_gems/                             # Gemini Gem templates and example Gems
 │   ├── make_gem.md / .json
 │   ├── make_gem_qc.md / .json
@@ -73,7 +73,7 @@ The four no-override principles — **P-001 Read Before Claiming, P-003 Stop on 
 **Where to start reading** (suggested first-pass order for new contributors):
 1. This file — project context (you're here)
 2. `knowledge/behavioral_discipline.md` — the discipline that governs every change
-3. `make_agent.md` — the meta-skill template (read for understanding, not for memorization)
+3. `make-agent.md` — the meta-skill template (read for understanding, not for memorization)
 4. An existing artifact in `update_agents/` for an example of a fully-formed agent spec
 
 **Project-specific rules** (carried from the previous CLAUDE.md):
@@ -84,7 +84,7 @@ The four no-override principles — **P-001 Read Before Claiming, P-003 Stop on 
 - **When an agent is complete, it moves to its own repo.** The folder here can stay as a reference or be deleted.
 - **Gems compile** to a `.txt` file in `make_gems/gem_instructions/` and a `.json` alongside `make_gem.md`.
 - **Templates use markdown + YAML frontmatter** — `make_*.md` files contain YAML frontmatter for metadata (following Anthropic Agent Skills pattern). Separate `.json` files were deprecated 2026-07-07 after audit showed 3/5 were 8 weeks stale and zero tooling referenced them. Exception: `knowledge/behavioral_discipline.md/.json` remain paired (the JSON holds structured QC rules referenced by ID from other QC agents).
-- **Updates to `make_agent.md` cascade** — every agent spec generated from it after the change should be regenerated or audited against the new template via `make_agent_qc`.
+- **Updates to `make-agent.md` cascade** — every agent spec generated from it after the change should be regenerated or audited against the new template via `make_agent_qc`.
 - **Make-AI-Agents is the leverage point; consumer repos are the field for Genchi Genbutsu (P-001).** This repo holds the meta-skills (`make_agent`, `make_orchestrator_agent`, `make_agent_knowledge`, etc.) and the discipline. Consumer repos (canvas-toolbox, AgentJ, course repos) USE the skills to generate real artifacts. When an agent in this repo is invoked to "test the skill on" a consumer repo, the goal is **skill improvement here**, NOT to finish the consumer repo's work. Capture what surfaces, fix the skill, commit the skill fix here, hand the field state back to the consumer repo's own agents/maintainers to commit there. Don't cross the boundary: this repo's commits update meta-skills; consumer-repo commits update generated artifacts.
 - **Cascade material changes to consumer repos via handoffs.** When a commit here would materially affect agents working in consumer repos — a new make_AGENTS standard, a behavioral_discipline rule, a new QC check, a new optional section, a sharpened condition — **assess blast radius** before considering the change done. If consumer agents would behave differently with the new version (i.e., generate different AGENTS.md, fail QC under the new rule, gain access to a new pattern), draft a per-consumer handoff doc + proposal file (per the 2026-05-13 sprint pattern documented in this Active Context) and drop into each affected `handoffs/` folder. If the change is cosmetic / internal / non-propagating, skip — and note that skip reasoning in the commit message so future readers know the assessment happened. The cross-repo audit workstreams queued in Active Context are the SYSTEMATIC version of this rule (running it across every consumer at once); day-to-day skill commits should still trigger the lightweight version (assess → drop per affected repo OR explicitly skip with reasoning). The agents in this repo are the **main drivers** of consumer-repo behavior; the propagation discipline is what keeps that driver-relationship trustworthy. Added 2026-05-13.
 
@@ -196,11 +196,11 @@ Before generating new tools or scripts in this repo, reuse what already exists.
 
 | Tool / File | Purpose | When to use |
 |---|---|---|
-| `make_agent.md` / `.json` | Generate agent specs (the meta-skill) | Building any new single agent |
-| `make_agent_qc.md` / `.json` | Validate agent specs (20 rules, 17 dimensions; covers BD-QC, ORCH-QC, KNW-QC families) | After generating any new agent |
+| `make-agent.md` / `.json` | Generate agent specs (the meta-skill) | Building any new single agent |
+| `make-agent-qc.md` / `.json` | Validate agent specs (20 rules, 17 dimensions; covers BD-QC, ORCH-QC, KNW-QC families) | After generating any new agent |
 | `make_AGENTS.md` / `.json` | Generate `AGENTS.md` for a project | Setting up a new project, migrating from `CLAUDE.md` |
-| `make_orchestrator_agent.md` / `.json` | Generate multi-agent orchestrator specs (`agent_type.type: 'multi_agent'`) that delegate to specialist subagents | When a single agent has > 20 tools or spans multiple domains — split into specialists + orchestrator |
-| `make_agent_knowledge.md` / `.json` | Generate runtime knowledge files (MD+JSON pair in `knowledge/`) in three shapes (reference / identity / procedural) | When an agent needs lookup-shaped, principle-shaped, or playbook-shaped knowledge at runtime |
+| `make-orchestrator-agent.md` / `.json` | Generate multi-agent orchestrator specs (`agent_type.type: 'multi_agent'`) that delegate to specialist subagents | When a single agent has > 20 tools or spans multiple domains — split into specialists + orchestrator |
+| `make-agent-knowledge.md` / `.json` | Generate runtime knowledge files (MD+JSON pair in `knowledge/`) in three shapes (reference / identity / procedural) | When an agent needs lookup-shaped, principle-shaped, or playbook-shaped knowledge at runtime |
 | `make_gems/make_gem.md` / `.json` | Generate Gemini Gem instructions | Building any new Gem |
 | `make_gems/make_gem_qc.md` / `.json` | Validate Gem instructions | After generating any new Gem |
 | `knowledge/behavioral_discipline.md` / `.json` | Source of truth for the discipline embedded in every generated artifact | Read once for context; reference by path in generated specs |
@@ -214,14 +214,14 @@ Before generating new tools or scripts in this repo, reuse what already exists.
 
 1. Open the meta-skill's `.md` and `.json` in your agentic dev tool (Claude Code, Cursor, Aider, Antigravity).
 2. State the task, e.g. *"Use `make_agent` to draft a spec for an X agent."* The tool reads the meta-skill files as instructions and applies them to your request.
-3. Follow the meta-skill's Quickstart steps with the LLM. For agent specs, that includes choosing an `interaction_pattern` and embedding the behavioral discipline (step 0 of `make_agent.md` Quickstart).
+3. Follow the meta-skill's Quickstart steps with the LLM. For agent specs, that includes choosing an `interaction_pattern` and embedding the behavioral discipline (step 0 of `make-agent.md` Quickstart).
 4. Validate the generated artifact with the matching `*_qc` meta-skill. Output goes wherever the LLM writes it; review reports manually or save to `qc_reports/` (gitignored).
 
 There is no CLI or build step. The repo is a knowledge base + prompt library, not a pipeline.
 
 **Worked example** — running `make_agent_qc` against an existing spec:
 
-> *"Use `make_agent_qc.md` (with YAML frontmatter) to validate `update_agents/doc_refresh_agent.md` (with YAML frontmatter). Score against all 18 rules and 15 quality dimensions. Report critical issues first."*
+> *"Use `make-agent-qc.md` (with YAML frontmatter) to validate `update_agents/doc_refresh_agent.md` (with YAML frontmatter). Score against all 18 rules and 15 quality dimensions. Report critical issues first."*
 
 The LLM reads the QC meta-skill, reads the target spec, runs the rule set, and returns a structured report. Save the report to `qc_reports/` if you want to keep it.
 
@@ -239,7 +239,7 @@ The LLM reads the QC meta-skill, reads the target spec, runs the rule set, and r
 | `compact_boilerplate` | Template strings (in the `*.json` of a meta-skill) that get substituted into generated outputs. The discipline propagates through these. |
 | `non_interactive_mode` (NI mode) | An agent runs without a synchronous user (cron, webhook, scheduled batch). Opt-in graduation path — agents are validated interactively first. Requires an `alert_channel` (BD-QC-007). |
 | clone+gitignore | The canonical vendored-upstream consumption pattern in this repo (per the 2026-05-13 cross-project rule). Vendored repos are cloned at the host root and listed in `.gitignore`, so the host's tracked tree stays clean and refreshes are just `cd <clone> && git pull`. Currently in use: `temp/` (andrej-karpathy-skills), `gh-issues-agent/`. NOT used: `git subtree` — migrated away 2026-05-13 because subtree mechanics noise up the host's `git pull` and `git log`. |
-| `NGAI` | "Non-General AI" — the project's framing for what this repo produces: purpose-built specialist agents (and Gems) rather than general-purpose chatbots. Each agent built from `make_agent.md` is an NGAI specialist with a specific mission, contract, and behavioral discipline. The term appears in README and historical context (e.g., `README_Disclosure.md`); use it when discussing the project's design philosophy with stakeholders. |
+| `NGAI` | "Non-General AI" — the project's framing for what this repo produces: purpose-built specialist agents (and Gems) rather than general-purpose chatbots. Each agent built from `make-agent.md` is an NGAI specialist with a specific mission, contract, and behavioral discipline. The term appears in README and historical context (e.g., `README_Disclosure.md`); use it when discussing the project's design philosophy with stakeholders. |
 
 ---
 

@@ -195,12 +195,12 @@ project/
 ```
 Make-AI-Agents/
 ├── AGENTS.md                          # project context for any agentic dev tool (canonical)
-├── make_agent.md / .json              # agent spec template (the meta-skill)
-├── make_agent_qc.md / .json           # agent spec QC template (20 rules, 17 dimensions)
+├── make-agent.md / .json              # agent spec template (the meta-skill)
+├── make-agent-qc.md / .json           # agent spec QC template (20 rules, 17 dimensions)
 ├── make_AGENTS.md / .json             # AGENTS.md generation template
-├── make_AGENTS_qc.md / .json          # AGENTS.md QC template
-├── make_orchestrator_agent.md / .json # multi-agent orchestrator template (2026-05-13)
-├── make_agent_knowledge.md / .json    # runtime knowledge file template (2026-05-13)
+├── make-AGENTS-qc.md / .json          # AGENTS.md QC template
+├── make-orchestrator-agent.md / .json # multi-agent orchestrator template (2026-05-13)
+├── make-agent-knowledge.md / .json    # runtime knowledge file template (2026-05-13)
 ├── make_gems/                         # Gemini Gem templates (sibling to make_agent)
 │   ├── make_gem.md / .json
 │   └── make_gem_qc.md / .json
@@ -225,7 +225,7 @@ Pick the tier that matches what you're building. The template adapts:
 - **Tier 2 (Production)** — *shared, deployed services.* ~25 min to fill.
 - **Tier 3 (Complex)** — *frameworks, platform components.* ~40 min to fill.
 
-See `make_agent.md` YAML frontmatter and tier guidance sections for which fields belong to which tier.
+See `make-agent.md` YAML frontmatter and tier guidance sections for which fields belong to which tier.
 
 ---
 
@@ -247,7 +247,7 @@ The Gem and AGENTS QC skills delegate to the same canonical BD-QC checks — no 
 
 # Optional sections in agent specs
 
-Beyond the core sections, `make_agent.md` supports several optional sections that earn their place when relevant:
+Beyond the core sections, `make-agent.md` supports several optional sections that earn their place when relevant:
 
 - **Domain Terms** — vocabulary table for agents in domains with non-obvious terminology
 - **Existing Tooling** — reuse-first inventory when integrating with an existing codebase

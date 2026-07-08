@@ -85,4 +85,4 @@ For full principle definitions, examples, and override rationale, see `../knowle
 - **Start a refresh run**: See `doc_refresh_agent.md` → Agent Quickstart
 - **Start an analysis run**: See `doc_analysis_agent.md` → Agent Quickstart
 - **Source cache files**: `source_docs/` folder (34 files: 9 original + 17 wave-2 + 8 ADK A2A child pages)
-- **Update targets**: `make_agent.md`, `make_agent.json`, `make_orchestrator_agent.md`, `make_orchestrator_agent.json`, `make_agent_knowledge.md`, `make_agent_knowledge.json`, `make_gems/make_gem.md`, `make_gems/make_gem.json`, `make_gems/make_gem_qc.md`, `make_gems/make_gem_qc.json`
+- **Update targets**: `make-agent.md`, `make_agent.json`, `make-orchestrator-agent.md`, `make_orchestrator_agent.json`, `make-agent-knowledge.md`, `make_agent_knowledge.json`, `make_gems/make_gem.md`, `make_gems/make_gem.json`, `make_gems/make_gem_qc.md`, `make_gems/make_gem_qc.json`

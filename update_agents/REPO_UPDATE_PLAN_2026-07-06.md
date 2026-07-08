@@ -35,7 +35,7 @@
 
 **Impact on our repo**:
 - ❌ We don't have templates for managed agents
-- ❌ `make_agent.md` assumes self-hosted/API-only execution
+- ❌ `make-agent.md` assumes self-hosted/API-only execution
 - ❌ No guidance on when to use managed vs self-hosted
 
 ### 2. Execution Models & Sandboxes (High Impact)
@@ -53,7 +53,7 @@
 - Replaces older conversation patterns
 
 **Impact on our repo**:
-- ❌ `make_orchestrator_agent.md` doesn't cover sandbox orchestration
+- ❌ `make-orchestrator-agent.md` doesn't cover sandbox orchestration
 - ❌ No template for stateful execution environments
 - ❌ Missing guidance on backend selection
 
@@ -86,7 +86,7 @@
 
 **Impact on our repo**:
 - ❓ Likely out of scope for current templates (text-focused agents)
-- ❓ Could add optional multimodal section to `make_agent.md`
+- ❓ Could add optional multimodal section to `make-agent.md`
 
 ### 5. Framework Updates (Medium Impact)
 
@@ -107,7 +107,7 @@
 - Grok 4.3 fastest/most intelligent
 
 **Impact on our repo**:
-- ⚠️  `make_orchestrator_agent.md` could reference ADK 2.0 graph patterns
+- ⚠️  `make-orchestrator-agent.md` could reference ADK 2.0 graph patterns
 - ⚠️  Model recommendations may be stale (check current defaults)
 
 ### 6. New Patterns
@@ -131,20 +131,20 @@
 
 ### ✅ What We Cover Well
 
-1. **Basic agent authoring** (`make_agent.md`)
+1. **Basic agent authoring** (`make-agent.md`)
    - Prompt engineering, tool use, structured output
    - Behavioral discipline integration
    - QC framework
 
-2. **Orchestration** (`make_orchestrator_agent.md`)
+2. **Orchestration** (`make-orchestrator-agent.md`)
    - Multi-agent patterns, delegation, handoffs
    - Grounded in OpenAI/Anthropic/ADK patterns
 
-3. **Knowledge integration** (`make_agent_knowledge.md`)
+3. **Knowledge integration** (`make-agent-knowledge.md`)
    - Files, caching, citations, retrieval
    - Cross-platform (Anthropic, Google, OpenAI, xAI)
 
-4. **Quality control** (`make_agent_qc.md`, `make_AGENTS_qc.md`)
+4. **Quality control** (`make-agent-qc.md`, `make-AGENTS-qc.md`)
    - Structural validation, compliance checks
 
 5. **Meta-documentation** (`make_AGENTS.md`)
@@ -195,7 +195,7 @@
 
 ### Priority 1: High Impact, Low Effort
 
-#### 1.1 Update `make_agent.md` — Add Managed Agents Section
+#### 1.1 Update `make-agent.md` — Add Managed Agents Section
 **Why**: Managed agents are a major shift (Anthropic, Google, OpenAI all offer them)
 **What**:
 - New section: "## Execution Model: Managed vs Self-Hosted"
@@ -206,7 +206,7 @@
 **Effort**: 2-3 hours
 **Impact**: High (affects all future agent decisions)
 
-#### 1.2 Update `make_agent_knowledge.md` — Add Interactions API
+#### 1.2 Update `make-agent-knowledge.md` — Add Interactions API
 **Why**: Google Interactions API is GA and recommended for new projects
 **What**:
 - Update Google section with Interactions API patterns
@@ -228,7 +228,7 @@
 
 ### Priority 2: Medium Impact, Medium Effort
 
-#### 2.1 Create `make_managed_agent.md` Template
+#### 2.1 Create `make-managed-agent.md` Template
 **Why**: New execution model deserves dedicated template
 **What**:
 - Full template for Anthropic/Google/OpenAI managed agents
@@ -240,7 +240,7 @@
 **Effort**: 4-6 hours
 **Impact**: High (new capability class)
 
-#### 2.2 Update `make_orchestrator_agent.md` — Add Graph Patterns
+#### 2.2 Update `make-orchestrator-agent.md` — Add Graph Patterns
 **Why**: ADK 2.0 introduces graph-based workflows (vs linear)
 **What**:
 - New section: "## Workflow Models: Linear vs Graph-Based"
@@ -274,7 +274,7 @@
 **Effort**: 3-4 hours
 **Impact**: Medium (advanced integration topic)
 
-#### 3.2 Add Optional Multimodal Section to `make_agent.md`
+#### 3.2 Add Optional Multimodal Section to `make-agent.md`
 **Why**: Voice/image agents are emerging
 **What**:
 - Optional section: "## Multimodal Capabilities (Optional)"
@@ -312,8 +312,8 @@
 ## Recommended Execution Order
 
 ### Phase 1: Quick Wins (Week 1)
-1. ✅ Update `make_agent.md` — Add Managed Agents section
-2. ✅ Update `make_agent_knowledge.md` — Add Interactions API
+1. ✅ Update `make-agent.md` — Add Managed Agents section
+2. ✅ Update `make-agent-knowledge.md` — Add Interactions API
 3. ✅ Create `knowledge/learned/` lessons from this refresh
 4. ✅ Update model recommendations throughout
 
@@ -321,15 +321,15 @@
 **Impact**: Brings repo current with major 2026 platform updates
 
 ### Phase 2: New Capabilities (Week 2-3)
-5. ✅ Create `make_managed_agent.md` template
-6. ✅ Update `make_orchestrator_agent.md` — Graph patterns
+5. ✅ Create `make-managed-agent.md` template
+6. ✅ Update `make-orchestrator-agent.md` — Graph patterns
 7. ✅ Add MCP integration patterns doc
 
 **Total effort**: ~10-13 hours
 **Impact**: Adds new template class, advanced orchestration patterns
 
 ### Phase 3: Optional/Future (Backlog)
-8. ⏸️  Add multimodal section to `make_agent.md`
+8. ⏸️  Add multimodal section to `make-agent.md`
 9. ⏸️  Create `make_voice_agent.md` (if demand emerges)
 10. ⏸️  Hermes auto-distillation research
 
@@ -372,14 +372,14 @@
 ## Success Criteria
 
 ### Phase 1 Complete When:
-- [ ] `make_agent.md` has managed agents decision section
-- [ ] `make_agent_knowledge.md` covers Interactions API
+- [ ] `make-agent.md` has managed agents decision section
+- [ ] `make-agent-knowledge.md` covers Interactions API
 - [ ] `knowledge/learned/` has 3+ lessons from this refresh
 - [ ] All templates reference current model defaults (gpt-5.5, etc.)
 
 ### Phase 2 Complete When:
-- [ ] `make_managed_agent.md` exists and covers all 3 platforms
-- [ ] `make_orchestrator_agent.md` has graph workflow section
+- [ ] `make-managed-agent.md` exists and covers all 3 platforms
+- [ ] `make-orchestrator-agent.md` has graph workflow section
 - [ ] MCP integration patterns documented
 
 ### Phase 3 Complete When:
@@ -391,11 +391,11 @@
 
 ## Questions to Resolve
 
-1. **Managed agents scope**: Should `make_managed_agent.md` be a separate template, or fold into `make_agent.md` as a section?
+1. **Managed agents scope**: Should `make-managed-agent.md` be a separate template, or fold into `make-agent.md` as a section?
    - **Recommendation**: Separate template (different enough to warrant it)
 
 2. **ADK 2.0 coverage**: Should we create `make_adk_agent.md` specifically for ADK patterns?
-   - **Recommendation**: No - fold into `make_orchestrator_agent.md` as an advanced pattern
+   - **Recommendation**: No - fold into `make-orchestrator-agent.md` as an advanced pattern
 
 3. **Multimodal priority**: Is voice/video integration important enough for Priority 2?
    - **Recommendation**: No - keep in Priority 3 until user demand emerges

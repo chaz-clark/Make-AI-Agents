@@ -33,13 +33,13 @@ Per ecosystem-specific naming conventions:
 
 | Current | Target | References |
 |---------|--------|------------|
-| `make_agent.md` | `make-agent.md` | 192 |
-| `make_agent_qc.md` | `make-agent-qc.md` | ~40 |
-| `make_agent_knowledge.md` | `make-agent-knowledge.md` | ~30 |
+| `make-agent.md` | `make-agent.md` | 192 |
+| `make-agent-qc.md` | `make-agent-qc.md` | ~40 |
+| `make-agent-knowledge.md` | `make-agent-knowledge.md` | ~30 |
 | `make_AGENTS.md` | `make-AGENTS.md` | ~50 (keep AGENTS capitalized) |
-| `make_AGENTS_qc.md` | `make-AGENTS-qc.md` | ~25 |
-| `make_orchestrator_agent.md` | `make-orchestrator-agent.md` | ~35 |
-| `make_managed_agent.md` | `make-managed-agent.md` | ~20 |
+| `make-AGENTS-qc.md` | `make-AGENTS-qc.md` | ~25 |
+| `make-orchestrator-agent.md` | `make-orchestrator-agent.md` | ~35 |
+| `make-managed-agent.md` | `make-managed-agent.md` | ~20 |
 
 ### Knowledge Files (9 files)
 
@@ -197,31 +197,31 @@ Date-stamped handoffs use ISO date format (2026-05-22) which already includes hy
 cd /Users/chazclar/Documents/GitHub/Make-AI-Agents
 
 # Rename files with git mv (preserves history)
-git mv make_agent.md make-agent.md
-ln -s make-agent.md make_agent.md
+git mv make-agent.md make-agent.md
+ln -s make-agent.md make-agent.md
 
-git mv make_agent_qc.md make-agent-qc.md
-ln -s make-agent-qc.md make_agent_qc.md
+git mv make-agent-qc.md make-agent-qc.md
+ln -s make-agent-qc.md make-agent-qc.md
 
-git mv make_agent_knowledge.md make-agent-knowledge.md
-ln -s make-agent-knowledge.md make_agent_knowledge.md
+git mv make-agent-knowledge.md make-agent-knowledge.md
+ln -s make-agent-knowledge.md make-agent-knowledge.md
 
 git mv make_AGENTS.md make-AGENTS.md
 ln -s make-AGENTS.md make_AGENTS.md
 
-git mv make_AGENTS_qc.md make-AGENTS-qc.md
-ln -s make-AGENTS-qc.md make_AGENTS_qc.md
+git mv make-AGENTS-qc.md make-AGENTS-qc.md
+ln -s make-AGENTS-qc.md make-AGENTS-qc.md
 
-git mv make_orchestrator_agent.md make-orchestrator-agent.md
-ln -s make-orchestrator-agent.md make_orchestrator_agent.md
+git mv make-orchestrator-agent.md make-orchestrator-agent.md
+ln -s make-orchestrator-agent.md make-orchestrator-agent.md
 
-git mv make_managed_agent.md make-managed-agent.md
-ln -s make-managed-agent.md make_managed_agent.md
+git mv make-managed-agent.md make-managed-agent.md
+ln -s make-managed-agent.md make-managed-agent.md
 
 # Stage symlinks
-git add make_agent.md make_agent_qc.md make_agent_knowledge.md \
-        make_AGENTS.md make_AGENTS_qc.md make_orchestrator_agent.md \
-        make_managed_agent.md
+git add make-agent.md make-agent-qc.md make-agent-knowledge.md \
+        make_AGENTS.md make-AGENTS-qc.md make-orchestrator-agent.md \
+        make-managed-agent.md
 ```
 
 **Update internal references in renamed files** (use sed/manual)
@@ -515,7 +515,7 @@ git push
 ## Risk Assessment & Mitigation
 
 ### Risk 1: Broken Git History
-**Impact**: `git log make_agent.md` won't show pre-rename history
+**Impact**: `git log make-agent.md` won't show pre-rename history
 **Mitigation**: Use `git log --follow make-agent.md` (follows renames)
 **Severity**: Low (git handles renames well with `git mv`)
 
@@ -597,7 +597,7 @@ cat AGENTS.md | grep -E "make_|update_|source_"
 2. **Symlink test**:
    ```bash
    # Verify old paths work
-   cat make_agent.md  # Should resolve via symlink
+   cat make-agent.md  # Should resolve via symlink
    cat make-agent.md  # Should resolve to actual file
    ```
 
@@ -681,7 +681,7 @@ Make-AI-Agents has migrated to kebab-case for all .md files.
 
 Old paths still work via symlinks (grace period: 6-12 months).
 New canonical paths use hyphens:
-- make_agent.md → make-agent.md
+- make-agent.md → make-agent.md
 - update_agents/ → update-agents/
 - behavioral_discipline.md → behavioral-discipline.md
 

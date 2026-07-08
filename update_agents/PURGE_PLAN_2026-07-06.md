@@ -28,9 +28,9 @@ status: DRAFT - Review in morning before execution
 | File | Lines | Last Updated | Referenced By | Keep? |
 |------|-------|--------------|---------------|-------|
 | `make_agent.json` | 525 | 8 weeks ago | Nothing | ❌ DELETE |
-| `make_agent_qc.json` | 899 | Current | make_agent_qc.md | ⚠️ CONSOLIDATE |
+| `make_agent_qc.json` | 899 | Current | make-agent-qc.md | ⚠️ CONSOLIDATE |
 | `make_AGENTS.json` | 359 | Current | make_AGENTS.md | ⚠️ CONSOLIDATE |
-| `make_AGENTS_qc.json` | 486 | Current | make_AGENTS_qc.md | ⚠️ CONSOLIDATE |
+| `make_AGENTS_qc.json` | 486 | Current | make-AGENTS-qc.md | ⚠️ CONSOLIDATE |
 | `make_orchestrator_agent.json` | 507 | 8 weeks ago | Nothing | ❌ DELETE |
 | `make_agent_knowledge.json` | 557 | 8 weeks ago | Nothing | ❌ DELETE |
 
@@ -38,8 +38,8 @@ status: DRAFT - Review in morning before execution
 
 | File | Purpose | Used? | Keep? |
 |------|---------|-------|-------|
-| `make_agent_qc.md` | 20 rules for agent specs | Unknown | ✅ KEEP (document as optional) |
-| `make_AGENTS_qc.md` | 11 rules for AGENTS.md files | Created AGENTS-QC-010/011 | ✅ KEEP (proven value) |
+| `make-agent-qc.md` | 20 rules for agent specs | Unknown | ✅ KEEP (document as optional) |
+| `make-AGENTS-qc.md` | 11 rules for AGENTS.md files | Created AGENTS-QC-010/011 | ✅ KEEP (proven value) |
 
 ### Missing QC (should they exist?)
 
@@ -76,7 +76,7 @@ git rm make_agent_knowledge.json
 
 **Current pattern**:
 ```
-make_agent_qc.md      (narrative: what each rule checks, why it matters)
+make-agent-qc.md      (narrative: what each rule checks, why it matters)
 make_agent_qc.json    (structured: rule IDs, check commands, dimensions)
 ```
 
@@ -99,10 +99,10 @@ dimensions: 17
 ```
 
 **Action**:
-1. Add YAML frontmatter to `make_agent_qc.md` with metadata
+1. Add YAML frontmatter to `make-agent-qc.md` with metadata
 2. Keep structured rules inline (markdown tables or code blocks)
 3. Delete `make_agent_qc.json`
-4. Repeat for `make_AGENTS_qc.md` / `make_AGENTS_qc.json`
+4. Repeat for `make-AGENTS-qc.md` / `make_AGENTS_qc.json`
 
 **Benefit**: Single source of truth. Industry-aligned format.
 
@@ -132,7 +132,7 @@ dimensions: 17
 
 **Example transformation**:
 
-**Before** (make_managed_agent.md):
+**Before** (make-managed-agent.md):
 ```markdown
 ---
 name: make_managed_agent
@@ -165,10 +165,10 @@ see_also:
 ```
 
 **Apply to**:
-- ✅ `make_managed_agent.md` (new, add frontmatter)
-- ⚠️ `make_agent.md` (has frontmatter, enhance it)
-- ⚠️ `make_orchestrator_agent.md` (has frontmatter, enhance it)
-- ⚠️ `make_agent_knowledge.md` (has frontmatter, enhance it)
+- ✅ `make-managed-agent.md` (new, add frontmatter)
+- ⚠️ `make-agent.md` (has frontmatter, enhance it)
+- ⚠️ `make-orchestrator-agent.md` (has frontmatter, enhance it)
+- ⚠️ `make-agent-knowledge.md` (has frontmatter, enhance it)
 - ⚠️ `make_AGENTS.md` (has frontmatter, enhance it)
 
 **Benefit**: Machine-readable metadata in industry-standard format.
@@ -195,9 +195,9 @@ see_also:
    - **Verdict**: Keep
 
 3. **make_agent_qc has 20 rules, but...**
-   - We created `make_managed_agent.md` (Sprint 2) and didn't run QC
-   - We added 380 lines to `make_agent.md` (Sprint 3) and didn't run QC
-   - We updated `make_orchestrator_agent.md` and didn't run QC
+   - We created `make-managed-agent.md` (Sprint 2) and didn't run QC
+   - We added 380 lines to `make-agent.md` (Sprint 3) and didn't run QC
+   - We updated `make-orchestrator-agent.md` and didn't run QC
    - **Verdict**: Useful in theory, not used in practice
 
 **Evidence AGAINST**:
@@ -211,22 +211,22 @@ see_also:
    - We don't do that consistently
 
 3. **Templates have internalized discipline**
-   - Early QC caught issues (v1.0 make_agent.md)
+   - Early QC caught issues (v1.0 make-agent.md)
    - Now we "know" what good looks like
    - Diminishing returns
 
 ### Recommendation: Keep QC but Document as Optional
 
 **Action**:
-1. Keep `make_agent_qc.md` and `make_AGENTS_qc.md`
+1. Keep `make-agent-qc.md` and `make-AGENTS-qc.md`
 2. Add frontmatter marking them as `optional: true`
 3. Update AGENTS.md:
    ```markdown
    ## Quality Control
 
    QC agents exist but are **optional**:
-   - `make_agent_qc.md` — 20 rules for agent specs
-   - `make_AGENTS_qc.md` — 11 rules for AGENTS.md files
+   - `make-agent-qc.md` — 20 rules for agent specs
+   - `make-AGENTS-qc.md` — 11 rules for AGENTS.md files
 
    **When to run**:
    - Before releasing template to consumer repos
@@ -298,7 +298,7 @@ $ grep -r "\.json" *.md --exclude-dir=.git | grep "make_"
 - `README_Disclosure.md`: "meta-skills like make_agent.json"
 - Old GitHub issues mention make_agent.json
 
-**Action**: Update references to say "See make_agent.md YAML frontmatter"
+**Action**: Update references to say "See make-agent.md YAML frontmatter"
 
 **Effort**: 15 minutes
 
@@ -352,8 +352,8 @@ $ grep -r "\.json" *.md --exclude-dir=.git | grep "make_"
 - Commit: "Purge stale JSON files - align with industry markdown-only pattern"
 
 **Task 2: Consolidate QC** (2-3 hrs)
-- Migrate make_agent_qc.json → YAML frontmatter in make_agent_qc.md
-- Migrate make_AGENTS_qc.json → YAML frontmatter in make_AGENTS_qc.md
+- Migrate make_agent_qc.json → YAML frontmatter in make-agent-qc.md
+- Migrate make_AGENTS_qc.json → YAML frontmatter in make-AGENTS-qc.md
 - Delete 2 JSON files
 - Commit: "Consolidate QC JSON into YAML frontmatter"
 

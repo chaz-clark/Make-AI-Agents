@@ -10,14 +10,14 @@ This guide focuses specifically on the **validation phase** of the lifecycle.
 
 ## How to Talk to Your AI About Agent QC
 
-Think of `make_agent_qc` (`make_agent_qc.json` and `make_agent_qc.md`) as defining a **Quality Assurance** meta-skill for your AI.
+Think of `make_agent_qc` (`make_agent_qc.json` and `make-agent-qc.md`) as defining a **Quality Assurance** meta-skill for your AI.
 
 You'll guide your AI by telling it to "adopt" this QC skill and then pointing it at an agent you've created.
 
 ### Common Prompting Patterns:
 
 1.  **To validate a newly created agent:**
-    > "Use the 'Agent Quality Control' skill defined by `make_agent_qc.json` and `make_agent_qc.md`. Validate the 'Simple Summarizer' agent I just created (`summarizer.json` and `summarizer.md`)."
+    > "Use the 'Agent Quality Control' skill defined by `make_agent_qc.json` and `make-agent-qc.md`. Validate the 'Simple Summarizer' agent I just created (`summarizer.json` and `summarizer.md`)."
 
     *Your AI should act as the QC agent, reading your files and producing a pass/fail report based on the rules in the JSON.*
 
@@ -57,7 +57,7 @@ AI: Updates agent and re-validates. "Score: 98/100. PASSED."
 
 ### Step 1: Load the QC Skill
 > **Your Prompt:**
-> "Read `make_agent_qc.json` and `make_agent_qc.md` to understand your role as the Quality Control agent."
+> "Read `make_agent_qc.json` and `make-agent-qc.md` to understand your role as the Quality Control agent."
 
 ### Step 2: Run Validation
 > **Your Prompt:**
@@ -80,7 +80,7 @@ AI: Updates agent and re-validates. "Score: 98/100. PASSED."
 The `make_agent_qc` files define a **standardized validator** for the NGAI ecosystem.
 
 *   **`make_agent_qc.json`**: Contains the *rules*, *scoring weights*, and *logic*. (e.g., "If 'mission' is missing, deduct 20 points.")
-*   **`make_agent_qc.md`**: Contains the *philosophy* and *explanations*. (e.g., "Why we value specificity over generic templates.")
+*   **`make-agent-qc.md`**: Contains the *philosophy* and *explanations*. (e.g., "Why we value specificity over generic templates.")
 
 ## The 17 Quality Dimensions
 

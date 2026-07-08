@@ -66,8 +66,8 @@ grep -r "your_agent\.json" . --include="*.py" --include="*.sh"
 | **agentskills.io** | MD + YAML frontmatter | Standard skill format |
 | **Google ADK** | MD only | `AGENTS.md`, `SKILL.md` (no frontmatter) |
 | **Hermes Agent** | TXT only | `/llms.txt`, `/llms-full.txt` |
-| **Make-AI-Agents (old)** | MD + JSON | `make_agent.md` + `make_agent.json` ❌ |
-| **Make-AI-Agents (new)** | MD + YAML frontmatter | `make_agent.md` with YAML ✅ |
+| **Make-AI-Agents (old)** | MD + JSON | `make-agent.md` + `make_agent.json` ❌ |
+| **Make-AI-Agents (new)** | MD + YAML frontmatter | `make-agent.md` with YAML ✅ |
 
 **Conclusion**: Zero major platforms use separate JSON files. YAML frontmatter is industry standard.
 
@@ -270,7 +270,7 @@ git push
 
 ---
 
-## Real Example: make_agent.json → make_agent.md
+## Real Example: make_agent.json → make-agent.md
 
 ### Before (Separate Files)
 
@@ -301,11 +301,11 @@ git push
 }
 ```
 
-**make_agent.md** (narrative guide, no frontmatter)
+**make-agent.md** (narrative guide, no frontmatter)
 
 ### After (Consolidated)
 
-**make_agent.md** (with YAML frontmatter):
+**make-agent.md** (with YAML frontmatter):
 ```markdown
 ---
 name: make_agent
@@ -453,7 +453,7 @@ version: "1.0"
 }
 ```
 
-### After (make_agent_qc.md with YAML frontmatter)
+### After (make-agent-qc.md with YAML frontmatter)
 
 ```markdown
 ---

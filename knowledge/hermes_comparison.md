@@ -47,14 +47,14 @@ Skill self-improves on failure → Cycle continues
 **Components**:
 1. **Manual lesson capture** - Human or agent writes to `knowledge/learned/*.md` at session end
 2. **Sprint B post-session review** - Human reviews session, identifies patterns, creates lessons
-3. **Template updates** - Lessons inform updates to `make_agent.md`, `behavioral_discipline.json`, etc.
+3. **Template updates** - Lessons inform updates to `make-agent.md`, `behavioral_discipline.json`, etc.
 4. **Handoff propagation** - Changes cascade to consumer repos via `handoffs/` documents
 5. **make_agent_qc validation** - All generated agents pass 20 QC rules before acceptance
 
 **Flow**:
 ```
 Session completes → Human identifies lessons → Writes lesson.md →
-Reviews AGENTS.md / make_agent.md → Updates if material → Runs make_agent_qc →
+Reviews AGENTS.md / make-agent.md → Updates if material → Runs make_agent_qc →
 Creates handoffs if cascading → Consumer repos apply → Cycle completes
 ```
 
@@ -241,7 +241,7 @@ relevant_lessons = search_learned_lessons("documentation refresh patterns")
 - **What**: Auto-prompt agent at session end to draft lesson
 - **Effort**: 2-3 hours (add hook + prompt template)
 - **Impact**: High (reduces forgetting, improves Sprint B throughput)
-- **Implementation**: Add to `make_agent.md` as optional post-session hook
+- **Implementation**: Add to `make-agent.md` as optional post-session hook
 
 **2. FTS5 Lesson Search Tool**
 - **What**: Index `knowledge/learned/` for full-text search
@@ -273,7 +273,7 @@ relevant_lessons = search_learned_lessons("documentation refresh patterns")
 
 ### Task 1: Post-Session Lesson Nudge (3 hours)
 
-**Deliverable**: Add optional post-session hook to `make_agent.md`
+**Deliverable**: Add optional post-session hook to `make-agent.md`
 
 **Pattern**:
 ```markdown
@@ -348,7 +348,7 @@ results = search_learned_lessons("documentation refresh patterns")
 - Behavioral Discipline: `knowledge/behavioral_discipline.md`
 - Learned Lessons: `knowledge/learned/*.md`
 - Learning Loop: Sprint B (manual post-session review)
-- Quality Control: `make_agent_qc.md` (20 rules, 17 dimensions)
+- Quality Control: `make-agent-qc.md` (20 rules, 17 dimensions)
 
 **Related**:
 - Our `knowledge/learned/` pattern was inspired by Hermes but implemented manually
