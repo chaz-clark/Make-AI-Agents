@@ -37,28 +37,28 @@ Tracked content only (gitignored files like `GEMINI.md`, `gpt.qmd`, and `qc_repo
 ```
 Make-AI-Agents/
 ├── AGENTS.md                       # this file — project context for any agentic dev tool
-├── README.md / README_QC.md / README_Disclosure.md
+├── README.md / README-QC.md / README-Disclosure.md
 ├── make-agent.md / .json                  # agent spec template (the meta-skill)
 ├── make-agent-qc.md / .json               # agent spec QC template (20 rules, 17 dimensions)
 ├── make_AGENTS.md / .json                 # AGENTS.md generation template (sibling)
 ├── make-orchestrator-agent.md / .json     # multi-agent orchestrator template (sibling, 2026-05-13)
 ├── make-agent-knowledge.md / .json        # runtime knowledge file template (sibling, 2026-05-13)
-├── make_gems/                             # Gemini Gem templates and example Gems
-│   ├── make_gem.md / .json
-│   ├── make_gem_qc.md / .json
-│   ├── README_GEM.md
+├── make-gems/                             # Gemini Gem templates and example Gems
+│   ├── make-gem.md / .json
+│   ├── make-gem-qc.md / .json
+│   ├── README-GEM.md
 │   ├── course_info_bot.json               # example Gem (Engineering Statistics course bot)
-│   ├── implement_gem.md / .json           # implementation guide for compiled Gems
-│   └── gem_instructions/                  # compiled .txt outputs (gitignored)
+│   ├── implement-gem.md / .json           # implementation guide for compiled Gems
+│   └── gem-instructions/                  # compiled .txt outputs (gitignored)
 ├── knowledge/                             # source-of-truth + generated knowledge files
 │   ├── behavioral-discipline.md / .json   # 10 principles, 5 interaction patterns (v1.4)
 │   └── learned/                           # session-end lesson distillation (Sprint B Learning loop landing zone)
-├── update_agents/                         # doc refresh + analysis agents + utilities
-│   ├── update_agent.md / .json            # entry-point / orchestration
-│   ├── doc_refresh_agent.md / .json       # spec for the refresh workflow (uses fetch_doc.py)
-│   ├── doc_analysis_agent.md / .json      # spec for the analysis workflow
+├── update-agents/                         # doc refresh + analysis agents + utilities
+│   ├── update-agent.md / .json            # entry-point / orchestration
+│   ├── doc-refresh-agent.md / .json       # spec for the refresh workflow (uses fetch_doc.py)
+│   ├── doc-analysis-agent.md / .json      # spec for the analysis workflow
 │   └── fetch_doc.py                       # raw-HTTP doc fetcher (5 modes, 2026-05-13)
-├── source_docs/                           # 34 cached platform docs (Anthropic / Google ADK / OpenAI / xAI)
+├── source-docs/                           # 34 cached platform docs (Anthropic / Google ADK / OpenAI / xAI)
 │   └── dropbox/                           # staging folder for manual fetches (gitignored)
 ├── handoffs/                              # cross-repo handoff documents + parkinglot.md (gitignored)
 └── temp/                                  # clone+gitignored: andrej-karpathy-skills (reference; refresh via `cd temp && git pull`; migrated from subtree 2026-05-13)
@@ -74,7 +74,7 @@ The four no-override principles — **P-001 Read Before Claiming, P-003 Stop on 
 1. This file — project context (you're here)
 2. `knowledge/behavioral-discipline.md` — the discipline that governs every change
 3. `make-agent.md` — the meta-skill template (read for understanding, not for memorization)
-4. An existing artifact in `update_agents/` for an example of a fully-formed agent spec
+4. An existing artifact in `update-agents/` for an example of a fully-formed agent spec
 
 **Project-specific rules** (carried from the previous CLAUDE.md):
 
@@ -82,7 +82,7 @@ The four no-override principles — **P-001 Read Before Claiming, P-003 Stop on 
 - **No root-level `requirements.txt`** — each agent carries its own dependencies when moved.
 - **No packaging or CI/CD config** — this is a drafting space, not a pipeline.
 - **When an agent is complete, it moves to its own repo.** The folder here can stay as a reference or be deleted.
-- **Gems compile** to a `.txt` file in `make_gems/gem_instructions/` and a `.json` alongside `make_gem.md`.
+- **Gems compile** to a `.txt` file in `make-gems/gem-instructions/` and a `.json` alongside `make-gem.md`.
 - **Templates use markdown + YAML frontmatter** — `make_*.md` files contain YAML frontmatter for metadata (following Anthropic Agent Skills pattern). Separate `.json` files were deprecated 2026-07-07 after audit showed 3/5 were 8 weeks stale and zero tooling referenced them. Exception: `knowledge/behavioral-discipline.md/.json` remain paired (the JSON holds structured QC rules referenced by ID from other QC agents).
 - **Updates to `make-agent.md` cascade** — every agent spec generated from it after the change should be regenerated or audited against the new template via `make_agent_qc`.
 - **Make-AI-Agents is the leverage point; consumer repos are the field for Genchi Genbutsu (P-001).** This repo holds the meta-skills (`make_agent`, `make_orchestrator_agent`, `make_agent_knowledge`, etc.) and the discipline. Consumer repos (canvas-toolbox, AgentJ, course repos) USE the skills to generate real artifacts. When an agent in this repo is invoked to "test the skill on" a consumer repo, the goal is **skill improvement here**, NOT to finish the consumer repo's work. Capture what surfaces, fix the skill, commit the skill fix here, hand the field state back to the consumer repo's own agents/maintainers to commit there. Don't cross the boundary: this repo's commits update meta-skills; consumer-repo commits update generated artifacts.
@@ -127,7 +127,9 @@ Future invocations of agents in this repo read `knowledge/learned/` alongside th
 
 ## Active Context
 
-_Last updated: 2026-06-18_
+_Last updated: 2026-07-08_
+
+**Kebab-case migration completed** (2026-07-08): All markdown files and folders migrated from snake_case to kebab-case naming (e.g., `make_agent.md` → `make-agent.md`, `update_agents/` → `update-agents/`). Backward-compatible symlinks preserved for 6-12 month grace period. All cross-references updated. Migration execution plan: `KEBAB_CASE_MIGRATION.md`.
 
 **Recent shipped (2026-05-28 → 2026-06-17):**
 
