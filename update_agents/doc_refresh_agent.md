@@ -37,8 +37,8 @@ validation:
   test_cases_count: 4
 cross_references:
   knowledge_files:
-    - path: knowledge/source_docs_index.json
-      purpose: Lookup table of 34 cached platform docs
+    - path: knowledge/source_docs_index.md
+      purpose: Lookup table of 34 cached platform docs (YAML frontmatter)
 metadata:
   companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
   template_version: "1.0"

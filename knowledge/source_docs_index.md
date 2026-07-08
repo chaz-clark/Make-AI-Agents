@@ -8,8 +8,8 @@ generated_by: make_agent_knowledge v1.0 (dogfood pass 2026-05-13)
 runtime_strategy: read_at_runtime
 runtime_strategy_rationale: 34 rows × ~5 fields each exceeds the 8000-token embed threshold. Consumers retrieve at runtime via platform file primitives.
 consumed_by:
-  - update_agents/doc_analysis_agent.json
-  - update_agents/merge_agent.json
+  - update_agents/doc_analysis_agent.md
+  - update_agents/merge_agent.md
 companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
 
 facts:
@@ -254,7 +254,7 @@ facts:
 provenance:
   sources:
     - source_docs/_refresh_log.json (sources keys + fetch_status + size context for all 34 cached docs)
-    - update_agents/doc_refresh_agent.json → primary_data.sources[] (platform, label, source_url, section_focus)
+    - update_agents/doc_refresh_agent.md frontmatter → primary_data.sources[] (platform, label, source_url, section_focus)
   last_reviewed: 2026-05-13
 
 metadata:
@@ -272,7 +272,7 @@ metadata:
 
 > Reference. Lookup table of the 34 cached platform documentation files in `source_docs/` — keyed by short_name, with platform, topic keywords, and source URL.
 
-**Scope**: Catalogs every doc currently cached in `source_docs/*.md` so consumers (`doc_analysis_agent`, `merge_agent`, future agents) can resolve a short_name to its platform / topic / URL without grepping the cache or re-reading `_refresh_log.json` and `doc_refresh_agent.json` together. Bounds OUT: live-doc fetching (that's `doc_refresh_agent`), proposal generation (that's `doc_analysis_agent`), and any per-doc body content (the cached `.md` files themselves remain the body authority).
+**Scope**: Catalogs every doc currently cached in `source_docs/*.md` so consumers (`doc_analysis_agent`, `merge_agent`, future agents) can resolve a short_name to its platform / topic / URL without grepping the cache or re-reading `_refresh_log.json` and `doc_refresh_agent.md` frontmatter together. Bounds OUT: live-doc fetching (that's `doc_refresh_agent`), proposal generation (that's `doc_analysis_agent`), and any per-doc body content (the cached `.md` files themselves remain the body authority).
 
 **Provenance**: See YAML frontmatter → `provenance` block.
 
@@ -288,7 +288,7 @@ _Last updated: 2026-05-13_
 
 - The doc body itself — read the cached `.md` directly when content is needed.
 - Per-doc freshness — that lives in `source_docs/_refresh_log.json` (the canonical refresh log; this index is intentionally derivative and may lag).
-- Fetch configuration (URLs to try, suspect-overwrite threshold, retry logic) — that's `doc_refresh_agent.json → fetch_config`.
+- Fetch configuration (URLs to try, suspect-overwrite threshold, retry logic) — that's `doc_refresh_agent.md` frontmatter.
 
 ## Related Knowledge
 

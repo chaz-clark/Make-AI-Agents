@@ -28,8 +28,8 @@ The documentation update system uses two separate agents plus one utility:
 
 | Component | Files | What it does |
 |-------|-------|-------------|
-| **Doc Refresh Agent** | `doc_refresh_agent.md` / `doc_refresh_agent.json` | Spec for the refresh workflow: staleness check → fetch → validate → write → report. Step 2 (Fetch) uses `fetch_doc.py`. |
-| **Doc Analysis Agent** | `doc_analysis_agent.md` / `doc_analysis_agent.json` | Reads cached docs, diffs against templates, scores candidates, proposes additive improvements |
+| **Doc Refresh Agent** | `doc_refresh_agent.md` | Spec for the refresh workflow: staleness check → fetch → validate → write → report. Step 2 (Fetch) uses `fetch_doc.py`. (YAML frontmatter) |
+| **Doc Analysis Agent** | `doc_analysis_agent.md` | Reads cached docs, diffs against templates, scores candidates, proposes additive improvements (YAML frontmatter) |
 | **fetch_doc.py** | `fetch_doc.py` | Raw-HTTP doc fetcher used by the refresh workflow. 5 modes: default fetch, `--list-links` (discover child URLs), `--batch`, `--from-html` (convert browser-saved HTML for JS-rendered sites), `--check` (drift detection). Added 2026-05-13; validated as drop-in replacement for the prior WebFetch+manual-save flow. |
 
 ---

@@ -26,17 +26,17 @@ io_contract:
 topology:
   specialists:
     - name: doc_refresh_agent
-      spec_path: update_agents/doc_refresh_agent.json
+      spec_path: update_agents/doc_refresh_agent.md
       purpose: Detect stale sources, fetch URLs, write to source_docs/ or dropbox/
       input_contract: {task: string}
       expected_output: Refresh summary with refreshed/dropbox-staged/failed short_names
     - name: merge_agent
-      spec_path: update_agents/merge_agent.json
+      spec_path: update_agents/merge_agent.md
       purpose: Promote ONE staged file from dropbox/ with front-matter preservation
       input_contract: {task: string}
       expected_output: A3 change report per merge, suspect-overwrite halts surfaced explicitly
     - name: doc_analysis_agent
-      spec_path: update_agents/doc_analysis_agent.json
+      spec_path: update_agents/doc_analysis_agent.md
       purpose: Diff source_docs/ against templates, emit numbered proposals
       input_contract: {task: string}
       expected_output: Numbered proposal list with citations + run_summary
@@ -53,12 +53,12 @@ implementation:
     tools_count: 3
 cross_references:
   related_agents:
-    - update_agents/doc_refresh_agent.json
-    - update_agents/merge_agent.json
-    - update_agents/doc_analysis_agent.json
+    - update_agents/doc_refresh_agent.md
+    - update_agents/merge_agent.md
+    - update_agents/doc_analysis_agent.md
   knowledge_files:
-    - path: knowledge/source_docs_index.json
-      purpose: Lookup table of 34 cached platform docs
+    - path: knowledge/source_docs_index.md
+      purpose: Lookup table of 34 cached platform docs (YAML frontmatter)
       runtime_strategy: read_at_runtime
 validation:
   success_criteria:

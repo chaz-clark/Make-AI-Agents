@@ -221,7 +221,7 @@ There is no CLI or build step. The repo is a knowledge base + prompt library, no
 
 **Worked example** — running `make_agent_qc` against an existing spec:
 
-> *"Use `make_agent_qc.md` and `make_agent_qc.json` to validate `update_agents/doc_refresh_agent.md` and `update_agents/doc_refresh_agent.json`. Score against all 18 rules and 15 quality dimensions. Report critical issues first."*
+> *"Use `make_agent_qc.md` (with YAML frontmatter) to validate `update_agents/doc_refresh_agent.md` (with YAML frontmatter). Score against all 18 rules and 15 quality dimensions. Report critical issues first."*
 
 The LLM reads the QC meta-skill, reads the target spec, runs the rule set, and returns a structured report. Save the report to `qc_reports/` if you want to keep it.
 
