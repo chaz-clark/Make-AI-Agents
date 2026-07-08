@@ -13,7 +13,6 @@ platforms:
   - xAI
 dependencies:
   - knowledge/behavioral_discipline.md
-  - knowledge/behavioral_discipline.json
 propagates:
   - behavioral_discipline
 see_also:
@@ -33,7 +32,7 @@ metadata:
 2. Parse `<your_agent_name>.json` for structured data, code/config examples, validation, and operations. Do not parse this Markdown.
 3. Keep this file lean. For simple agents, include only Mission, Quickstart, JSON vs MD guidance, Key Principles, **Behavioral Discipline**, How to Use, Pitfalls, Examples, Validation, and Resources.
 4. For added complexity, only append the optional sections marked below.
-5. **Behavioral Discipline is required in every new agent spec.** Consult `knowledge/behavioral_discipline.md` (narrative) and `knowledge/behavioral_discipline.json` (structured rules) when generating any new agent. The skill MUST look up `agent_type_applicability` for the new agent's type and embed the appropriate principles using `compact_boilerplate`. See "## Behavioral Discipline (core)" below for the integration flow.
+5. **Behavioral Discipline is required in every new agent spec.** Consult `knowledge/behavioral_discipline.md` (narrative + structured rules in YAML frontmatter) when generating any new agent. The skill MUST look up `agent_type_applicability` from the frontmatter for the new agent's type and embed the appropriate principles. See "## Behavioral Discipline (core)" below for the integration flow.
 
 ---
 

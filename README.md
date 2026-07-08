@@ -205,8 +205,7 @@ Make-AI-Agents/
 │   ├── make_gem.md / .json
 │   └── make_gem_qc.md / .json
 ├── knowledge/                         # source-of-truth + generated knowledge files
-│   ├── behavioral_discipline.md       # Toyota Way + Karpathy framework — narrative
-│   ├── behavioral_discipline.json     # same — structured rules for skill consumption
+│   ├── behavioral_discipline.md       # Toyota Way + Karpathy framework (YAML frontmatter + narrative)
 │   └── source_docs_index.{md,json}    # reference-shape catalog of the 35 cached platform docs
 ├── update_agents/                     # doc refresh + analysis agents + fetch utility
 │   ├── update_agent.md / .json
