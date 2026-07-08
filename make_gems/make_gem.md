@@ -5,7 +5,7 @@
 1. Read this guide to understand the Gem's mission, persona, and core pillars.
 2. Use `<your_gem_name>.json` to define the specific instructions for Persona, Task, Context, and Format.
 3. **Important**: This spec only defines the *System Instructions* text. File uploads (Knowledge) must be handled separately in the Gem interface.
-4. **Behavioral Discipline applies in a Gem-tailored form.** Consult `../knowledge/behavioral_discipline.md` and `../knowledge/behavioral_discipline.json`. Gems can't take actions, so only the response-shaping principles apply: P-001 (Read Before Claiming), P-003 (Stop on Defect — refuse outside knowledge), P-007 (Pull, Don't Push), P-008 (Mistake-Proof Outputs), P-009 (partial — surface knowledge gaps), P-010 (Respect User's Intent). See `## Behavioral Discipline for Gems (core)` below for how to embed in the 4 Pillars.
+4. **Behavioral Discipline applies in a Gem-tailored form.** Consult `../knowledge/behavioral-discipline.md` and `../knowledge/behavioral_discipline.json`. Gems can't take actions, so only the response-shaping principles apply: P-001 (Read Before Claiming), P-003 (Stop on Defect — refuse outside knowledge), P-007 (Pull, Don't Push), P-008 (Mistake-Proof Outputs), P-009 (partial — surface knowledge gaps), P-010 (Respect User's Intent). See `## Behavioral Discipline for Gems (core)` below for how to embed in the 4 Pillars.
 
 ---
 
@@ -56,7 +56,7 @@ Defines the conversational workflow and visual style.
 
 ## Behavioral Discipline for Gems (core)
 
-Every Gem built from this template inherits a tailored subset of the behavioral discipline defined in `../knowledge/behavioral_discipline.md` and `../knowledge/behavioral_discipline.json`. Gems can't take actions — they respond from knowledge — so the action-oriented principles (P-002 Plan, P-004 Root Cause, P-005 Small Steps, P-006 A3) don't apply. Six principles do:
+Every Gem built from this template inherits a tailored subset of the behavioral discipline defined in `../knowledge/behavioral-discipline.md` and `../knowledge/behavioral_discipline.json`. Gems can't take actions — they respond from knowledge — so the action-oriented principles (P-002 Plan, P-004 Root Cause, P-005 Small Steps, P-006 A3) don't apply. Six principles do:
 
 | Principle | What it means for a Gem | Where to embed in the 4 Pillars |
 |---|---|---|
@@ -71,9 +71,9 @@ The four no-override principles from the discipline are P-001, P-003, P-007, P-0
 
 **Compact boilerplate for embedding in the Persona/Context pillars** (paste as a paragraph in the Context section):
 
-> "I operate under a knowledge discipline: I read the uploaded materials before claiming anything (P-001); I stop and say so when the answer isn't in those materials (P-003); I answer only what was asked (P-007); I keep the same response shape across questions (P-008); I name knowledge gaps when I see them (P-009); I never substitute a different question for the one you asked (P-010). Full source: knowledge/behavioral_discipline.md."
+> "I operate under a knowledge discipline: I read the uploaded materials before claiming anything (P-001); I stop and say so when the answer isn't in those materials (P-003); I answer only what was asked (P-007); I keep the same response shape across questions (P-008); I name knowledge gaps when I see them (P-009); I never substitute a different question for the one you asked (P-010). Full source: knowledge/behavioral-discipline.md."
 
-For the canonical principle definitions, override rules, and reasoning, see `../knowledge/behavioral_discipline.md`. The discipline file is the source of truth — this section pointers to it, doesn't duplicate.
+For the canonical principle definitions, override rules, and reasoning, see `../knowledge/behavioral-discipline.md`. The discipline file is the source of truth — this section pointers to it, doesn't duplicate.
 
 ---
 

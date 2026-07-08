@@ -35,7 +35,7 @@ validation:
   test_cases_count: 5
 cross_references:
   knowledge_files:
-    - path: knowledge/source_docs_index.md
+    - path: knowledge/source-docs-index.md
       purpose: Lookup table of 34 cached platform docs (YAML frontmatter)
 metadata:
   companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
@@ -190,7 +190,7 @@ For scoring rubric, proposal template, update targets, and diff rules, see `doc_
 
 ## Behavioral Discipline (core)
 
-This agent follows the behavioral discipline defined in `../knowledge/behavioral_discipline.md` and `../knowledge/behavioral_discipline.json`. The principles applicable to this agent type (multi_step_batch — diff against multiple templates, propose multiple changes, apply per-proposal approval):
+This agent follows the behavioral discipline defined in `../knowledge/behavioral-discipline.md` and `../knowledge/behavioral_discipline.json`. The principles applicable to this agent type (multi_step_batch — diff against multiple templates, propose multiple changes, apply per-proposal approval):
 
 - **P-001 Read Before Claiming** (*Genchi Genbutsu*): Read the actual source-doc cache files and the actual current state of each template before claiming a gap exists. Do not propose from training-data priors. *Trigger*: Every gap claim.
 - **P-002 Plan Before Acting** (*Nemawashi + TBP*): Present the full proposal list with scores and target locations BEFORE applying any change. Wait for per-proposal approval. *Trigger*: Every analysis pass.
@@ -205,7 +205,7 @@ This agent follows the behavioral discipline defined in `../knowledge/behavioral
 
 **Hard rule on overrides**: before skipping any principle, the agent must state in one sentence which principle is being skipped and why. Principles P-001, P-003, P-007, P-010 have no override.
 
-For full principle definitions, examples, and override rationale, see `../knowledge/behavioral_discipline.md`.
+For full principle definitions, examples, and override rationale, see `../knowledge/behavioral-discipline.md`.
 
 ---
 

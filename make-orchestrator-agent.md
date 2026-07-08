@@ -13,7 +13,7 @@ platforms:
   - OpenAI
 dependencies:
   - make-agent.md
-  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral-discipline.md
   - knowledge/behavioral_discipline.json
 propagates:
   - behavioral_discipline
@@ -36,7 +36,7 @@ metadata:
 1. Read this for mission, principles, quickstart, and pitfalls.
 2. Parse `make_orchestrator_agent.json` for structured data, templates, validation rules, and the orchestrator JSON skeleton.
 3. This skill **sits alongside `make_agent`**. Use `make_agent` to generate each specialist first; use this skill to generate the orchestrator that delegates to them.
-4. **Behavioral Discipline is required in every generated orchestrator spec.** Consult `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json` and follow the integration flow in [make-agent.md](make-agent.md) → "## Behavioral Discipline (core)". The orchestrator picks its own `interaction_pattern` via the standard decision flow; specialists carry their own.
+4. **Behavioral Discipline is required in every generated orchestrator spec.** Consult `knowledge/behavioral-discipline.md` and `knowledge/behavioral_discipline.json` and follow the integration flow in [make-agent.md](make-agent.md) → "## Behavioral Discipline (core)". The orchestrator picks its own `interaction_pattern` via the standard decision flow; specialists carry their own.
 
 ---
 
@@ -535,7 +535,7 @@ Standard BD-QC-001 through BD-QC-007 and the rest of `make_agent_qc` apply uncha
 - `make_orchestrator_agent.json`: Templates, schemas, validation rules
 - `make-agent.md` / `make_agent.json`: Sibling skill for specialist generation
 - `make-agent-qc.md` / `make_agent_qc.json`: QC pipeline; ORCH-QC family lives here
-- `knowledge/behavioral_discipline.md` / `.json`: Discipline source of truth
+- `knowledge/behavioral-discipline.md` / `.json`: Discipline source of truth
 
 ### Related Concepts
 - **Anthropic Agent SDK subagents**: `agents={"name": AgentDefinition(...)}` with `parent_tool_use_id` — see `source_docs/anthropic_subagents.md`

@@ -1,6 +1,6 @@
 ---
 name: make_agent_qc
-description: Quality-control checks for Make-AI-Agents agent specs. Delegates to BD-QC rules in behavioral_discipline.md frontmatter.
+description: Quality-control checks for Make-AI-Agents agent specs. Delegates to BD-QC rules in behavioral-discipline.md frontmatter.
 version: "1.5"
 last_updated: 2026-04-10
 author: chaz-clark
@@ -15,7 +15,7 @@ dependencies:
   - re (stdlib)
   - pathlib (stdlib)
   - make-agent.md (reference template)
-  - knowledge/behavioral_discipline.md (BD-QC rules in YAML frontmatter)
+  - knowledge/behavioral-discipline.md (BD-QC rules in YAML frontmatter)
   - make_orchestrator_agent.json (ORCH-QC rules)
   - make_agent_knowledge.json (KNW-QC rules)
 when_to_use:
@@ -163,7 +163,7 @@ For detailed validation rules and scoring criteria, see `make_agent_qc.json`.
 
 **Why**: A skill generating a new agent can paste a placeholder discipline section and call it done. Without enforcement, the discipline becomes aspirational decoration rather than runtime behavior. The four no-override principles (P-001 Read Before Claiming, P-003 Stop on Defect, P-007 Pull Don't Push, P-010 Respect Intent) are the load-bearing core — if any are missing, the agent has lost the trust-producing foundation.
 
-**How**: Rule 17 (Behavioral Discipline Compliance) delegates to BD-QC-001 through BD-QC-006 in `knowledge/behavioral_discipline.md` YAML frontmatter → `qc_checks`. Rule 18 covers non-interactive mode (BD-QC-007: alert_channel required). The canonical rules live in the discipline frontmatter; the QC engine reads them by ID rather than duplicating them. When the discipline file is updated, every QC run picks up the new rules automatically — no QC sync required.
+**How**: Rule 17 (Behavioral Discipline Compliance) delegates to BD-QC-001 through BD-QC-006 in `knowledge/behavioral-discipline.md` YAML frontmatter → `qc_checks`. Rule 18 covers non-interactive mode (BD-QC-007: alert_channel required). The canonical rules live in the discipline frontmatter; the QC engine reads them by ID rather than duplicating them. When the discipline file is updated, every QC run picks up the new rules automatically — no QC sync required.
 
 **Critical failure modes**:
 - **BD-QC-006** — any of P-001, P-003, P-007, P-010 missing from `applicable_principles`. Fails the agent regardless of other scores.
@@ -521,7 +521,7 @@ The validation section includes:
 12. **Graceful Degradation Coverage**: Agents with optional tools document fallback behavior in error_handling.fallbacks and system prompt
 13. **Autonomy Guidance**: Workflow agents (those with multi-step loops or API writes) document propose-vs-execute behavior in system prompt or constraints
 14. **I/O Contract Consistency**: Declared input type (string/file/folder) matches the system-prompt boilerplate; folder mode declares a file_filter; no hardcoded paths in the spec
-15. **Behavioral Discipline Integration**: Agent embeds the discipline correctly per BD-QC-001 through BD-QC-007 in `knowledge/behavioral_discipline.md` frontmatter. Critical: P-001/P-003/P-007/P-010 always present; non-interactive agents declare an alert_channel.
+15. **Behavioral Discipline Integration**: Agent embeds the discipline correctly per BD-QC-001 through BD-QC-007 in `knowledge/behavioral-discipline.md` frontmatter. Critical: P-001/P-003/P-007/P-010 always present; non-interactive agents declare an alert_channel.
 16. **Orchestrator Topology Compliance** (conditional): For `agent_type.type: 'multi_agent'`, all topology rules pass per ORCH-QC-001 through ORCH-QC-005 in `make_orchestrator_agent.json`. Critical: specialist spec_paths resolve; ≥ 2 specialists; delegate_to_* tools match roster; termination criteria present; no specialist tools leaked.
 17. **Knowledge File Reference Compliance** (conditional): For agents with non-empty `cross_references.knowledge_files[]`, all references resolve and the referenced knowledge files pass KNW-QC-001 through KNW-QC-006 in `make_agent_knowledge.json`.
 

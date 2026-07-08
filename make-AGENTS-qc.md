@@ -67,7 +67,7 @@ A fast-path validation flow:
 
 2. **[Parse rules]**: Load structured rules from `make_AGENTS_qc.json` — the 11 rules, their weights, and severity levels.
 
-3. **[Read sources]**: Read the AGENTS.md fully. If repo root is provided, read the discipline source at `knowledge/behavioral_discipline.md/.json` (or equivalent) and run `git ls-files` for the structure check.
+3. **[Read sources]**: Read the AGENTS.md fully. If repo root is provided, read the discipline source at `knowledge/behavioral-discipline.md/.json` (or equivalent) and run `git ls-files` for the structure check.
 
 4. **[Validate]**: Run all applicable rules. Each rule produces pass/fail + a severity-tagged finding if failed.
 
@@ -116,7 +116,7 @@ For detailed rules and scoring, see `make_AGENTS_qc.json`.
 **How**: When a repo path is provided, run `git ls-files`, `git log --oneline -1`, and `gh issue list --state open` (if applicable). Compare claims in AGENTS.md to actual output. Flag mismatches.
 
 ### 3. Pointer, Not Duplicate
-**Description**: AGENTS.md should *point to* the behavioral discipline (`knowledge/behavioral_discipline.md`), not paraphrase or duplicate it.
+**Description**: AGENTS.md should *point to* the behavioral discipline (`knowledge/behavioral-discipline.md`), not paraphrase or duplicate it.
 
 **Why**: Duplication rots. When the discipline updates, every paraphrase becomes stale. A pointer stays current automatically.
 
@@ -140,7 +140,7 @@ For detailed rules and scoring, see `make_AGENTS_qc.json`.
 
 ## Behavioral Discipline (core)
 
-This QC skill operates under the discipline defined in `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json`. The applicable interaction pattern for this skill is `read_only`:
+This QC skill operates under the discipline defined in `knowledge/behavioral-discipline.md` and `knowledge/behavioral_discipline.json`. The applicable interaction pattern for this skill is `read_only`:
 
 - **P-001 Read Before Claiming**: read the actual AGENTS.md and the actual repo state. Don't infer either from training priors.
 - **P-003 Stop on Defect**: if a critical rule fails (Rules 1, 2, or 6), surface the failure prominently and recommend fixing before considering other rules.
@@ -160,7 +160,7 @@ P-002, P-004, P-005, P-006 are skipped per `read_only.skip_unless_applicable` �
 - Repo root accessible (optional but recommended for Genchi Genbutsu rules)
 - `make_AGENTS_qc.json` readable (for rules and scoring)
 - `make_AGENTS.md` readable (for the contract definitions in Required/Optional Sections)
-- `knowledge/behavioral_discipline.md/.json` readable (for the discipline reference)
+- `knowledge/behavioral-discipline.md/.json` readable (for the discipline reference)
 
 ### Basic Usage
 
@@ -353,7 +353,7 @@ For canonical scoring weights and rule-to-dimension mapping, see `make_AGENTS_qc
 ### Skill Files
 - **`make_AGENTS_qc.json`**: Rules, scoring weights, test cases, output format
 - **`make_AGENTS.md` / `.json`**: The contract this QC validates against
-- **`knowledge/behavioral_discipline.md` / `.json`**: The discipline this skill itself operates under (and that AGENTS.md files reference)
+- **`knowledge/behavioral-discipline.md` / `.json`**: The discipline this skill itself operates under (and that AGENTS.md files reference)
 
 ### Related Skills
 - `make_AGENTS` — generates AGENTS.md (this QC validates its output)
@@ -379,4 +379,4 @@ For canonical scoring weights and rule-to-dimension mapping, see `make_AGENTS_qc
 | **Complexity** | simple-to-standard |
 | **Key Files** | `make_AGENTS_qc.json`, `make-AGENTS-qc.md` |
 | **Common Pitfall** | Running without repo access — skips highest-value drift detection |
-| **Dependencies** | knowledge/behavioral_discipline.md/.json, make_AGENTS.md |
+| **Dependencies** | knowledge/behavioral-discipline.md/.json, make_AGENTS.md |

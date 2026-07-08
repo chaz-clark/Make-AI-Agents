@@ -45,11 +45,11 @@ Per ecosystem-specific naming conventions:
 
 | Current | Target |
 |---------|--------|
-| `knowledge/behavioral_discipline.md` | `knowledge/behavioral-discipline.md` |
-| `knowledge/hermes_comparison.md` | `knowledge/hermes-comparison.md` |
-| `knowledge/json_to_yaml_migration.md` | `knowledge/json-to-yaml-migration.md` |
-| `knowledge/mcp_integration_patterns.md` | `knowledge/mcp-integration-patterns.md` |
-| `knowledge/source_docs_index.md` | `knowledge/source-docs-index.md` |
+| `knowledge/behavioral-discipline.md` | `knowledge/behavioral-discipline.md` |
+| `knowledge/hermes-comparison.md` | `knowledge/hermes-comparison.md` |
+| `knowledge/json-to-yaml-migration.md` | `knowledge/json-to-yaml-migration.md` |
+| `knowledge/mcp-integration-patterns.md` | `knowledge/mcp-integration-patterns.md` |
+| `knowledge/source-docs-index.md` | `knowledge/source-docs-index.md` |
 | `knowledge/learned/5tier_fetch_automation.md` | `knowledge/learned/5tier-fetch-automation.md` |
 | `knowledge/learned/github_api_faster_than_http.md` | `knowledge/learned/github-api-faster-than-http.md` |
 | `knowledge/learned/playwright_react_spa_pattern.md` | `knowledge/learned/playwright-react-spa-pattern.md` |
@@ -246,20 +246,20 @@ git push
 ```bash
 cd knowledge
 
-git mv behavioral_discipline.md behavioral-discipline.md
-ln -s behavioral-discipline.md behavioral_discipline.md
+git mv behavioral-discipline.md behavioral-discipline.md
+ln -s behavioral-discipline.md behavioral-discipline.md
 
-git mv hermes_comparison.md hermes-comparison.md
-ln -s hermes-comparison.md hermes_comparison.md
+git mv hermes-comparison.md hermes-comparison.md
+ln -s hermes-comparison.md hermes-comparison.md
 
-git mv json_to_yaml_migration.md json-to-yaml-migration.md
-ln -s json-to-yaml-migration.md json_to_yaml_migration.md
+git mv json-to-yaml-migration.md json-to-yaml-migration.md
+ln -s json-to-yaml-migration.md json-to-yaml-migration.md
 
-git mv mcp_integration_patterns.md mcp-integration-patterns.md
-ln -s mcp-integration-patterns.md mcp_integration_patterns.md
+git mv mcp-integration-patterns.md mcp-integration-patterns.md
+ln -s mcp-integration-patterns.md mcp-integration-patterns.md
 
-git mv source_docs_index.md source-docs-index.md
-ln -s source-docs-index.md source_docs_index.md
+git mv source-docs-index.md source-docs-index.md
+ln -s source-docs-index.md source-docs-index.md
 
 cd learned
 git mv 5tier_fetch_automation.md 5tier-fetch-automation.md
@@ -683,7 +683,7 @@ Old paths still work via symlinks (grace period: 6-12 months).
 New canonical paths use hyphens:
 - make-agent.md → make-agent.md
 - update_agents/ → update-agents/
-- behavioral_discipline.md → behavioral-discipline.md
+- behavioral-discipline.md → behavioral-discipline.md
 
 Update your references when convenient. Symlinks will be removed after [date].
 ```

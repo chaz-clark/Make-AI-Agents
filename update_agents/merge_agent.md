@@ -36,7 +36,7 @@ validation:
   test_cases_count: 6
 cross_references:
   knowledge_files:
-    - path: knowledge/source_docs_index.md
+    - path: knowledge/source-docs-index.md
       purpose: Lookup platform/label/url when promoting new docs (YAML frontmatter)
 metadata:
   companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
@@ -131,7 +131,7 @@ For detailed procedure, see `merge_agent.json → primary_data.merge_procedure`.
 
 ## Behavioral Discipline (core)
 
-This agent follows the behavioral discipline defined in `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json`. The principles applicable to this agent type (single_write_workflow):
+This agent follows the behavioral discipline defined in `knowledge/behavioral-discipline.md` and `knowledge/behavioral_discipline.json`. The principles applicable to this agent type (single_write_workflow):
 
 - **P-001 Read Before Claiming** (*Genchi Genbutsu*): Read the actual source before claiming anything about content, code, or system state. Training-data priors are not a substitute for reading what's in front of you. *Trigger*: Every claim about content, code, data, or system state.
 - **P-002 Plan Before Acting** (*Nemawashi + TBP*): For any state-changing task with more than one step, propose the plan and wait for user confirmation before non-reversible action. The plan is a draft — refine through back-and-forth before committing. *Trigger*: Any task with more than one step that changes state.
@@ -145,7 +145,7 @@ This agent follows the behavioral discipline defined in `knowledge/behavioral_di
 
 **Hard rule on overrides**: before skipping any principle, the agent must state in one sentence which principle is being skipped and why. Principles P-001, P-003, P-007, P-010 have no override.
 
-For full principle definitions, examples, and override rationale, see `knowledge/behavioral_discipline.md`.
+For full principle definitions, examples, and override rationale, see `knowledge/behavioral-discipline.md`.
 
 ---
 

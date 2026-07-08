@@ -12,7 +12,7 @@ knowledge_shapes:
   - procedural
 interaction_pattern: single_write_workflow
 dependencies:
-  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral-discipline.md
   - knowledge/behavioral_discipline.json
 propagates:
   - behavioral_discipline
@@ -30,7 +30,7 @@ metadata:
 1. Read this for mission, principles, the three knowledge shapes, and pitfalls.
 2. Parse `make_agent_knowledge.json` for structured data — required/optional MD sections per shape, JSON skeleton, compact_boilerplate, runtime_strategy rules, validation, and the KNW-QC family.
 3. This skill is an **authoring scaffold only**. It produces empty-but-structured MD+JSON templates for the user to fill. It does NOT ingest source material, fetch documents, or auto-populate content from external systems.
-4. **Behavioral Discipline is required.** Consult `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json`. The make_agent_knowledge skill operates as `interaction_pattern: single_write_workflow` and follows the integration flow defined in [make-agent.md](make-agent.md) → "## Behavioral Discipline (core)" unchanged.
+4. **Behavioral Discipline is required.** Consult `knowledge/behavioral-discipline.md` and `knowledge/behavioral_discipline.json`. The make_agent_knowledge skill operates as `interaction_pattern: single_write_workflow` and follows the integration flow defined in [make-agent.md](make-agent.md) → "## Behavioral Discipline (core)" unchanged.
 
 ---
 
@@ -38,7 +38,7 @@ metadata:
 
 **What it does**: Generates a knowledge file pair (`<name>.md` + `<name>.json`) inside `knowledge/` at the project root. The file pair is a **runtime artifact** that one or more agents reference via their `cross_references.knowledge_files[]` array. Three shapes are supported: **reference** (glossary, API ref, policy table), **identity** (principles, values, working-style charters), and **procedural** (playbooks, scenario scripts).
 
-**Why it exists**: Knowledge that an agent needs at runtime — facts, principles, playbooks — does not belong in the agent spec. Embedding it bloats the system prompt; scattering it across `source_docs/` mixes runtime artifacts with research notes. The existing `knowledge/behavioral_discipline.md/.json` pair is the proven exemplar: a stable, structured, agent-consumable file that lives next to the agents that read it. This skill formalizes that pattern so any agent can have its own `behavioral_discipline`-style knowledge file with the same authoring discipline.
+**Why it exists**: Knowledge that an agent needs at runtime — facts, principles, playbooks — does not belong in the agent spec. Embedding it bloats the system prompt; scattering it across `source_docs/` mixes runtime artifacts with research notes. The existing `knowledge/behavioral-discipline.md/.json` pair is the proven exemplar: a stable, structured, agent-consumable file that lives next to the agents that read it. This skill formalizes that pattern so any agent can have its own `behavioral_discipline`-style knowledge file with the same authoring discipline.
 
 **Who uses it**: Engineers adding domain knowledge, identity charters, or playbooks to an agent or set of agents — typically discovered when a `make_agent` invocation reveals "this agent needs to know X, but X is not in the prompt and not in source_docs."
 
@@ -88,7 +88,7 @@ For detailed structure, see `make_agent_knowledge.json`.
 
 ### 1. Knowledge Files Are Runtime Artifacts, Not Source Docs
 **Description**: `knowledge/*` files are read by the running agent at inference time. `source_docs/*` files are research notes for the human author of a skill or agent. The two do not overlap.
-**Why**: An agent that loads `source_docs/anthropic_files.md` at runtime burns context on platform documentation that the agent does not act on. A skill author who edits `knowledge/behavioral_discipline.md` thinking it is research notes corrupts a live runtime file.
+**Why**: An agent that loads `source_docs/anthropic_files.md` at runtime burns context on platform documentation that the agent does not act on. A skill author who edits `knowledge/behavioral-discipline.md` thinking it is research notes corrupts a live runtime file.
 **How**: If the content will be referenced by a `cross_references.knowledge_files[]` entry in a deployed agent spec, it belongs in `knowledge/`. If it is documentation cached for the human writing the skill, it belongs in `source_docs/`.
 
 ### 2. Pick the Shape Before Filling Content
@@ -186,7 +186,7 @@ Pick the shape before drafting. Each shape has a different required JSON array a
 
 **MD spine**: title, scope, provenance (optional), last_updated, body (one section per principle).
 
-**JSON required**: `principles[]` — array of `{ id, name, compact_statement, trigger, trust_marker, override?{} }` entries. The existing `knowledge/behavioral_discipline.md/.json` is the proven exemplar of this shape — this skill formalizes the pattern it demonstrates.
+**JSON required**: `principles[]` — array of `{ id, name, compact_statement, trigger, trust_marker, override?{} }` entries. The existing `knowledge/behavioral-discipline.md/.json` is the proven exemplar of this shape — this skill formalizes the pattern it demonstrates.
 
 **Example use**: `behavioral_discipline` itself (the universal example), or an agent-specific identity charter like `loan_classifier_principles` if that agent has discipline beyond the universal BD set.
 
@@ -348,7 +348,7 @@ JSON skeleton excerpt:
 
 ### Example 2: Identity Shape — Agent Principles
 
-The proven exemplar is `knowledge/behavioral_discipline.md/.json` — read that file for the pattern this shape formalizes. An agent-specific identity charter follows the same structure with fewer principles (5-7 instead of 10) and tighter scope (one agent or a closely related set instead of all agents).
+The proven exemplar is `knowledge/behavioral-discipline.md/.json` — read that file for the pattern this shape formalizes. An agent-specific identity charter follows the same structure with fewer principles (5-7 instead of 10) and tighter scope (one agent or a closely related set instead of all agents).
 
 JSON skeleton excerpt:
 ```json
@@ -510,7 +510,7 @@ agent.run("Apply those rules to this loan application: [...]")
 ### Skill Files
 - **`make_agent_knowledge.json`**: Required/optional sections per shape, JSON skeleton, runtime_strategy rules, KNW-QC family, validation
 - **`make-agent.md` / `make_agent.json`**: Consumer side — how the generated agent references the knowledge file via `cross_references.knowledge_files[]`
-- **`knowledge/behavioral_discipline.md` / `.json`**: The proven exemplar of the identity shape — this skill formalizes the pattern that file demonstrates
+- **`knowledge/behavioral-discipline.md` / `.json`**: The proven exemplar of the identity shape — this skill formalizes the pattern that file demonstrates
 
 ### Source Docs Referenced
 - `source_docs/anthropic_files.md` — Anthropic Files API (beta) primitives
@@ -530,7 +530,7 @@ agent.run("Apply those rules to this loan application: [...]")
 ### How to Use This Documentation System
 1. Start here (.md) for the conceptual frame and the three shapes
 2. Use `make_agent_knowledge.json` for the per-shape template structure
-3. Reference `knowledge/behavioral_discipline.md` to see the identity shape in production use
+3. Reference `knowledge/behavioral-discipline.md` to see the identity shape in production use
 
 ---
 

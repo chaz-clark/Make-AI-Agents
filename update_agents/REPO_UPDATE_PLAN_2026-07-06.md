@@ -266,7 +266,7 @@
 #### 3.1 Add MCP Integration Patterns Doc
 **Why**: MCP is now cross-platform
 **What**:
-- New doc: `knowledge/mcp_integration_patterns.md`
+- New doc: `knowledge/mcp-integration-patterns.md`
 - How to integrate MCP servers (OpenAI, Google, xAI)
 - Public MCP servers list (e.g., gemini-api-docs-mcp.dev)
 - Custom MCP server patterns
@@ -302,7 +302,7 @@
 - Research deep-dive into Hermes Agent auto-distillation
 - Compare with our `knowledge/learned/` pattern
 - Identify improvements we could adopt
-- Document in `knowledge/hermes_comparison.md`
+- Document in `knowledge/hermes-comparison.md`
 
 **Effort**: 4-6 hours
 **Impact**: Low-Medium (learning/research value)

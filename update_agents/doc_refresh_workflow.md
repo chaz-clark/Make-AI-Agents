@@ -57,7 +57,7 @@ cross_references:
     - update_agents/merge_agent.md
     - update_agents/doc_analysis_agent.md
   knowledge_files:
-    - path: knowledge/source_docs_index.md
+    - path: knowledge/source-docs-index.md
       purpose: Lookup table of 34 cached platform docs (YAML frontmatter)
       runtime_strategy: read_at_runtime
 validation:
@@ -141,7 +141,7 @@ A backstop `max_turns: 30` catches the case where the criteria are never satisfi
 
 ## Behavioral Discipline (core)
 
-This agent follows the behavioral discipline defined in `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json`. The principles applicable to this agent type (multi_step_batch) — the full discipline applies:
+This agent follows the behavioral discipline defined in `knowledge/behavioral-discipline.md` and `knowledge/behavioral_discipline.json`. The principles applicable to this agent type (multi_step_batch) — the full discipline applies:
 
 - **P-001 Read Before Claiming** (*Genchi Genbutsu*): Read the actual source before claiming anything about content, code, or system state. Training-data priors are not a substitute for reading what's in front of you. *Trigger*: Every claim about content, code, data, or system state.
 - **P-002 Plan Before Acting** (*Nemawashi + TBP*): For any state-changing task with more than one step, propose the plan and wait for user confirmation before non-reversible action. The plan is a draft — refine through back-and-forth before committing. *Trigger*: Any task with more than one step that changes state.
@@ -156,7 +156,7 @@ This agent follows the behavioral discipline defined in `knowledge/behavioral_di
 
 **Hard rule on overrides**: before skipping any principle, the agent must state in one sentence which principle is being skipped and why. Principles P-001, P-003, P-007, P-010 have no override.
 
-For full principle definitions, examples, and override rationale, see `knowledge/behavioral_discipline.md`.
+For full principle definitions, examples, and override rationale, see `knowledge/behavioral-discipline.md`.
 
 ---
 
@@ -214,4 +214,4 @@ For full principle definitions, examples, and override rationale, see `knowledge
 | **Termination** | All stale sources refreshed + merged; OR analysis returned a synthesized proposal list; OR user-requested phase completed |
 | **max_turns** | 30 |
 | **Common Pitfall** | Forgetting to pass platform-filter from `doc_refresh_agent` step into `doc_analysis_agent` step (cross-agent state) |
-| **Dependencies** | All 3 specialist spec files exist + knowledge/source_docs_index.md (read-at-runtime, YAML frontmatter) |
+| **Dependencies** | All 3 specialist spec files exist + knowledge/source-docs-index.md (read-at-runtime, YAML frontmatter) |

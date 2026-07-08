@@ -12,7 +12,7 @@ platforms:
   - OpenAI
   - xAI
 dependencies:
-  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral-discipline.md
 propagates:
   - behavioral_discipline
 see_also:
@@ -32,7 +32,7 @@ metadata:
 2. Parse `<your_agent_name>.json` for structured data, code/config examples, validation, and operations. Do not parse this Markdown.
 3. Keep this file lean. For simple agents, include only Mission, Quickstart, JSON vs MD guidance, Key Principles, **Behavioral Discipline**, How to Use, Pitfalls, Examples, Validation, and Resources.
 4. For added complexity, only append the optional sections marked below.
-5. **Behavioral Discipline is required in every new agent spec.** Consult `knowledge/behavioral_discipline.md` (narrative + structured rules in YAML frontmatter) when generating any new agent. The skill MUST look up `agent_type_applicability` from the frontmatter for the new agent's type and embed the appropriate principles. See "## Behavioral Discipline (core)" below for the integration flow.
+5. **Behavioral Discipline is required in every new agent spec.** Consult `knowledge/behavioral-discipline.md` (narrative + structured rules in YAML frontmatter) when generating any new agent. The skill MUST look up `agent_type_applicability` from the frontmatter for the new agent's type and embed the appropriate principles. See "## Behavioral Discipline (core)" below for the integration flow.
 
 ---
 
@@ -713,7 +713,7 @@ For session-stateful agents, also document when the loop repeats vs. when it end
 Every agent built from this template inherits a behavioral discipline that produces predictable, trustworthy behavior for end users. The discipline is the source of trust for non-technical users — it makes the agent visible, predictable, and correctable.
 
 The discipline is defined in:
-- **`knowledge/behavioral_discipline.md`** — narrative source of truth (Toyota Way + Karpathy synthesis, 10 principles with examples, foundation, override rules, non-interactive mode)
+- **`knowledge/behavioral-discipline.md`** — narrative source of truth (Toyota Way + Karpathy synthesis, 10 principles with examples, foundation, override rules, non-interactive mode)
 - **`knowledge/behavioral_discipline.json`** — structured rules (canonical principle metadata, agent_type_applicability lookup, trust markers, override rules, compact_boilerplate templates, QC checks, non_interactive_mode mappings)
 
 This template **does not duplicate the discipline** — it wires it into the agent-generation flow and instructs the make_agent skill how to apply it.
@@ -782,7 +782,7 @@ The skill substitutes `compact_boilerplate.md_section_template` from the knowled
 ```markdown
 ## Behavioral Discipline (core)
 
-This agent follows the behavioral discipline defined in `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json`. The principles applicable to this agent type (read_only):
+This agent follows the behavioral discipline defined in `knowledge/behavioral-discipline.md` and `knowledge/behavioral_discipline.json`. The principles applicable to this agent type (read_only):
 
 - **P-001 Read Before Claiming** (*Genchi Genbutsu*): Read the actual source before claiming anything about content, code, or system state. *Trigger*: Every claim about content, code, data, or system state.
 - **P-003 Stop on Defect** (*Jidoka + Andon*): First failed precondition, malformed input, or unresolved ambiguity → stop and surface. *Trigger*: Any failure or unresolved ambiguity.
@@ -793,7 +793,7 @@ This agent follows the behavioral discipline defined in `knowledge/behavioral_di
 
 **Hard rule on overrides**: before skipping any principle, the agent must state in one sentence which principle is being skipped and why. Principles P-001, P-003, P-007, P-010 have no override.
 
-For full principle definitions, examples, and override rationale, see `knowledge/behavioral_discipline.md`.
+For full principle definitions, examples, and override rationale, see `knowledge/behavioral-discipline.md`.
 ```
 
 The skill takes the `read_only.always_include` array directly from the JSON — no add-back step, no special handling. The four no-override principles (P-001, P-003, P-007, P-010) are present in EVERY interaction pattern's `always_include`; this is the `_no_override_invariant` documented in the JSON. Trust the array; don't add or subtract.
@@ -803,7 +803,7 @@ The skill takes the `read_only.always_include` array directly from the JSON — 
 ```markdown
 ## Behavioral Discipline (core)
 
-This agent follows the behavioral discipline defined in `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json`. The principles applicable to this agent type (single_write_workflow):
+This agent follows the behavioral discipline defined in `knowledge/behavioral-discipline.md` and `knowledge/behavioral_discipline.json`. The principles applicable to this agent type (single_write_workflow):
 
 - **P-001 Read Before Claiming** (*Genchi Genbutsu*): Read the actual source before claiming anything. *Trigger*: Every claim about state.
 - **P-002 Plan Before Acting** (*Nemawashi + TBP*): Propose what will change, wait for confirmation. *Trigger*: Any state-changing action.
@@ -817,7 +817,7 @@ This agent follows the behavioral discipline defined in `knowledge/behavioral_di
 
 **Hard rule on overrides**: before skipping any principle, the agent must state in one sentence which principle is being skipped and why. Principles P-001, P-003, P-007, P-010 have no override.
 
-For full principle definitions, see `knowledge/behavioral_discipline.md`.
+For full principle definitions, see `knowledge/behavioral-discipline.md`.
 ```
 
 P-005 (Small Steps) is the only principle in `skip_unless_applicable` for this pattern — there's only one step, so decomposition doesn't apply.
@@ -888,7 +888,7 @@ When uncertain about applicability, **default to including all 10 principles wit
 | Boilerplate templates for embedding | `knowledge/behavioral_discipline.json` → `compact_boilerplate` |
 | Override rules and no-override list | `knowledge/behavioral_discipline.json` → `override_rules` |
 | Non-interactive mode mappings | `knowledge/behavioral_discipline.json` → `non_interactive_mode` |
-| Narrative explanation of any principle | `knowledge/behavioral_discipline.md` |
+| Narrative explanation of any principle | `knowledge/behavioral-discipline.md` |
 
 ---
 

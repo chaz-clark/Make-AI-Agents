@@ -21,7 +21,7 @@ applicable_principles:
 skipped_principles:
   P-005: "Single-step workflow (one AGENTS.md per invocation), no decomposition needed"
 dependencies:
-  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral-discipline.md
   - handoff/AGENTS_snippet.md
 propagates:
   - behavioral_discipline
@@ -39,7 +39,7 @@ required_sections: 6
 optional_sections: 5
 see_also:
   - make-AGENTS-qc.md
-  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral-discipline.md
   - handoff/CONVENTION.md
 metadata:
   make-ai-agents:
@@ -53,7 +53,7 @@ metadata:
 1. Read this for mission, structure, principles, and what an AGENTS.md must contain.
 2. See **## Contract: Required Sections** and **## Contract: Optional Sections** below for structured section requirements, templates, and validation rules.
 3. Keep generated AGENTS.md files lean. Required sections only by default; add optional sections only when warranted.
-4. **Behavioral Discipline is required.** Consult `knowledge/behavioral_discipline.md` (YAML frontmatter + narrative). The make_AGENTS skill itself operates as `interaction_pattern: single_write_workflow` and embeds discipline language in every AGENTS.md it generates (in the "Working Style" section).
+4. **Behavioral Discipline is required.** Consult `knowledge/behavioral-discipline.md` (YAML frontmatter + narrative). The make_AGENTS skill itself operates as `interaction_pattern: single_write_workflow` and embeds discipline language in every AGENTS.md it generates (in the "Working Style" section).
 
 ---
 
@@ -79,9 +79,9 @@ metadata:
 
 3. **[Generate]**: Write `AGENTS.md` at project root. Include all required core sections; add optional sections only if their criteria apply. Embed the behavioral discipline pointer in the "Working Style" section.
 
-4. **[Package the discipline files alongside]** (REQUIRED — added 2026-05-13): Copy `knowledge/behavioral_discipline.md` and `knowledge/behavioral_discipline.json` from this repo (Make-AI-Agents) into the **target project's** `knowledge/` folder. **Without this step, the pointer in Working Style is a broken reference in any project that doesn't already have a Make-AI-Agents clone.** The discipline must travel WITH the AGENTS.md — co-located files, not a remote pointer. **Detection logic before copying**:
+4. **[Package the discipline files alongside]** (REQUIRED — added 2026-05-13): Copy `knowledge/behavioral-discipline.md` and `knowledge/behavioral_discipline.json` from this repo (Make-AI-Agents) into the **target project's** `knowledge/` folder. **Without this step, the pointer in Working Style is a broken reference in any project that doesn't already have a Make-AI-Agents clone.** The discipline must travel WITH the AGENTS.md — co-located files, not a remote pointer. **Detection logic before copying**:
    - If the target already has `knowledge/behavioral_discipline.{md,json}` at the canonical path — skip the copy. Optionally check the snapshot header / commit-sha and warn if stale.
-   - If the target has the discipline at a cloned-subdirectory path (e.g. `<consumer>/make_ai_agents/knowledge/behavioral_discipline.md` per the clone+gitignore pattern) — update the AGENTS.md Working Style pointer to that path; skip the copy. The clone-and-pull pattern provides freshness; the local copy is redundant. **NOTE — only a full `Make-AI-Agents` clone (or another repo explicitly carrying `knowledge/behavioral_discipline.md` at a known relative path) satisfies condition (b). Single-skill clones like `gh_issues_agent/`, `canvas-toolbox/`, etc. do NOT carry the discipline by default — verify the file actually exists at the cloned-subdirectory path before relying on it. If the only clone present is single-skill and doesn't carry the discipline, fall back to "Otherwise — copy both files" below.**
+   - If the target has the discipline at a cloned-subdirectory path (e.g. `<consumer>/make_ai_agents/knowledge/behavioral-discipline.md` per the clone+gitignore pattern) — update the AGENTS.md Working Style pointer to that path; skip the copy. The clone-and-pull pattern provides freshness; the local copy is redundant. **NOTE — only a full `Make-AI-Agents` clone (or another repo explicitly carrying `knowledge/behavioral-discipline.md` at a known relative path) satisfies condition (b). Single-skill clones like `gh_issues_agent/`, `canvas-toolbox/`, etc. do NOT carry the discipline by default — verify the file actually exists at the cloned-subdirectory path before relying on it. If the only clone present is single-skill and doesn't carry the discipline, fall back to "Otherwise — copy both files" below.**
    - Otherwise — copy both files. Add a 4-field snapshot header to each. **The header form differs by file type** (added 2026-05-13 after the sprint-3 migrations surfaced that HTML comments break strict JSON parsing): for the `.md`, prepend 4 HTML-comment lines: `<!-- SNAPSHOT_FROM: chaz-clark/Make-AI-Agents -->`, `<!-- SNAPSHOT_COMMIT: <sha> -->`, `<!-- SNAPSHOT_DATE: <YYYY-MM-DD> -->`, `<!-- REFRESH: copy the upstream file again to pick up changes -->`. For the `.json`, add 4 underscore-prefixed top-level keys to the existing JSON object: `"_snapshot_from": "chaz-clark/Make-AI-Agents"`, `"_snapshot_commit": "<sha>"`, `"_snapshot_date": "<YYYY-MM-DD>"`, `"_snapshot_refresh": "copy the upstream file again to pick up changes"`. Both forms carry the same information; the JSON form is strict-JSON-valid (no comments needed). Future refreshes detect drift via the `_snapshot_commit` value on the JSON OR the `SNAPSHOT_COMMIT:` line on the MD.
 
 4.5. **[Bake handoff convention recognition + conditionally co-locate `handoff/`]** (REQUIRED — added 2026-05-28, Sprint F):
@@ -102,15 +102,15 @@ metadata:
 
    **(b) Create the directory**: `mkdir -p <target>/knowledge/learned/` and add a `.gitkeep` file so the convention exists in version control even before the agent has written its first lesson.
 
-   **(c) Verified by BD-QC-008** (in `knowledge/behavioral_discipline.md` frontmatter): agent MD has the `## Learning loop` heading; `knowledge/learned/` exists. Without this slot, P-009 stays prose discipline rather than a self-improving artifact — every invocation re-discovers lessons previous sessions already surfaced.
+   **(c) Verified by BD-QC-008** (in `knowledge/behavioral-discipline.md` frontmatter): agent MD has the `## Learning loop` heading; `knowledge/learned/` exists. Without this slot, P-009 stays prose discipline rather than a self-improving artifact — every invocation re-discovers lessons previous sessions already surfaced.
 
 4.7. **[Prepend agentskills.io frontmatter]** (REQUIRED — added 2026-05-28, Sprint A):
 
    Prepend YAML frontmatter to the very top of the generated AGENTS.md following the agentskills.io standard. **Required fields**: `name`, `description`, `version`. **Recommended**: `author`, `license`. **Provenance**: `metadata.make-ai-agents.generated_by: make_AGENTS` and `metadata.make-ai-agents.generated_on: <iso-date>`.
 
-   This is the Make-AI-Agents idiom adoption of the **[agentskills.io open standard](https://agentskills.io)** — the same standard Hermes Agent and OpenClaw consume. Generated AGENTS.md files become **drop-in skills** in any agentskills.io-compliant runtime, layered atop the rich `.json` sidecar where one exists. Verified by **AGENTS-QC-009** (delegates to BD-QC-009 in behavioral_discipline.md frontmatter).
+   This is the Make-AI-Agents idiom adoption of the **[agentskills.io open standard](https://agentskills.io)** — the same standard Hermes Agent and OpenClaw consume. Generated AGENTS.md files become **drop-in skills** in any agentskills.io-compliant runtime, layered atop the rich `.json` sidecar where one exists. Verified by **AGENTS-QC-009** (delegates to BD-QC-009 in behavioral-discipline.md frontmatter).
 
-5. **[Validate]**: Run `make_agent_qc` against the generated AGENTS.md if it makes sense — AGENTS.md is structurally similar to an agent spec but not identical. See `## Validation and Testing (core)` for what applies. AGENTS-QC-006 verifies the discipline files are co-located (or the pointer resolves to a cloned-subdirectory path). **On refresh** (existing AGENTS.md as input): AGENTS-QC-007 scans Active Context / Structure / Project-specific rules for stale vendoring-pattern tokens (`git subtree`, `subtree pull/push/add`, `.gitmodules`, `git submodule`) — if any describe the CURRENT posture, propose a rewrite to the canonical clone+gitignore form (see Common Pitfall #1) rather than preserving them under P-007. **AGENTS-QC-008** (added 2026-05-28, Sprint F) verifies the handoff recognition section is structurally complete (heading present, path-pattern table present, all 7 rules present, status enum + direction enum quick-lookups present) AND — conditionally — that if the target repo has a `handoffs/` folder, the `handoff/` clone is co-located and gitignored. **BD-QC-008** (added 2026-05-28, Sprint B, in `knowledge/behavioral_discipline.md` frontmatter) verifies the `## Learning loop` section is present + `knowledge/learned/` directory exists in the target repo. **AGENTS-QC-009** (added 2026-05-28, Sprint A) verifies the agentskills.io frontmatter is present and has required fields; delegates to **BD-QC-009** in the discipline frontmatter.
+5. **[Validate]**: Run `make_agent_qc` against the generated AGENTS.md if it makes sense — AGENTS.md is structurally similar to an agent spec but not identical. See `## Validation and Testing (core)` for what applies. AGENTS-QC-006 verifies the discipline files are co-located (or the pointer resolves to a cloned-subdirectory path). **On refresh** (existing AGENTS.md as input): AGENTS-QC-007 scans Active Context / Structure / Project-specific rules for stale vendoring-pattern tokens (`git subtree`, `subtree pull/push/add`, `.gitmodules`, `git submodule`) — if any describe the CURRENT posture, propose a rewrite to the canonical clone+gitignore form (see Common Pitfall #1) rather than preserving them under P-007. **AGENTS-QC-008** (added 2026-05-28, Sprint F) verifies the handoff recognition section is structurally complete (heading present, path-pattern table present, all 7 rules present, status enum + direction enum quick-lookups present) AND — conditionally — that if the target repo has a `handoffs/` folder, the `handoff/` clone is co-located and gitignored. **BD-QC-008** (added 2026-05-28, Sprint B, in `knowledge/behavioral-discipline.md` frontmatter) verifies the `## Learning loop` section is present + `knowledge/learned/` directory exists in the target repo. **AGENTS-QC-009** (added 2026-05-28, Sprint A) verifies the agentskills.io frontmatter is present and has required fields; delegates to **BD-QC-009** in the discipline frontmatter.
 
 6. **[Output]**: Confirm AGENTS.md location with the user. If migrating from `CLAUDE.md`, propose deletion as a separate step (per P-002 — don't bundle the deletion with the creation).
 
@@ -169,7 +169,7 @@ This skill is itself an agent. The Recommended Principles for LLM Agents from `m
 
 ## Behavioral Discipline (core)
 
-This skill operates as `interaction_pattern: single_write_workflow` and inherits the discipline from `knowledge/behavioral_discipline.md` (YAML frontmatter + narrative). Applicable principles: P-001, P-002, P-003, P-004, P-006, P-007, P-008, P-009, P-010 (skip P-005 — single step, no decomposition needed).
+This skill operates as `interaction_pattern: single_write_workflow` and inherits the discipline from `knowledge/behavioral-discipline.md` (YAML frontmatter + narrative). Applicable principles: P-001, P-002, P-003, P-004, P-006, P-007, P-008, P-009, P-010 (skip P-005 — single step, no decomposition needed).
 
 The skill MUST follow the integration flow defined in `make-agent.md` → `## Behavioral Discipline (core)`. The same flow applies recursively to make_AGENTS itself.
 
@@ -182,7 +182,7 @@ Every AGENTS.md this skill generates contains a `## Working Style` section with 
 - **This skill's discipline** — applies to `make_AGENTS` when it generates AGENTS.md files (P-002 plan, P-006 document, P-009 reflect, etc.)
 - **Generated AGENTS.md discipline pointer** — applies to the LLM working in any project that has an AGENTS.md generated by this skill
 
-Both layers reference the same `knowledge/behavioral_discipline.md` source of truth.
+Both layers reference the same `knowledge/behavioral-discipline.md` source of truth.
 
 ---
 
@@ -196,7 +196,7 @@ The contract for every AGENTS.md this skill generates.
 2. **`## Project Purpose`** — what this repo IS and is NOT, ~3-5 bullets each. Includes the audience (who uses this).
 3. **`## Structure`** — annotated folder layout. Reference, not exhaustive.
 4. **`## Working Style`** — behavioral discipline pointer (the `compact_boilerplate.working_style_template` substituted in), project-specific rules, AND the canonical handoff recognition snippet (baked from `handoff/AGENTS_snippet.md`, per Sprint F / AGENTS-QC-008).
-5. **`## Learning loop`** *(added 2026-05-28, Sprint B)* — closed-loop knowledge distillation pattern (P-009 as structural artifact). Baked from `compact_boilerplate.learning_loop_template`. Verified by BD-QC-008 in `knowledge/behavioral_discipline.md` frontmatter. Target repo gets a `knowledge/learned/` directory (gitkept) for the agent to write distilled lessons.
+5. **`## Learning loop`** *(added 2026-05-28, Sprint B)* — closed-loop knowledge distillation pattern (P-009 as structural artifact). Baked from `compact_boilerplate.learning_loop_template`. Verified by BD-QC-008 in `knowledge/behavioral-discipline.md` frontmatter. Target repo gets a `knowledge/learned/` directory (gitkept) for the agent to write distilled lessons.
 6. **`## Active Context`** — current state, in-flight work, recent major changes, open issues. Date-stamped.
 
 ### Optional sections (when criteria apply)
@@ -215,7 +215,7 @@ For each optional section, see explicit inclusion criteria in **## Contract: Opt
 ### Prerequisites
 - Project root directory accessible
 - Existing `CLAUDE.md` readable (if present — used as input for migration)
-- `knowledge/behavioral_discipline.md/.json` readable (for the discipline pointer)
+- `knowledge/behavioral-discipline.md/.json` readable (for the discipline pointer)
 - `handoff/AGENTS_snippet.md` readable (for handoff recognition section)
 
 ### Basic Usage
@@ -231,8 +231,8 @@ The skill responds with a proposed AGENTS.md draft, waits for confirmation per P
 ### 1. Duplicating discipline content INTO the AGENTS.md prose (vs. packaging the discipline FILES alongside)
 
 **Problem**: There are THREE distinct mistakes that look similar:
-- **(a) Inlining the discipline content**: Generated AGENTS.md restates the behavioral discipline in full prose — copies all 10 principles, examples, override rules — into the Working Style section itself. AGENTS.md balloons to 1000+ lines and stays in sync with `knowledge/behavioral_discipline.md` only by manual effort.
-- **(b) Failing to package the files**: Generated AGENTS.md is lean (points at `knowledge/behavioral_discipline.md`) but the target repo doesn't actually have that file. The pointer is broken in every project that wasn't explicitly set up with the discipline.
+- **(a) Inlining the discipline content**: Generated AGENTS.md restates the behavioral discipline in full prose — copies all 10 principles, examples, override rules — into the Working Style section itself. AGENTS.md balloons to 1000+ lines and stays in sync with `knowledge/behavioral-discipline.md` only by manual effort.
+- **(b) Failing to package the files**: Generated AGENTS.md is lean (points at `knowledge/behavioral-discipline.md`) but the target repo doesn't actually have that file. The pointer is broken in every project that wasn't explicitly set up with the discipline.
 - **(c) Preserving stale vendoring-pattern language under minimum-diff**: A refresh of an older AGENTS.md leaves a stale Active Context (or Structure) bullet that describes the Make-AI-Agents reference as a `git subtree` — language from the pre-2026-05-13 era. The actual local posture is `clone+gitignore` per the current rule, but the bullet wasn't rewritten because P-007 (minimum diff) preserved adjacent code. Result: the AGENTS.md reads as endorsing a vendoring pattern the project no longer uses, and a new agent in that repo will follow the stale instruction (e.g. try to `git subtree pull --prefix=...` on a path that's a regular clone, get a confusing error).
 
 All three kill the propagation — (a) by duplication-drift, (b) by broken-reference, (c) by stale-instruction-drift.
@@ -240,8 +240,8 @@ All three kill the propagation — (a) by duplication-drift, (b) by broken-refer
 **Why each happens**: (a) Skill writes "comprehensive" output instead of pointers. (b) Skill writes pointer-only output without ensuring the target file exists. (c) Refresh treats vendoring-pattern language as "adjacent code that was correct for its time" and preserves it verbatim — but the canonical posture changed (subtree → clone+gitignore as of 2026-05-13), so the language IS itself the defect, not adjacent code.
 
 **Solution**:
-- The AGENTS.md prose is a POINTER — Working Style references `knowledge/behavioral_discipline.md` by file path. The Working Style template is a ~3-line summary naming the four no-override principles, not a copy of all 10.
-- The FILES are PACKAGED alongside — per Quickstart step 4, `knowledge/behavioral_discipline.md` is copied from Make-AI-Agents into the target's `knowledge/` folder (with a snapshot header). The pointer in Working Style then resolves to a local file that exists.
+- The AGENTS.md prose is a POINTER — Working Style references `knowledge/behavioral-discipline.md` by file path. The Working Style template is a ~3-line summary naming the four no-override principles, not a copy of all 10.
+- The FILES are PACKAGED alongside — per Quickstart step 4, `knowledge/behavioral-discipline.md` is copied from Make-AI-Agents into the target's `knowledge/` folder (with a snapshot header). The pointer in Working Style then resolves to a local file that exists.
 - **During refresh, SCAN for stale vendoring-pattern language and REWRITE** — explicit narrow exception to P-007. If the existing AGENTS.md mentions `git subtree`, `git subtree pull`, `git subtree push`, `subtree add`, `.gitmodules`, or `git submodule` in the Active Context / Structure / Project-specific rules sections, propose a rewrite to the canonical clone+gitignore form. Canonical Active Context bullet template (substitute the repo name for `make-ai-agents`): `\`make-ai-agents\` is a **local clone, gitignored** at \`make-ai-agents/\` (not a subtree, not a submodule — see \`.gitignore\`). Refresh with \`cd make-ai-agents && git pull\`. Re-clone fresh by removing the folder and running \`git clone https://github.com/chaz-clark/Make-AI-Agents.git make-ai-agents\` from the repo root.` Surface each rewrite in the refresh handoff doc so the maintainer sees the change explicitly.
 - Together: lean AGENTS.md prose + co-located discipline files + current vendoring-pattern language = discipline propagates correctly without duplication-drift, broken-reference, or stale-instruction-drift.
 
@@ -302,7 +302,7 @@ example-repo/
 
 ## Working Style
 
-This project follows the behavioral discipline defined in `knowledge/behavioral_discipline.md` (if present) or the equivalent ruleset in the LLM's loaded skills. In short: read before claiming, plan before acting, stop on defect, document changes structurally, respect user intent.
+This project follows the behavioral discipline defined in `knowledge/behavioral-discipline.md` (if present) or the equivalent ruleset in the LLM's loaded skills. In short: read before claiming, plan before acting, stop on defect, document changes structurally, respect user intent.
 
 Project-specific rules:
 - Use `pytest` for tests
@@ -357,7 +357,7 @@ See `make-AGENTS-qc.md` for comprehensive validation logic. For quick validation
 - **This file (`make_AGENTS.md`)**: Required/optional section lists (see contract sections below), AGENTS.md generation guidance, validation
 - **`make-agent.md`**: Sibling template for generating agent specs (referenced for the integration flow pattern)
 - **`make_gem.md`**: Sibling template for Gemini Gems
-- **`knowledge/behavioral_discipline.md` / `.json`**: Source of truth for the discipline embedded in every generated AGENTS.md
+- **`knowledge/behavioral-discipline.md` / `.json`**: Source of truth for the discipline embedded in every generated AGENTS.md
 
 ### Related Skills
 - `make_agent` — generates agent specs
@@ -368,7 +368,7 @@ See `make-AGENTS-qc.md` for comprehensive validation logic. For quick validation
 1. Start here (.md) for conceptual understanding
 2. Use the contract sections in this file for the template structure
 3. Reference `make-agent.md` for the integration flow pattern (recursive — same flow applies to this skill)
-4. Reference `knowledge/behavioral_discipline.md` for the discipline that gets embedded
+4. Reference `knowledge/behavioral-discipline.md` for the discipline that gets embedded
 
 ---
 
@@ -384,7 +384,7 @@ See `make-AGENTS-qc.md` for comprehensive validation logic. For quick validation
 | **Complexity** | simple-to-standard |
 | **Key Files** | `make_AGENTS.md`, generates `<project>/AGENTS.md` |
 | **Common Pitfall** | Duplicating discipline content instead of pointing to it |
-| **Dependencies** | knowledge/behavioral_discipline.md/.json (for the embed) |
+| **Dependencies** | knowledge/behavioral-discipline.md/.json (for the embed) |
 
 ---
 
@@ -409,7 +409,7 @@ Every generated AGENTS.md must contain these 6 sections in order:
 - **Heading**: `## Working Style`
 - **Content**: Behavioral discipline pointer + project-specific rules + handoff recognition section
 - **MUST include**:
-  - Discipline pointer to `knowledge/behavioral_discipline.md` or equivalent
+  - Discipline pointer to `knowledge/behavioral-discipline.md` or equivalent
   - Handoff recognition section (`## Handoff document recognition`) baked verbatim from `handoff/AGENTS_snippet.md` — heading + path-pattern table + 7 numbered rules + status/direction enum quick-lookups (verified by AGENTS-QC-008)
 
 ### 5. Learning Loop
@@ -472,7 +472,7 @@ These validation checks ensure generated AGENTS.md files meet the contract. Defi
 | Check ID | Name | Rule | Severity |
 |----------|------|------|----------|
 | **AGENTS-QC-001** | All required sections present | Generated AGENTS.md contains all 6 required sections in specified order | critical |
-| **AGENTS-QC-002** | Working Style contains discipline pointer | Working Style section references `knowledge/behavioral_discipline.md` or equivalent | critical |
+| **AGENTS-QC-002** | Working Style contains discipline pointer | Working Style section references `knowledge/behavioral-discipline.md` or equivalent | critical |
 | **AGENTS-QC-003** | Active Context has date stamp | Active Context starts with `_Last updated: YYYY-MM-DD_` | high |
 | **AGENTS-QC-004** | No tool-specific language | No tool-specific instructions (e.g., "When using Claude Code...") | medium |
 | **AGENTS-QC-005** | Optional sections meet criteria | Each present optional section satisfies its `include_when` criterion | medium |

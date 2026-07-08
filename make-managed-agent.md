@@ -14,7 +14,7 @@ platforms:
 execution_model: platform_managed
 dependencies:
   - make-agent.md
-  - knowledge/behavioral_discipline.md
+  - knowledge/behavioral-discipline.md
   - knowledge/behavioral_discipline.json
   - source_docs/anthropic_managed_agents_overview.md
   - source_docs/google_managed_agents.md
@@ -23,7 +23,7 @@ propagates:
   - behavioral_discipline
 see_also:
   - make-agent.md
-  - knowledge/mcp_integration_patterns.md
+  - knowledge/mcp-integration-patterns.md
 metadata:
   make-ai-agents:
     companion_json_not_created: "Uses YAML frontmatter only per 2026-07-07 standard"
@@ -34,7 +34,7 @@ metadata:
 ## Agent Instructions
 1. Read this for mission, platform selection, quickstart, and pitfalls.
 2. Parse `<your_managed_agent_name>.json` for structured data, code/config examples, validation, and operations.
-3. **Behavioral Discipline is required.** Consult `knowledge/behavioral_discipline.md` (narrative) and `knowledge/behavioral_discipline.json` (structured rules) when generating any new agent.
+3. **Behavioral Discipline is required.** Consult `knowledge/behavioral-discipline.md` (narrative) and `knowledge/behavioral_discipline.json` (structured rules) when generating any new agent.
 
 ---
 
@@ -362,7 +362,7 @@ You follow these principles:
 5. Simplicity first. Minimum code. No abstractions for single-use logic.
 ```
 
-See `knowledge/behavioral_discipline.md` for full rationale and agent-type mappings.
+See `knowledge/behavioral-discipline.md` for full rationale and agent-type mappings.
 
 ---
 
@@ -668,7 +668,7 @@ asyncio.run(run_research_task("Compare tokio vs async-std based on prior researc
 - [Sandbox Clients](https://openai.github.io/openai-agents-python/agents/sandbox/clients/)
 
 **Cross-Platform**:
-- `knowledge/behavioral_discipline.md` (narrative principles)
+- `knowledge/behavioral-discipline.md` (narrative principles)
 - `knowledge/behavioral_discipline.json` (structured rules)
 - `make-agent.md` (general agent patterns, execution model decision matrix)
 

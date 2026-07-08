@@ -37,7 +37,7 @@ validation:
   test_cases_count: 4
 cross_references:
   knowledge_files:
-    - path: knowledge/source_docs_index.md
+    - path: knowledge/source-docs-index.md
       purpose: Lookup table of 34 cached platform docs (YAML frontmatter)
 metadata:
   companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
@@ -144,7 +144,7 @@ For source list, staleness threshold, and fetch config, see `doc_refresh_agent.j
 
 ## Behavioral Discipline (core)
 
-This agent follows the behavioral discipline defined in `../knowledge/behavioral_discipline.md` and `../knowledge/behavioral_discipline.json`. The principles applicable to this agent type (multi_step_batch — multi-source fetch with writes to multiple cache files):
+This agent follows the behavioral discipline defined in `../knowledge/behavioral-discipline.md` and `../knowledge/behavioral_discipline.json`. The principles applicable to this agent type (multi_step_batch — multi-source fetch with writes to multiple cache files):
 
 - **P-001 Read Before Claiming** (*Genchi Genbutsu*): Read the existing cache file's metadata header (and content where relevant) before claiming it is stale or missing. *Trigger*: Every staleness/freshness claim.
 - **P-002 Plan Before Acting** (*Nemawashi + TBP*): Surface the list of stale sources and the planned fetch order before fetching. *Trigger*: Every refresh run.
@@ -159,7 +159,7 @@ This agent follows the behavioral discipline defined in `../knowledge/behavioral
 
 **Hard rule on overrides**: before skipping any principle, the agent must state in one sentence which principle is being skipped and why. Principles P-001, P-003, P-007, P-010 have no override.
 
-For full principle definitions, examples, and override rationale, see `../knowledge/behavioral_discipline.md`.
+For full principle definitions, examples, and override rationale, see `../knowledge/behavioral-discipline.md`.
 
 ---
 
