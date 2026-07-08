@@ -1,3 +1,77 @@
+---
+name: doc_refresh_workflow
+version: "1.0"
+last_updated: 2026-05-13
+description: Orchestrator coordinating doc_refresh_agent + merge_agent + doc_analysis_agent for the refresh → promote → analyze cycle over source_docs/.
+generated_by: make_orchestrator_agent v1.0 (dogfood pass 2026-05-13)
+agent_type:
+  type: multi_agent
+  description: Orchestrator that delegates to 3 specialists via delegate_to_<name> tools
+behavioral_discipline:
+  interaction_pattern: multi_step_batch
+  applicable_principles: [P-001, P-002, P-003, P-004, P-005, P-006, P-007, P-008, P-009, P-010]
+  override_decisions: []
+io_contract:
+  inputs:
+    - name: user_request
+      type: string
+      format: Conversational user request - refresh and/or analyze instruction, optionally with platform/short_name filter
+      required: true
+  outputs:
+    - name: synthesized_response
+      type: string
+      format: Free-text synthesis combining refresh summary, merge summary, and proposal list (if analysis phase ran)
+  side_effects: Indirect via specialists - doc_refresh_agent writes source_docs/ + dropbox/, merge_agent promotes files, doc_analysis_agent reads + proposes
+  non_interactive_mode: false
+topology:
+  specialists:
+    - name: doc_refresh_agent
+      spec_path: update_agents/doc_refresh_agent.json
+      purpose: Detect stale sources, fetch URLs, write to source_docs/ or dropbox/
+      input_contract: {task: string}
+      expected_output: Refresh summary with refreshed/dropbox-staged/failed short_names
+    - name: merge_agent
+      spec_path: update_agents/merge_agent.json
+      purpose: Promote ONE staged file from dropbox/ with front-matter preservation
+      input_contract: {task: string}
+      expected_output: A3 change report per merge, suspect-overwrite halts surfaced explicitly
+    - name: doc_analysis_agent
+      spec_path: update_agents/doc_analysis_agent.json
+      purpose: Diff source_docs/ against templates, emit numbered proposals
+      input_contract: {task: string}
+      expected_output: Numbered proposal list with citations + run_summary
+  routing_strategy: llm_routed
+  termination_criteria: All stale sources refreshed AND merged, OR doc_analysis_agent returned proposals, OR user requested only one phase and it completed
+implementation:
+  llm_agent:
+    max_turns: 30
+    parameters:
+      temperature: 0.2
+      max_tokens: 4096
+      disable_parallel_tool_use: true
+      memory: manual_history
+    tools_count: 3
+cross_references:
+  related_agents:
+    - update_agents/doc_refresh_agent.json
+    - update_agents/merge_agent.json
+    - update_agents/doc_analysis_agent.json
+  knowledge_files:
+    - path: knowledge/source_docs_index.json
+      purpose: Lookup table of 34 cached platform docs
+      runtime_strategy: read_at_runtime
+validation:
+  success_criteria:
+    - ORCH-QC-001 through ORCH-QC-005 pass
+    - BD-QC-001 through BD-QC-007 pass (BD-QC-007 N/A - non_interactive_mode is false)
+    - User receives single synthesized response
+  test_cases_count: 4
+metadata:
+  companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
+  specialists_count: 3
+  template_version: "1.0"
+---
+
 # Doc Refresh Workflow
 
 An orchestrator that coordinates `doc_refresh_agent`, `merge_agent`, and `doc_analysis_agent` to keep `source_docs/` fresh and turn that freshness into actionable proposals against the project's templates.

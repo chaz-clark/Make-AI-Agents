@@ -1,8 +1,54 @@
+---
+name: merge_agent
+version: "1.0"
+last_updated: 2026-05-13
+description: Promotes manually-staged docs from source_docs/dropbox/ into canonical cache with front-matter preservation.
+generated_by: make_agent v1.0 (dogfood pass 2026-05-13)
+tier: tier_1_core
+agent_type:
+  type: workflow
+  description: Linear workflow - identify → read → suspect-overwrite check → propose → write → verify → A3 report
+behavioral_discipline:
+  interaction_pattern: single_write_workflow
+  applicable_principles: [P-001, P-002, P-003, P-004, P-006, P-007, P-008, P-009, P-010]
+  override_decisions: []
+io_contract:
+  inputs:
+    - name: dropbox_or_short_name
+      type: string
+      required: true
+  outputs:
+    - merged_target_file (source_docs/<short_name>.md)
+    - updated_refresh_log (source_docs/_refresh_log.json)
+    - a3_report (Markdown A3 change report)
+  side_effects: Writes target + log, deletes dropbox file
+  non_interactive_mode: false
+implementation:
+  workflow_based:
+    steps_count: 9
+    entry_point: Conversational invocation with dropbox_path or short_name
+    exit_point: A3 report + updated files
+validation:
+  success_criteria:
+    - BD-QC-001 through BD-QC-007 pass
+    - Suspect-overwrite rule prevents regressions
+    - Front matter preserved across merge
+  test_cases_count: 6
+cross_references:
+  knowledge_files:
+    - path: knowledge/source_docs_index.json
+      purpose: Lookup platform/label/url when promoting new docs
+metadata:
+  companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
+  template_version: "1.0"
+  complexity: simple
+---
+
 # Merge Agent Guide
 
 ## Agent Instructions
 1. Read this for mission, principles, quickstart, and pitfalls.
-2. Parse `merge_agent.json` for structured data, the merge procedure, the suspect-overwrite rule, and validation.
+2. See YAML frontmatter above for structured data, tier classification, io_contract, and validation rules.
 3. This agent does ONE thing per invocation: merge a single staged file from `source_docs/dropbox/` into its target `source_docs/<short_name>.md`, update `source_docs/_refresh_log.json`, and delete the dropbox file. It is `single_write_workflow` shaped — propose plan, wait for confirmation, then perform the merge as one atomic operation per file.
 
 ---

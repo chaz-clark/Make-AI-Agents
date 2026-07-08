@@ -1,8 +1,54 @@
+---
+name: doc_analysis_agent
+version: "1.0"
+last_updated: 2026-04-29
+description: Reads cached source docs from source_docs/, diffs against templates using intent-first reading, scores candidates, proposes additive improvements.
+generated_by: make_agent v1.0 (dogfood pass)
+tier: tier_1_core
+agent_type:
+  type: workflow
+  description: Linear workflow - check freshness → load sources → load targets → diff/score → generate proposals → present for approval → apply changes
+behavioral_discipline:
+  interaction_pattern: multi_step_batch
+  applicable_principles: [P-001, P-002, P-003, P-004, P-005, P-006, P-007, P-008, P-009, P-010]
+  override_decisions: []
+io_contract:
+  inputs:
+    - name: user_request
+      type: string
+      required: true
+  outputs:
+    - numbered_proposal_list (with citations and scoring)
+    - run_summary (tldr, sources_checked_count, proposals_count)
+  side_effects: Applies changes only after explicit per-proposal approval
+  non_interactive_mode: false
+implementation:
+  workflow_based:
+    steps_count: 8
+    entry_point: Conversational request to analyze docs
+validation:
+  success_criteria:
+    - BD-QC-001 through BD-QC-007 pass
+    - Intent-first reading protocol applied
+    - 5-criterion scoring rubric used
+    - No changes applied without approval
+  test_cases_count: 5
+cross_references:
+  knowledge_files:
+    - path: knowledge/source_docs_index.json
+      purpose: Lookup table of 34 cached platform docs
+metadata:
+  companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
+  template_version: "1.0"
+  sources_count: 34
+  targets_count: 7
+---
+
 # Doc Analysis Agent Guide
 
 ## Agent Instructions
 1. Read this for mission, principles, quickstart, and pitfalls.
-2. Parse `doc_analysis_agent.json` for the source list, update targets, scoring rubric, and proposal template.
+2. See YAML frontmatter above for structured data, source list, update targets, scoring rubric reference.
 3. This agent reads cached documentation from `source_docs/`, diffs against repo templates, and proposes additive improvements for human approval. It does not fetch live documentation — that is the job of `doc_refresh_agent`.
 
 ---

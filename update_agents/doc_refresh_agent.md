@@ -1,8 +1,56 @@
+---
+name: doc_refresh_agent
+version: "1.0"
+last_updated: 2026-07-06
+description: Fetches live AI platform documentation and writes results to source_docs/ cache files. Does not analyze or propose changes.
+generated_by: make_agent v1.0 (dogfood pass)
+tier: tier_1_core
+agent_type:
+  type: workflow
+  description: Linear workflow - check staleness → fetch stale sources → write cache files → validate → report
+behavioral_discipline:
+  interaction_pattern: multi_step_batch
+  applicable_principles: [P-001, P-002, P-003, P-004, P-005, P-006, P-007, P-008, P-009, P-010]
+  override_decisions: []
+io_contract:
+  inputs:
+    - name: user_request
+      type: string
+      required: true
+  outputs:
+    - refresh_summary (refreshed_count, dropbox_staged_count, failed_count, notes_per_source)
+    - updated_cache_files (source_docs/*.md)
+    - _refresh_log.json (updated with latest fetch results)
+  side_effects: Writes source_docs/*.md and source_docs/_refresh_log.json
+  non_interactive_mode: false
+implementation:
+  workflow_based:
+    steps_count: 5
+    entry_point: Conversational request to refresh docs
+    fetch_tool: uv run update_agents/fetch_doc.py
+validation:
+  success_criteria:
+    - BD-QC-001 through BD-QC-007 pass
+    - Staleness threshold respected
+    - Fetch retries on timeout but not 403/404
+    - Dropbox staging for manual-fetch sources
+  test_cases_count: 4
+cross_references:
+  knowledge_files:
+    - path: knowledge/source_docs_index.json
+      purpose: Lookup table of 34 cached platform docs
+metadata:
+  companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
+  template_version: "1.0"
+  sources_count: 34
+  staleness_threshold_days: 30
+---
+
 # Doc Refresh Agent Guide
 
 ## Agent Instructions
 1. Read this for mission, principles, quickstart, and pitfalls.
-2. Parse `doc_refresh_agent.json` for the source list, fetch configuration, and validation rules.
+2. See YAML frontmatter above for structured data, source list reference, fetch configuration.
 3. This agent fetches live documentation from AI platform URLs and writes the results to `source_docs/`. It does not analyze content or propose changes — that is the job of `doc_analysis_agent`.
 
 ---

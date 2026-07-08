@@ -1,3 +1,21 @@
+---
+name: update_agent
+version: "1.1"
+last_updated: 2026-04-29
+description: Doc Update Agent - reads cached source docs, diffs against templates, proposes additive improvements (navigation guide - split into focused agents).
+deprecated: true
+deprecation_note: Split into doc_refresh_agent and doc_analysis_agent. This file preserved for navigation.
+agent_type:
+  type: workflow
+  description: Two-mode workflow - Analysis (read cache → diff → score → propose) and Refresh (fetch live docs → update cache)
+behavioral_discipline:
+  interaction_pattern: multi_step_batch
+  applicable_principles: [P-001, P-002, P-003, P-004, P-005, P-006, P-007, P-008, P-009, P-010]
+metadata:
+  companion_json_deprecated: "2026-07-08 - consolidated into YAML frontmatter per JSON purge"
+  template_version: "1.0"
+---
+
 # Doc Update System — Overview
 
 > **This file is a navigation guide.** The update system has been split into two focused agents. Use the agents below directly.
