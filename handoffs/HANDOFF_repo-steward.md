@@ -324,25 +324,50 @@ def is_stale(local_file, canonical_file):
 
 ---
 
-## Questions for Chaz
+## Questions for Chaz ✅ ANSWERED
 
-1. **Notification preference**: Console, file, GitHub issue, or all three?
-2. **Auto-fix permission**: Should steward auto-fix and commit, or just propose?
-3. **Scope**: Monitor all repos in ~/Documents/GitHub/, or just explicit list?
-4. **Frequency**: On-demand, weekly, or post-Make-AI-Agents-commit hook?
-5. **Tolerance**: What compliance score triggers "critical" alert? (Suggest: <5)
+1. **Notification preference**: ✅ **GitHub issue** in Make-AI-Agents repo
+2. **Auto-fix permission**: ✅ **Propose only** — write proposed fixes as notes in GitHub issue, don't auto-commit
+3. **Frequency**: ✅ **Weekly cron** — Sunday night, generates Monday morning GitHub issue
+4. **Compliance threshold**: ✅ **Start with <5** for critical alerts, adjust week-over-week based on audit results
+5. **Philosophy**: ✅ **Tight control on structure and updates, but allow for individuality** — enforce canonical structure (YAML frontmatter, required sections, kebab-case) while permitting repo-specific content
+
+---
+
+## Critical Context: canvas-toolbox AGENTS.md Generation Gap
+
+**Important discovery (2026-07-08)**: The 6 *-master repos' AGENTS.md files were **NOT** built using the canvas-toolbox make-AGENTS.md process.
+
+**The gap**:
+- canvas-toolbox has a build process that runs `make-AGENTS.md` mixed with knowledge gained during `canvas-sync --init`
+- This process generates AGENTS.md with Canvas-specific context (course IDs, topology, module structure)
+- The current *-master AGENTS.md files are hand-written or scaffolded from older templates
+- They lack the Canvas-specific grounding that the canvas-toolbox build would provide
+
+**Implications for repo-steward**:
+1. **Don't enforce 100% compliance** on *-master AGENTS.md structure — they may legitimately differ from make-AGENTS.md standard if built via canvas-toolbox
+2. **Flag missing canvas-sync context** — if a *-master repo references Canvas but lacks course IDs, topology, or module structure sections, recommend rebuilding
+3. **New check**: "Was AGENTS.md built via canvas-toolbox?" — check for Canvas-specific metadata in frontmatter
+4. **Proposed action**: Add to steward scope — "Detect *-master repos that should rebuild AGENTS.md via canvas-toolbox build"
+
+**Example**:
+- ds460-master AGENTS.md has FERPA discipline section ✅
+- But may lack Canvas topology details that canvas-toolbox build would add
+- Steward should propose: "Consider rebuilding via canvas-toolbox make-AGENTS process to add Canvas grounding"
+
+**Recommendation**: Future sprint should rebuild all 6 *-master AGENTS.md files using canvas-toolbox, then audit against THAT output (not raw make-AGENTS.md).
 
 ---
 
 ## Status
 
 **Handoff created**: 2026-07-08
-**Handoff status**: Active (awaiting steward implementation)
-**Next action**: Create `repo_steward.md` agent spec or implement as standalone script
+**Handoff status**: ✅ Active (answers received, ready for implementation)
+**Next action**: Create `repo_steward.md` agent spec or implement as standalone Python script
 
----
-
-**Chaz**: Review this handoff and decide:
-- Build as full agent (repo_steward.md + tools) or lightweight script?
-- Store alerts in ~/.claude/memory/ or Make-AI-Agents/handoffs/?
-- Auto-run weekly or manual-only for now?
+**Implementation decisions**:
+- **Notification**: GitHub issue in Make-AI-Agents (one issue per weekly run)
+- **Auto-fix**: Propose only (fixes written as notes in issue, not committed)
+- **Frequency**: Weekly cron (Sunday night → Monday morning issue)
+- **Threshold**: Critical alert if score <5, adjust based on audit trends
+- **Scope**: 6 *-master + 3 sister repos initially, expand as needed
