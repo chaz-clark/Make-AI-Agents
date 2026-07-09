@@ -149,7 +149,7 @@ For detailed structure, see **## Contract: Required Sections** and **## Contract
 ### 2. Concise — Project Context, Not Documentation
 **Description**: AGENTS.md is the file the LLM reads first when working in a project. It is project context, not exhaustive documentation. Long AGENTS.md files dilute their own purpose.
 **Why**: An LLM that has to read 2000 lines of project context before answering a simple question burns budget and surfaces noise. The first 100 lines do 80% of the work. Beyond ~25,000 tokens, the file exceeds common Read-tool limits and becomes unreadable in one pass.
-**How**: Required sections aim for ~30 lines each. Optional sections only when they earn their presence. Long-form documentation lives in READMEs, not AGENTS.md. **Enforced by**: AGENTS-QC-010 (total file size thresholds: soft warn at 1200 lines/12k tokens, hard flag at 25k tokens) and AGENTS-QC-011 (Active Context current-state-only check: flags when >5 dated entries or >150 lines).
+**How**: Required sections aim for ~30 lines each. Optional sections only when they earn their presence. Long-form documentation lives in READMEs, not AGENTS.md. **Enforced by**: AGENTS-QC-010 (total file size thresholds: soft warn at 800 lines/8k tokens, hard flag at 1200 lines/12k tokens — the auto-include limit for Claude Code and similar tools; 25k tokens is the Read-tool technical limit but too large for auto-context) and AGENTS-QC-011 (Active Context current-state-only check: flags when >5 dated entries or >150 lines).
 
 ### 3. Active-State-Aware
 **Description**: Every AGENTS.md has an "Active Context" section that surfaces in-flight work, recent major changes, and known follow-ups. This is the section that decays fastest and matters most.
