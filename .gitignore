@@ -1,21 +1,73 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Make-AI-Agents .gitignore
+#
+# This repo is PUBLIC on GitHub. Keep maintainer-only docs, personal notes,
+# and local dev artifacts gitignored.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Secrets and local config
+.env
+.env.local
+.env.*.local
+
+# Per-user docs — anything ending in `.local.md` stays local
+# Use this for files with specific dates, instance IDs, personal account refs
+*.local.md
+
+# Dev docs — maintainer-only documentation
+# AGENTS.md and docs/*.md are public/committed; docs/dev/ is private/gitignored
+docs/dev/
+
+# AI coding tool local memory / caches — per-user, never committed
+.gemini/
+.claude/cache/
+.cursor/
+.aider*
 GEMINI.md
-gem-instructions/
-gem_instructions/
-qc-reports/
-qc_reports/
-gpt.qmd
-*.qmd
 CLAUDE.md
+
+# Agent-to-agent handoffs — local scratch, never committed
+# (Cross-repo handoffs go in receiving repo's handoffs/ folder per convention)
 handoffs/
-gh-issues-agent/
+
+# GitHub issues workflow — local only
 .github-issues/
 .github_issues/
-.DS_Store
-AGENTJ_*.md
-canvas-sync.md
+
+# Quality reports — generated output, tracked separately
+qc-reports/
+qc_reports/
+
+# Cloned dependency repos — clone+gitignore pattern, refresh via git pull
+# gh-issues-agent — git clone https://github.com/chaz-clark/gh-issues-agent.git
+gh-issues-agent/
+# handoff convention — git clone https://github.com/chaz-clark/handoff.git
+handoff/
+
+# Temp/scratch files
+temp/
 source-docs/dropbox/
 source_docs/dropbox/
-temp/
 
-# Cloned handoff convention repo — clone+gitignore, refresh via `cd handoff && git pull`
-handoff/
+# Course content artifacts (shouldn't be in this repo)
+*.qmd
+gpt.qmd
+
+# External handoff visibility copies (naming pattern: <REPO>_HANDOFF_*.md or <REPO>_DELIVERS_*.md)
+# These are dropped here by other repos; apply then delete per handoff convention
+AGENTJ_*.md
+canvas-sync.md
+
+# Legacy naming patterns (replaced by kebab-case)
+gem-instructions/
+gem_instructions/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
