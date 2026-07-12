@@ -147,9 +147,9 @@ For detailed structure, see **## Contract: Required Sections** and **## Contract
 **How**: When in doubt, write instructions that any agentic tool could follow. Tool-specific guidance lives in tool-specific config (e.g., `.cursorrules`), not in `AGENTS.md`.
 
 ### 2. Concise — Project Context, Not Documentation
-**Description**: AGENTS.md is the file the LLM reads first when working in a project. It is project context, not exhaustive documentation. Long AGENTS.md files dilute their own purpose.
-**Why**: An LLM that has to read 2000 lines of project context before answering a simple question burns budget and surfaces noise. The first 100 lines do 80% of the work. Beyond ~25,000 tokens, the file exceeds common Read-tool limits and becomes unreadable in one pass.
-**How**: Required sections aim for ~30 lines each. Optional sections only when they earn their presence. Long-form documentation lives in READMEs, not AGENTS.md. **Enforced by**: AGENTS-QC-010 (total file size thresholds: soft warn at 800 lines/8k tokens, hard flag at 1200 lines/12k tokens — the auto-include limit for Claude Code and similar tools; 25k tokens is the Read-tool technical limit but too large for auto-context) and AGENTS-QC-011 (Active Context current-state-only check: flags when >5 dated entries or >150 lines).
+**Description**: AGENTS.md is the file the LLM reads first when working in a project. It is project context, not exhaustive documentation. Long AGENTS.md files dilute their own purpose and compete for working context RAM.
+**Why**: An LLM that has to read 2000 lines of project context before answering a simple question burns budget and surfaces noise. The first 100 lines do 80% of the work. Beyond ~25,000 tokens, the file exceeds common Read-tool limits and becomes unreadable in one pass. **Context RAM principle**: Bloated AGENTS.md files compete with actual working context (code under edit, test output, error messages), increasing the frequency of context-window exhaustion and conversation resets.
+**How**: Required sections aim for ~30 lines each. Optional sections only when they earn their presence. Long-form documentation lives in READMEs, not AGENTS.md. **Extract detailed explanations into knowledge files** (e.g., `knowledge/working-style-<project>.md`) and keep only bullet summaries in AGENTS.md with reference links. **Enforced by**: AGENTS-QC-010 (total file size thresholds: **30KB target, 40KB hard max** for byte size; 800 lines/8k tokens soft warn, 1200 lines/12k tokens hard flag for auto-include limits; 25k tokens is the Read-tool technical limit but too large for auto-context) and AGENTS-QC-011 (Active Context current-state-only check: flags when >5 dated entries or >150 lines). **Example**: canvas-toolbox trimmed AGENTS.md from 43KB → 33KB by extracting Working Style details to `lib/agents/knowledge/working-style-canvas-toolbox.md`, leaving only bullet summaries with reference link.
 
 ### 3. Active-State-Aware
 **Description**: Every AGENTS.md has an "Active Context" section that surfaces in-flight work, recent major changes, and known follow-ups. This is the section that decays fastest and matters most.
@@ -488,13 +488,13 @@ Include these sections only when the inclusion criteria apply:
 
 ---
 
-## QC Checks (AGENTS-QC-001 through AGENTS-QC-009)
+## QC Checks (AGENTS-QC-001 through AGENTS-QC-012)
 
 These validation checks ensure generated AGENTS.md files meet the contract. Defined here for reference; full validation logic in `make-AGENTS-qc.md`.
 
 | Check ID | Name | Rule | Severity |
 |----------|------|------|----------|
-| **AGENTS-QC-001** | All required sections present | Generated AGENTS.md contains all 6 required sections in specified order | critical |
+| **AGENTS-QC-001** | All required sections present | Generated AGENTS.md contains all 7 required sections in specified order | critical |
 | **AGENTS-QC-002** | Working Style contains discipline pointer | Working Style section references `knowledge/behavioral-discipline.md` or equivalent | critical |
 | **AGENTS-QC-003** | Active Context has date stamp | Active Context starts with `_Last updated: YYYY-MM-DD_` | high |
 | **AGENTS-QC-004** | No tool-specific language | No tool-specific instructions (e.g., "When using Claude Code...") | medium |
@@ -503,6 +503,9 @@ These validation checks ensure generated AGENTS.md files meet the contract. Defi
 | **AGENTS-QC-007** | No stale vendoring language (refresh only) | On refresh, no stale `git subtree`/submodule tokens describe current posture | high |
 | **AGENTS-QC-008** | Handoff recognition complete | Working Style contains canonical handoff section with all structural elements; if target has `handoffs/`, the `handoff/` clone is co-located | high |
 | **AGENTS-QC-009** | agentskills.io frontmatter present | Generated AGENTS.md starts with YAML frontmatter (`name`, `description`, `version` required) | medium |
+| **AGENTS-QC-010** | File size within limits | AGENTS.md file size: soft warn at 800 lines/8k tokens, hard flag at 1200 lines/12k tokens (auto-include limit); **30KB target, 40KB hard max** (context RAM management) | high |
+| **AGENTS-QC-011** | Active Context current-state-only | Active Context has ≤5 dated entries and ≤150 lines (not append-only log) | medium |
+| **AGENTS-QC-012** | Toyota Quality Loop section present | Generated AGENTS.md contains ## Toyota Quality Loop section with all three principles and behavioral triggers | critical |
 
 ---
 
