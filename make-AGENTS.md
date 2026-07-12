@@ -196,8 +196,9 @@ The contract for every AGENTS.md this skill generates.
 2. **`## Project Purpose`** — what this repo IS and is NOT, ~3-5 bullets each. Includes the audience (who uses this).
 3. **`## Structure`** — annotated folder layout. Reference, not exhaustive.
 4. **`## Working Style`** — behavioral discipline pointer (the `compact_boilerplate.working_style_template` substituted in), project-specific rules, AND the canonical handoff recognition snippet (baked from `handoff/AGENTS_snippet.md`, per Sprint F / AGENTS-QC-008).
-5. **`## Learning loop`** *(added 2026-05-28, Sprint B)* — closed-loop knowledge distillation pattern (P-009 as structural artifact). Baked from `compact_boilerplate.learning_loop_template`. Verified by BD-QC-008 in `knowledge/behavioral-discipline.md` frontmatter. Target repo gets a `knowledge/learned/` directory (gitkept) for the agent to write distilled lessons.
-6. **`## Active Context`** — current state, in-flight work, recent major changes, open issues. Date-stamped.
+5. **`## Toyota Quality Loop`** *(added 2026-07-12, P-011)* — the three-principle quality discipline (Genchi Gembutsu, Jidoka, Poka-yoke) that prevents defects. Baked from `compact_boilerplate.quality_loop_template`. Includes behavioral triggers for each principle. NO-OVERRIDE principle per P-011 in `knowledge/behavioral-discipline.md` v1.5.
+6. **`## Learning loop`** *(added 2026-05-28, Sprint B)* — closed-loop knowledge distillation pattern (P-009 as structural artifact). Baked from `compact_boilerplate.learning_loop_template`. Verified by BD-QC-008 in `knowledge/behavioral-discipline.md` frontmatter. Target repo gets a `knowledge/learned/` directory (gitkept) for the agent to write distilled lessons.
+7. **`## Active Context`** — current state, in-flight work, recent major changes, open issues. Date-stamped.
 
 ### Optional sections (when criteria apply)
 
@@ -412,18 +413,40 @@ Every generated AGENTS.md must contain these 6 sections in order:
   - Discipline pointer to `knowledge/behavioral-discipline.md` or equivalent
   - Handoff recognition section (`## Handoff document recognition`) baked verbatim from `handoff/AGENTS_snippet.md` — heading + path-pattern table + 7 numbered rules + status/direction enum quick-lookups (verified by AGENTS-QC-008)
 
-### 5. Learning Loop
+### 5. Toyota Quality Loop
+- **Heading**: `## Toyota Quality Loop`
+- **Content**: The three Toyota Production System principles that form a quality loop (P-011 from behavioral-discipline.md v1.5)
+- **MUST include**:
+  - **Genchi Gembutsu (現地現物)** - Go and See / Verify with Real Data
+    - Don't assume, verify with real data
+    - Test with REAL user data, not synthetic fixtures
+    - Behavioral trigger: "When you say 'probably' or 'should' → STOP and verify"
+  - **Jidoka (自働化)** - Built-in Quality / Stop on Defect
+    - Write tests WITH code, not after
+    - Red tests block progress - fix immediately, don't defer
+    - Behavioral trigger: "When you want to say 'we'll fix this later' → STOP and fix now"
+    - Aligns with P-003 Stop on Defect
+  - **Poka-yoke (ポカヨケ)** - Mistake-Proofing
+    - Design so mistakes can't happen
+    - Automate validation (no manual steps)
+    - Behavioral trigger: "When manual verification required → Design it out"
+  - Quality loop diagram: Prevent (Poka-yoke) → Detect (Jidoka) → Verify (Genchi Gembutsu)
+- **Rationale**: Discovered in canvas-toolbox offline mode work - these three prevent defects systematically. NO-OVERRIDE per P-011.
+- **Placement**: After Working Style, before Learning loop
+- **Verified by**: AGENTS-QC-012 (new check)
+
+### 6. Learning Loop
 - **Heading**: `## Learning loop`
 - **Content**: P-009 (Hansei + Yokoten) as structural artifact — closed-loop knowledge distillation
 - **MUST include**:
   - Section heading `## Learning loop`
-  - Reference to `knowledge/learned/` directory pattern  
+  - Reference to `knowledge/learned/` directory pattern
   - Rule that a lesson must be specific and reusable (not generic "task done" prose)
   - **Hermes promotion rule** (adopted from canvas-toolbox): When a learned file is referenced twice, promote it to first-class knowledge file
-- **Placement**: Between Working Style and Active Context
+- **Placement**: After Toyota Quality Loop, before Active Context
 - **Verified by**: BD-QC-008
 
-### 6. Active Context
+### 7. Active Context
 - **Heading**: `## Active Context`
 - **Content**: Current state, in-flight work, recent major changes, open issues. Date-stamped.
 - **MUST include**: `_Last updated: YYYY-MM-DD_` line at the top of the section
